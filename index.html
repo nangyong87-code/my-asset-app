@@ -125,8 +125,6 @@
         </button>
       </section>
 
-      <!-- 顺序列 (存款 -> 黄金 -> 股票 -> 公积金) -->
-
       <!-- TAB 1: 现金/存款 (Cash & Bank) -->
       <section v-if="activeTab === 'cash'" class="space-y-3">
         <div class="flex justify-between items-center text-xs px-1">
@@ -188,7 +186,6 @@
           </div>
         </div>
 
-        <!-- 实体黄金 & 纸黄金 分分类 -->
         <div class="space-y-2">
           <div v-for="g in goldList" :key="g.Type" class="glass-card rounded-2xl p-3.5 flex justify-between items-center">
             <div class="flex items-center gap-3">
@@ -219,7 +216,7 @@
         </div>
 
         <div class="space-y-2.5">
-          <div v-for="stock in stockData" :key="stock.Ticker" class="glass-card rounded-2xl p-3.5 space-y-2.5 hover:border-slate-600 transition">
+          <div v-for="stock in stockData" :key="stock.Ticker" class="glass-card rounded-2xl p-3.5 space-y-2.5 hover:border-slate-600 transition relative">
             <div class="flex justify-between items-start">
               <div>
                 <div class="flex items-center gap-2">
@@ -235,13 +232,18 @@
                   </span>
                 </div>
               </div>
-              <div class="text-right">
-                <div class="text-base font-black text-white">RM {{ formatNumber(useTP ? stock.TP_Value_MYR : stock.Market_Value_MYR) }}</div>
-                <div class="text-[11px] text-slate-400 font-medium">持股: <span class="text-slate-200">{{ stock.Total_Shares }}</span> 股</div>
+              <div class="text-right flex items-start gap-2">
+                <div>
+                  <div class="text-base font-black text-white">RM {{ formatNumber(useTP ? stock.TP_Value_MYR : stock.Market_Value_MYR) }}</div>
+                  <div class="text-[11px] text-slate-400 font-medium">持股: <span class="text-slate-200">{{ stock.Total_Shares }}</span> 股</div>
+                </div>
+                <!-- 股票删除按钮 -->
+                <button @click="deleteItem('stock', stock.Ticker)" class="text-slate-500 hover:text-rose-400 p-1 text-xs transition" title="删除持仓记录">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
               </div>
             </div>
 
-            <!-- 股数与成本小指标框 -->
             <div class="grid grid-cols-2 bg-slate-950/60 rounded-xl p-2.5 text-[11px] gap-1.5 border border-slate-800/80">
               <div><span class="text-slate-400">现价:</span> <span class="font-semibold text-slate-100">{{ stock.Currency === 'USD' ? '$' : 'RM' }}{{ stock.Current_Price }}</span></div>
               <div><span class="text-slate-400">目标价 (TP):</span> <span class="font-semibold text-amber-400">{{ stock.Currency === 'USD' ? '$' : 'RM' }}{{ stock.Target_Price_TP }}</span></div>
@@ -299,7 +301,13 @@
                   {{ div.Status === 'Paid' ? '已入账' : '待派发' }}
                 </span>
               </div>
-              <span class="font-black text-emerald-400 text-sm">+ RM {{ formatNumber(div.Total_Dividend_MYR) }}</span>
+              <div class="flex items-center gap-2">
+                <span class="font-black text-emerald-400 text-sm">+ RM {{ formatNumber(div.Total_Dividend_MYR) }}</span>
+                <!-- 股息删除按钮 -->
+                <button @click="deleteItem('dividend', div.Div_ID)" class="text-slate-500 hover:text-rose-400 p-1 text-xs transition" title="删除股息记录">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
             </div>
 
             <div class="grid grid-cols-2 text-[10px] text-slate-400 bg-slate-950/50 p-2 rounded-xl gap-1 border border-slate-800/50">
@@ -321,11 +329,17 @@
             </div>
             <div class="text-slate-400 text-[11px] mt-0.5">{{ h.Remarks || '月度资产快照' }}</div>
           </div>
-          <div class="text-right">
-            <div class="font-extrabold text-sm text-white">RM {{ formatNumber(h.Total_Net_Worth) }}</div>
-            <div :class="parseFloat(h.MoM_Change_Amount) >= 0 ? 'text-emerald-400' : 'text-rose-400'" class="font-semibold text-[11px]">
-              {{ parseFloat(h.MoM_Change_Amount) >= 0 ? '+' : '' }}{{ formatNumber(h.MoM_Change_Amount) }} ({{ h.MoM_Change_Pct }})
+          <div class="flex items-center gap-2">
+            <div class="text-right">
+              <div class="font-extrabold text-sm text-white">RM {{ formatNumber(h.Total_Net_Worth) }}</div>
+              <div :class="parseFloat(h.MoM_Change_Amount) >= 0 ? 'text-emerald-400' : 'text-rose-400'" class="font-semibold text-[11px]">
+                {{ parseFloat(h.MoM_Change_Amount) >= 0 ? '+' : '' }}{{ formatNumber(h.MoM_Change_Amount) }} ({{ h.MoM_Change_Pct }})
+              </div>
             </div>
+            <!-- 快照删除按钮 -->
+            <button @click="deleteItem('snapshot', h.Record_Date)" class="text-slate-500 hover:text-rose-400 p-1.5 text-xs transition" title="删除该快照">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
           </div>
         </div>
       </section>
@@ -341,8 +355,6 @@
         <span>{{ tab.name }}</span>
       </button>
     </footer>
-
-    <!-- 所有操作弹窗 Modal -->
 
     <!-- 1. 快照 Modal -->
     <div v-if="showSnapshotModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -396,7 +408,8 @@
         </div>
         <div>
           <label class="block text-[11px] text-slate-400 mb-1">金额 (MYR)</label>
-          <input type="number" v-model="transferForm.amount" placeholder="0.00" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2 text-xs">
+          <!-- 添加 step 限制以支持高精度小数 -->
+          <input type="number" step="0.01" min="0" v-model="transferForm.amount" placeholder="0.00" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2 text-xs">
         </div>
         <div>
           <label class="block text-[11px] text-slate-400 mb-1">Remarks 强制备注</label>
@@ -433,21 +446,23 @@
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block text-[11px] text-slate-400 mb-1">股数</label>
-            <input type="number" v-model="stockTxnForm.shares" placeholder="1000" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2 text-xs">
+            <!-- 支持整数与零碎股 -->
+            <input type="number" step="0.0001" min="0" v-model="stockTxnForm.shares" placeholder="1000" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2 text-xs">
           </div>
           <div>
             <label class="block text-[11px] text-slate-400 mb-1">单价 (原币)</label>
-            <input type="number" v-model="stockTxnForm.price" placeholder="9.80" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2 text-xs">
+            <!-- 支持美股/马股高精度单价 -->
+            <input type="number" step="0.0001" min="0" v-model="stockTxnForm.price" placeholder="9.80" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2 text-xs">
           </div>
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block text-[11px] text-slate-400 mb-1">手动手续费 (MYR)</label>
-            <input type="number" v-model="stockTxnForm.fee" placeholder="12.00" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2 text-xs">
+            <input type="number" step="0.01" min="0" v-model="stockTxnForm.fee" placeholder="12.00" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2 text-xs">
           </div>
           <div>
             <label class="block text-[11px] text-slate-400 mb-1">手动交易汇率</label>
-            <input type="number" v-model="stockTxnForm.exchangeRate" placeholder="美股填汇率，马股填 1" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2 text-xs">
+            <input type="number" step="0.0001" min="0" v-model="stockTxnForm.exchangeRate" placeholder="美股填汇率，马股填 1" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2 text-xs">
           </div>
         </div>
         <div v-if="stockTxnForm.category !== 'Stock_Initial'">
@@ -478,7 +493,7 @@
         </div>
         <div>
           <label class="block text-[11px] text-slate-400 mb-1">金额 (MYR)</label>
-          <input type="number" v-model="epfForm.amount" placeholder="0.00" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2 text-xs">
+          <input type="number" step="0.01" min="0" v-model="epfForm.amount" placeholder="0.00" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2 text-xs">
         </div>
         <div>
           <label class="block text-[11px] text-slate-400 mb-1">Remarks 强制备注</label>
@@ -505,7 +520,6 @@
         const activeTab = ref('cash');
         const useTP = ref(false);
 
-        // 首页 Tab 按您指定顺序：存款 -> 黄金 -> 股票 -> 公积金 -> 股息 -> 历史
         const tabs = [
           { id: 'cash', name: '存款', icon: 'fa-solid fa-wallet' },
           { id: 'gold', name: '黄金', icon: 'fa-solid fa-coins' },
@@ -583,6 +597,28 @@
           } catch (e) {
             alert('获取数据失败，请检查网络或 GAS API 链接！');
           } finally {
+            loading.value = false;
+          }
+        };
+
+        // 统一删除函数（支持删除股票持仓、股息记录和快照）
+        const deleteItem = async (targetType, id) => {
+          if (!confirm(`确定要删除此${targetType === 'stock' ? '股票持仓' : targetType === 'dividend' ? '股息记录' : '历史快照'}吗？操作不可逆！`)) {
+            return;
+          }
+          loading.value = true;
+          try {
+            await fetch(GAS_API_URL, {
+              method: 'POST',
+              body: JSON.stringify({
+                action: 'deleteRecord',
+                targetType: targetType,
+                id: id
+              })
+            });
+            await fetchData();
+          } catch (e) {
+            alert('删除失败，请重试！');
             loading.value = false;
           }
         };
@@ -690,7 +726,7 @@
         return {
           loading, dataLoaded, activeTab, tabs, useTP, summary, cashAccounts, epfData, goldList, stockData, dividendData, historyList,
           displayedNetWorth, assetPercentages, momAmount, momPct, showSnapshotModal, snapshotForm, showTransferModal, transferForm,
-          showStockTxnModal, stockTxnForm, showEPFModal, selectedFund, epfForm, fetchData, openSnapshotModal, submitSnapshot,
+          showStockTxnModal, stockTxnForm, showEPFModal, selectedFund, epfForm, fetchData, deleteItem, openSnapshotModal, submitSnapshot,
           submitTransfer, openStockTxnModal, submitStockTxn, openEPFModal, submitEPFTxn, formatNumber
         };
       }
