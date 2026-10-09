@@ -48,7 +48,6 @@
     <!-- 主界面 -->
     <template v-else>
 
-      <!-- 顶部 Header -->
       <header class="px-5 pt-6 pb-3 flex justify-between items-center bg-[#090f0b]/80 backdrop-blur-md sticky top-0 z-30 border-b border-[#1a2e22]">
         <h1 class="text-2xl font-black text-slate-100 tracking-tight">{{ currentTabTitle }}</h1>
         <div class="flex items-center gap-2">
@@ -111,6 +110,7 @@
 
           <div class="space-y-2">
             <div class="text-xs font-bold text-slate-300 px-1">💵 现金 (Hand Cash)</div>
+            <div v-if="cashAccounts.filter(a => a.Type === 'Cash').length === 0" class="text-xs text-slate-500 p-3 text-center border border-dashed border-[#1f3329] rounded-xl">暂无现金账户</div>
             <div v-for="acc in cashAccounts.filter(a => a.Type === 'Cash')" :key="acc.Account_ID" class="forest-card rounded-2xl p-3.5 flex justify-between items-center">
               <div>
                 <div class="font-bold text-sm text-slate-100">{{ acc.Account_Nickname }}</div>
@@ -122,6 +122,7 @@
 
           <div class="space-y-2 pt-2">
             <div class="text-xs font-bold text-slate-300 px-1">🏦 银行存款户口</div>
+            <div v-if="cashAccounts.filter(a => a.Type === 'Bank').length === 0" class="text-xs text-slate-500 p-3 text-center border border-dashed border-[#1f3329] rounded-xl">暂无存款账户，请点击右上角添加</div>
             <div v-for="acc in cashAccounts.filter(a => a.Type === 'Bank')" :key="acc.Account_ID" class="forest-card rounded-2xl p-3.5 flex justify-between items-center">
               <div>
                 <div class="font-bold text-sm text-slate-100">{{ acc.Bank_Name }} <span class="text-xs font-normal text-slate-400">({{ acc.Account_Nickname }})</span></div>
@@ -142,6 +143,7 @@
           </div>
 
           <div class="space-y-2">
+            <div v-if="goldList.length === 0" class="text-xs text-slate-500 p-3 text-center border border-dashed border-[#1f3329] rounded-xl">暂无黄金持仓</div>
             <div v-for="g in goldList" :key="g.Type" class="forest-card rounded-2xl p-4 flex justify-between items-center">
               <div>
                 <div class="font-bold text-sm text-slate-100">{{ g.Type === 'Paper' ? '🪙 纸黄金 (Paper Gold)' : '🥇 实体金条 (Gold Bar)' }}</div>
@@ -203,7 +205,6 @@
 
       </main>
 
-      <!-- 底部 6 大 TAB 导航 -->
       <footer class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#080d09]/95 backdrop-blur-md border-t border-[#1a2e22] px-2 py-2.5 grid grid-cols-6 gap-1 text-[10px] text-center font-medium z-40">
         <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id" :class="activeTab === tab.id ? 'text-amber-400 font-bold' : 'text-slate-500'" class="flex flex-col items-center justify-center gap-1 py-1">
           <i :class="tab.icon" class="text-base"></i>
@@ -211,24 +212,24 @@
         </button>
       </footer>
 
-      <!-- 1. 新增现金/存款弹窗 Modal -->
+      <!-- 1. 新增存款 Modal -->
       <div v-if="showAddCashModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3 shadow-2xl">
           <h3 class="font-bold text-base text-white">🏦 添加现金/存款户口</h3>
           <div><label class="block text-[11px] text-slate-400 mb-1">类型</label>
             <select v-model="cashForm.type" class="input-dark"><option value="Bank">银行存款 (Bank)</option><option value="Cash">手上现金 (Hand Cash)</option></select>
           </div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">银行/机构名字</label><input type="text" v-model="cashForm.bankName" placeholder="如 Maybank / Cash" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">户口别名</label><input type="text" v-model="cashForm.nickname" placeholder="如 主户口 / Emergency" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">银行/机构名字</label><input type="text" v-model="cashForm.bankName" placeholder="如 Maybank / UOB" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">户口别名</label><input type="text" v-model="cashForm.nickname" placeholder="如 主户口 / 储蓄" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">初始余额 (RM)</label><input type="number" v-model="cashForm.balance" placeholder="0.00" class="input-dark"></div>
           <div class="flex gap-2 pt-2">
             <button @click="showAddCashModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button>
-            <button @click="submitAddCash" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存</button>
+            <button @click="submitAddCash" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存并提交</button>
           </div>
         </div>
       </div>
 
-      <!-- 2. 新增黄金记录弹窗 Modal -->
+      <!-- 2. 新增黄金 Modal -->
       <div v-if="showAddGoldModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3 shadow-2xl">
           <h3 class="font-bold text-base text-white">🪙 记录黄金买入</h3>
@@ -244,7 +245,7 @@
         </div>
       </div>
 
-      <!-- 3. EPF 供款弹窗 Modal -->
+      <!-- 3. EPF Modal -->
       <div v-if="showAddEPFModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3 shadow-2xl">
           <h3 class="font-bold text-base text-white">🏛️ EPF / PRS 变动</h3>
@@ -264,15 +265,15 @@
         </div>
       </div>
 
-      <!-- 4. 记录本月净值快照 Modal -->
+      <!-- 4. 快照 Modal -->
       <div v-if="showSnapshotModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-4 shadow-2xl">
           <h3 class="font-bold text-base text-white">📷 记录本月净值快照</h3>
           <div class="text-xs text-slate-300 bg-[#132219] p-3 rounded-xl border border-[#1f3329]">
             当前计算净值: <span class="font-bold text-amber-400 font-serif-num">RM {{ formatNumber(displayedNetWorth) }}</span>
           </div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">快照日期 (自动置为月底)</label><input type="date" v-model="snapshotForm.date" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">Remarks 强制备注</label><input type="text" v-model="snapshotForm.remarks" placeholder="如：买车险 / 年中发奖金" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">快照日期</label><input type="date" v-model="snapshotForm.date" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">Remarks 备注</label><input type="text" v-model="snapshotForm.remarks" placeholder="备注说明" class="input-dark"></div>
           <div class="flex gap-2 pt-2">
             <button @click="showSnapshotModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2.5 rounded-xl text-xs">取消</button>
             <button @click="submitSnapshot" class="flex-1 btn-gold-border font-bold py-2.5 rounded-xl text-xs">保存快照</button>
@@ -314,7 +315,6 @@
         const epfData = ref([]);
         const historyList = ref([]);
 
-        // 各弹窗表单状态
         const showAddCashModal = ref(false);
         const cashForm = ref({ type: 'Bank', bankName: '', nickname: '', balance: '' });
 
@@ -353,7 +353,7 @@
         const fetchData = async () => {
           loading.value = true;
           try {
-            const res = await fetch(`${GAS_API_URL}?action=getOverview`);
+            const res = await fetch(`${GAS_API_URL}?action=getOverview&t=${Date.now()}`); // 防缓存
             const json = await res.json();
             if (json.status === 'success') {
               cashAccounts.value = json.data.cashAccounts || [];
@@ -365,19 +365,51 @@
           } catch (e) { console.error(e); } finally { loading.value = false; }
         };
 
+        // 强力跨域写入函数
         const postAction = async (action, body) => {
           loading.value = true;
-          await fetch(GAS_API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action, ...body })
-          });
-          await fetchData();
+          try {
+            const res = await fetch(GAS_API_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({ action, ...body })
+            });
+            const json = await res.json();
+            if (json.status === 'success' && json.data) {
+              // 自动刷新全盘数据
+              cashAccounts.value = json.data.cashAccounts || [];
+              stockData.value = json.data.stockData || [];
+              goldList.value = json.data.goldList || [];
+              epfData.value = json.data.epfData || [];
+              historyList.value = json.data.history || [];
+            } else {
+              await fetchData();
+            }
+            alert('保存成功！');
+          } catch (e) {
+            console.error(e);
+            alert('提交失败，请重试');
+          } finally {
+            loading.value = false;
+          }
         };
 
-        const submitAddCash = async () => { showAddCashModal.value = false; await postAction('addCashAccount', cashForm.value); };
-        const submitAddGold = async () => { showAddGoldModal.value = false; await postAction('addGoldTransaction', goldForm.value); };
-        const submitAddEPF = async () => { showAddEPFModal.value = false; await postAction('addEPFTransaction', epfForm.value); };
+        const submitAddCash = async () => {
+          if(!cashForm.value.bankName) return alert('请输入银行名字！');
+          showAddCashModal.value = false;
+          await postAction('addCashAccount', cashForm.value);
+        };
+
+        const submitAddGold = async () => {
+          if(!goldForm.value.grams) return alert('请输入买入克数！');
+          showAddGoldModal.value = false;
+          await postAction('addGoldTransaction', goldForm.value);
+        };
+
+        const submitAddEPF = async () => {
+          showAddEPFModal.value = false;
+          await postAction('addEPFTransaction', epfForm.value);
+        };
 
         const openSnapshotModal = () => {
           const now = new Date();
