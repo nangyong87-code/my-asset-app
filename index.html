@@ -23,7 +23,7 @@
 
   <div id="app" v-cloak class="max-w-md mx-auto min-h-screen flex flex-col justify-between relative shadow-2xl bg-[#090f0b] border-x border-[#1a2e22]">
 
-    <!-- 0. 密码锁屏 PIN Modal -->
+    <!-- PIN Modal -->
     <div v-if="isLocked" class="fixed inset-0 z-50 bg-[#090f0b] flex flex-col items-center justify-center p-6 space-y-6">
       <div class="w-16 h-16 rounded-full bg-[#132219] border border-[#2e4e3b] flex items-center justify-center text-amber-400 text-2xl shadow-xl">
         <i class="fa-solid fa-shield-halved"></i>
@@ -45,7 +45,7 @@
       </div>
     </div>
 
-    <!-- 主界面 -->
+    <!-- MAIN UI -->
     <template v-else>
 
       <header class="px-5 pt-6 pb-3 flex justify-between items-center bg-[#090f0b]/80 backdrop-blur-md sticky top-0 z-30 border-b border-[#1a2e22]">
@@ -60,7 +60,7 @@
 
       <main class="p-4 space-y-4 flex-1">
 
-        <!-- PAGE 1: 总览 (Overview) -->
+        <!-- OVERVIEW -->
         <section v-if="activeTab === 'overview'" class="space-y-4">
           <div class="forest-card rounded-3xl p-5 relative overflow-hidden space-y-4">
             <div class="text-xs text-slate-400 font-medium">净资产总额</div>
@@ -98,19 +98,21 @@
           </div>
         </section>
 
-        <!-- PAGE 2: 现金 / 存款 (Cash & Bank) -->
+        <!-- CASH & BANK -->
         <section v-if="activeTab === 'cash'" class="space-y-4">
           <div class="flex justify-between items-center bg-[#132219] p-4 rounded-2xl border border-[#1f3329]">
             <div>
               <div class="text-xs text-slate-400">存款与现金总计</div>
               <div class="font-serif-num text-2xl font-bold text-slate-100 mt-1">RM {{ formatNumber(totals.cash + totals.bank) }}</div>
             </div>
-            <button @click="showAddCashModal = true" class="btn-gold-border px-3 py-1.5 rounded-xl text-xs font-bold">+ 添加户口</button>
+            <div class="flex gap-1.5">
+              <button @click="showAddCashModal = true" class="btn-gold-border px-2.5 py-1.5 rounded-xl text-xs font-bold">+ 建户</button>
+              <button @click="showCashTxnModal = true" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1.5 rounded-xl text-xs font-bold">± 存取/转账</button>
+            </div>
           </div>
 
           <div class="space-y-2">
             <div class="text-xs font-bold text-slate-300 px-1">💵 现金 (Hand Cash)</div>
-            <div v-if="cashAccounts.filter(a => a.Type === 'Cash').length === 0" class="text-xs text-slate-500 p-3 text-center border border-dashed border-[#1f3329] rounded-xl">暂无现金账户</div>
             <div v-for="acc in cashAccounts.filter(a => a.Type === 'Cash')" :key="acc.Account_ID" class="forest-card rounded-2xl p-3.5 flex justify-between items-center">
               <div>
                 <div class="font-bold text-sm text-slate-100">{{ acc.Account_Nickname }}</div>
@@ -122,7 +124,6 @@
 
           <div class="space-y-2 pt-2">
             <div class="text-xs font-bold text-slate-300 px-1">🏦 银行存款户口</div>
-            <div v-if="cashAccounts.filter(a => a.Type === 'Bank').length === 0" class="text-xs text-slate-500 p-3 text-center border border-dashed border-[#1f3329] rounded-xl">暂无存款账户，请点击右上角添加</div>
             <div v-for="acc in cashAccounts.filter(a => a.Type === 'Bank')" :key="acc.Account_ID" class="forest-card rounded-2xl p-3.5 flex justify-between items-center">
               <div>
                 <div class="font-bold text-sm text-slate-100">{{ acc.Bank_Name }} <span class="text-xs font-normal text-slate-400">({{ acc.Account_Nickname }})</span></div>
@@ -132,18 +133,17 @@
           </div>
         </section>
 
-        <!-- PAGE 3: 黄金 / 纸黄金 (Gold) -->
+        <!-- GOLD -->
         <section v-if="activeTab === 'gold'" class="space-y-4">
           <div class="flex justify-between items-center bg-[#132219] p-4 rounded-2xl border border-[#1f3329]">
             <div>
               <div class="text-xs text-amber-400 font-medium">黄金总市值</div>
               <div class="font-serif-num text-2xl font-bold text-slate-100 mt-1">RM {{ formatNumber(totals.paperGold + totals.physicalGold) }}</div>
             </div>
-            <button @click="showAddGoldModal = true" class="btn-gold-border px-3 py-1.5 rounded-xl text-xs font-bold">+ 记一笔黄金买入</button>
+            <button @click="showAddGoldModal = true" class="btn-gold-border px-3 py-1.5 rounded-xl text-xs font-bold">± 黄金买入/卖出</button>
           </div>
 
           <div class="space-y-2">
-            <div v-if="goldList.length === 0" class="text-xs text-slate-500 p-3 text-center border border-dashed border-[#1f3329] rounded-xl">暂无黄金持仓</div>
             <div v-for="g in goldList" :key="g.Type" class="forest-card rounded-2xl p-4 flex justify-between items-center">
               <div>
                 <div class="font-bold text-sm text-slate-100">{{ g.Type === 'Paper' ? '🪙 纸黄金 (Paper Gold)' : '🥇 实体金条 (Gold Bar)' }}</div>
@@ -154,7 +154,7 @@
           </div>
         </section>
 
-        <!-- PAGE 4: 公积金 (EPF & PRS) -->
+        <!-- EPF -->
         <section v-if="activeTab === 'epf'" class="space-y-4">
           <div class="bg-[#132219] p-4 rounded-2xl border border-[#1f3329] flex justify-between items-center">
             <div>
@@ -175,7 +175,7 @@
           </div>
         </section>
 
-        <!-- PAGE 5: 股票系统 (Stocks) -->
+        <!-- STOCKS -->
         <section v-if="activeTab === 'stocks'" class="space-y-3">
           <div class="flex justify-between items-center bg-[#132219] p-4 rounded-2xl border border-[#1f3329]">
             <div>
@@ -212,68 +212,121 @@
         </button>
       </footer>
 
-      <!-- 1. 新增存款 Modal -->
+      <!-- MODALS -->
+
+      <!-- 1. 建户 Modal -->
       <div v-if="showAddCashModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3 shadow-2xl">
-          <h3 class="font-bold text-base text-white">🏦 添加现金/存款户口</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">类型</label>
+        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
+          <h3 class="font-bold text-base text-white">🏦 创建现金/存款账户</h3>
+          <div><label class="block text-[11px] text-slate-400 mb-1">账户类型</label>
             <select v-model="cashForm.type" class="input-dark"><option value="Bank">银行存款 (Bank)</option><option value="Cash">手上现金 (Hand Cash)</option></select>
           </div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">银行/机构名字</label><input type="text" v-model="cashForm.bankName" placeholder="如 Maybank / UOB" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">户口别名</label><input type="text" v-model="cashForm.nickname" placeholder="如 主户口 / 储蓄" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">机构名字</label><input type="text" v-model="cashForm.bankName" placeholder="如 Maybank" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">别名</label><input type="text" v-model="cashForm.nickname" placeholder="如 储蓄户口" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">初始余额 (RM)</label><input type="number" v-model="cashForm.balance" placeholder="0.00" class="input-dark"></div>
           <div class="flex gap-2 pt-2">
             <button @click="showAddCashModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button>
-            <button @click="submitAddCash" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存并提交</button>
+            <button @click="submitAddCash" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存</button>
           </div>
         </div>
       </div>
 
-      <!-- 2. 新增黄金 Modal -->
-      <div v-if="showAddGoldModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3 shadow-2xl">
-          <h3 class="font-bold text-base text-white">🪙 记录黄金买入</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">黄金类型</label>
-            <select v-model="goldForm.type" class="input-dark"><option value="Paper">纸黄金 (Paper Gold)</option><option value="Physical">实体金条 (Gold Bar)</option></select>
+      <!-- 2. 资金存取与转账 Modal -->
+      <div v-if="showCashTxnModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
+          <h3 class="font-bold text-base text-white">💳 资金存取 / 账户转账</h3>
+          <div><label class="block text-[11px] text-slate-400 mb-1">交易类型</label>
+            <select v-model="cashTxnForm.type" class="input-dark">
+              <option value="in">➕ 存入 / 加钱 (Deposit)</option>
+              <option value="out">➖ 支出 / 扣钱 (Withdrawal)</option>
+              <option value="transfer">🔄 账户间转账 (Transfer)</option>
+            </select>
           </div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">购买克数 (Grams)</label><input type="number" v-model="goldForm.grams" placeholder="如 10.5" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">每克买入单价 (RM/g)</label><input type="number" v-model="goldForm.avgPrice" placeholder="如 380.00" class="input-dark"></div>
+
+          <!-- 普通存取选单个账户 -->
+          <div v-if="cashTxnForm.type !== 'transfer'">
+            <label class="block text-[11px] text-slate-400 mb-1">选择账户</label>
+            <select v-model="cashTxnForm.accountId" class="input-dark">
+              <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name }} - {{ a.Account_Nickname }} (RM {{ a.Current_Balance }})</option>
+            </select>
+          </div>
+
+          <!-- 转账选转出与转入 -->
+          <template v-else>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">转出账户 (From)</label>
+              <select v-model="cashTxnForm.fromAccountId" class="input-dark">
+                <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name }} (RM {{ a.Current_Balance }})</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">转入账户 (To)</label>
+              <select v-model="cashTxnForm.toAccountId" class="input-dark">
+                <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name }} (RM {{ a.Current_Balance }})</option>
+              </select>
+            </div>
+          </template>
+
+          <div><label class="block text-[11px] text-slate-400 mb-1">变动金额 (RM)</label><input type="number" v-model="cashTxnForm.amount" placeholder="0.00" class="input-dark"></div>
+
+          <div class="flex gap-2 pt-2">
+            <button @click="showCashTxnModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button>
+            <button @click="submitCashTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">提交变动</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 黄金买卖 Modal -->
+      <div v-if="showAddGoldModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
+          <h3 class="font-bold text-base text-white">🪙 黄金交易 (买入 / 卖出)</h3>
+          <div><label class="block text-[11px] text-slate-400 mb-1">交易类型</label>
+            <select v-model="goldForm.txnType" class="input-dark">
+              <option value="buy">➕ 买入黄金 (Buy)</option>
+              <option value="sell">➖ 卖出 / 变现 (Sell)</option>
+            </select>
+          </div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">黄金种类</label>
+            <select v-model="goldForm.goldType" class="input-dark"><option value="Paper">纸黄金 (Paper Gold)</option><option value="Physical">实体金条 (Gold Bar)</option></select>
+          </div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">克数 (Grams)</label><input type="number" v-model="goldForm.grams" placeholder="如 5" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">单价 (RM/g)</label><input type="number" v-model="goldForm.price" placeholder="如 380" class="input-dark"></div>
           <div class="flex gap-2 pt-2">
             <button @click="showAddGoldModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button>
-            <button @click="submitAddGold" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存买入</button>
+            <button @click="submitAddGold" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">确认变动</button>
           </div>
         </div>
       </div>
 
-      <!-- 3. EPF Modal -->
+      <!-- 4. EPF Modal -->
       <div v-if="showAddEPFModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3 shadow-2xl">
+        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
           <h3 class="font-bold text-base text-white">🏛️ EPF / PRS 变动</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">公积金账户</label>
+          <div><label class="block text-[11px] text-slate-400 mb-1">账户</label>
             <select v-model="epfForm.accountKey" class="input-dark">
               <option v-for="f in epfData" :key="f.Account_Key" :value="f.Account_Key">{{ f.Fund_Name }} ({{ f.Category }})</option>
             </select>
           </div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">变动类型</label>
-            <select v-model="epfForm.type" class="input-dark"><option value="Deposit">本月供款 / 自缴 (+)</option><option value="Withdrawal">提取 (-)</option></select>
+          <div><label class="block text-[11px] text-slate-400 mb-1">类型</label>
+            <select v-model="epfForm.type" class="input-dark"><option value="Deposit">供款 / 缴存 (+)</option><option value="Withdrawal">提取 (-)</option></select>
           </div>
           <div><label class="block text-[11px] text-slate-400 mb-1">金额 (RM)</label><input type="number" v-model="epfForm.amount" placeholder="0.00" class="input-dark"></div>
           <div class="flex gap-2 pt-2">
             <button @click="showAddEPFModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button>
-            <button @click="submitAddEPF" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">提交更新</button>
+            <button @click="submitAddEPF" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存</button>
           </div>
         </div>
       </div>
 
-      <!-- 4. 快照 Modal -->
+      <!-- 5. 快照 Modal -->
       <div v-if="showSnapshotModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-4 shadow-2xl">
-          <h3 class="font-bold text-base text-white">📷 记录本月净值快照</h3>
+        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-4">
+          <h3 class="font-bold text-base text-white">📷 记录月度资产快照</h3>
           <div class="text-xs text-slate-300 bg-[#132219] p-3 rounded-xl border border-[#1f3329]">
-            当前计算净值: <span class="font-bold text-amber-400 font-serif-num">RM {{ formatNumber(displayedNetWorth) }}</span>
+            当前净值: <span class="font-bold text-amber-400 font-serif-num">RM {{ formatNumber(displayedNetWorth) }}</span>
           </div>
           <div><label class="block text-[11px] text-slate-400 mb-1">快照日期</label><input type="date" v-model="snapshotForm.date" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">Remarks 备注</label><input type="text" v-model="snapshotForm.remarks" placeholder="备注说明" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">Remarks 备注</label><input type="text" v-model="snapshotForm.remarks" placeholder="备注" class="input-dark"></div>
           <div class="flex gap-2 pt-2">
             <button @click="showSnapshotModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2.5 rounded-xl text-xs">取消</button>
             <button @click="submitSnapshot" class="flex-1 btn-gold-border font-bold py-2.5 rounded-xl text-xs">保存快照</button>
@@ -286,7 +339,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbzf6N_MMuZNJJvAnh5zGE9M8RLrr5i59CNnQkWc6WH5q473d1brs1i3TXWv8uW8fpXU/exec";
+    var GAS_API_URL = "在这里替换成你刚才新建部署的 URL";
 
     const { createApp, ref, computed, onMounted } = Vue;
 
@@ -318,8 +371,11 @@
         const showAddCashModal = ref(false);
         const cashForm = ref({ type: 'Bank', bankName: '', nickname: '', balance: '' });
 
+        const showCashTxnModal = ref(false);
+        const cashTxnForm = ref({ type: 'in', accountId: '', fromAccountId: '', toAccountId: '', amount: '' });
+
         const showAddGoldModal = ref(false);
-        const goldForm = ref({ type: 'Paper', grams: '', avgPrice: '' });
+        const goldForm = ref({ txnType: 'buy', goldType: 'Paper', grams: '', price: '' });
 
         const showAddEPFModal = ref(false);
         const epfForm = ref({ accountKey: '', type: 'Deposit', amount: '' });
@@ -353,7 +409,7 @@
         const fetchData = async () => {
           loading.value = true;
           try {
-            const res = await fetch(`${GAS_API_URL}?action=getOverview&t=${Date.now()}`); // 防缓存
+            const res = await fetch(`${GAS_API_URL}?action=getOverview&t=${Date.now()}`);
             const json = await res.json();
             if (json.status === 'success') {
               cashAccounts.value = json.data.cashAccounts || [];
@@ -365,7 +421,6 @@
           } catch (e) { console.error(e); } finally { loading.value = false; }
         };
 
-        // 强力跨域写入函数
         const postAction = async (action, body) => {
           loading.value = true;
           try {
@@ -376,7 +431,6 @@
             });
             const json = await res.json();
             if (json.status === 'success' && json.data) {
-              // 自动刷新全盘数据
               cashAccounts.value = json.data.cashAccounts || [];
               stockData.value = json.data.stockData || [];
               goldList.value = json.data.goldList || [];
@@ -385,7 +439,7 @@
             } else {
               await fetchData();
             }
-            alert('保存成功！');
+            alert('成功更新！');
           } catch (e) {
             console.error(e);
             alert('提交失败，请重试');
@@ -395,13 +449,19 @@
         };
 
         const submitAddCash = async () => {
-          if(!cashForm.value.bankName) return alert('请输入银行名字！');
+          if (!cashForm.value.bankName) return alert('请输入机构/银行名字！');
           showAddCashModal.value = false;
           await postAction('addCashAccount', cashForm.value);
         };
 
+        const submitCashTxn = async () => {
+          if (!cashTxnForm.value.amount) return alert('请输入变动金额！');
+          showCashTxnModal.value = false;
+          await postAction('updateCashBalance', cashTxnForm.value);
+        };
+
         const submitAddGold = async () => {
-          if(!goldForm.value.grams) return alert('请输入买入克数！');
+          if (!goldForm.value.grams || !goldForm.value.price) return alert('请填全克数与单价！');
           showAddGoldModal.value = false;
           await postAction('addGoldTransaction', goldForm.value);
         };
@@ -433,8 +493,8 @@
         return {
           isLocked, pinInput, pressPin, loading, activeTab, tabs, useTP, currentTabTitle,
           cashAccounts, stockData, goldList, epfData, historyList, totals, displayedNetWorth,
-          showAddCashModal, cashForm, showAddGoldModal, goldForm, showAddEPFModal, epfForm, showSnapshotModal, snapshotForm,
-          fetchData, submitAddCash, submitAddGold, submitAddEPF, openSnapshotModal, submitSnapshot, formatNumber
+          showAddCashModal, cashForm, showCashTxnModal, cashTxnForm, showAddGoldModal, goldForm, showAddEPFModal, epfForm, showSnapshotModal, snapshotForm,
+          fetchData, submitAddCash, submitCashTxn, submitAddGold, submitAddEPF, openSnapshotModal, submitSnapshot, formatNumber
         };
       }
     }).mount('#app');
