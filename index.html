@@ -243,7 +243,6 @@
             </select>
           </div>
 
-          <!-- 普通存取选单个账户 -->
           <div v-if="cashTxnForm.type !== 'transfer'">
             <label class="block text-[11px] text-slate-400 mb-1">选择账户</label>
             <select v-model="cashTxnForm.accountId" class="input-dark">
@@ -251,7 +250,6 @@
             </select>
           </div>
 
-          <!-- 转账选转出与转入 -->
           <template v-else>
             <div>
               <label class="block text-[11px] text-slate-400 mb-1">转出账户 (From)</label>
@@ -339,7 +337,8 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbz0e87sG03sFdu8DvlgC56Cz8ft1P9yOxVPGUjE_onYDBuGtaC_v9MwuyxVdFMvHGg-/exec";
+    // ⚠️ 请在这里替换为您最新的 Apps Script 部署 URL
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbx9I-3FkxvTs0-zkLV3QPN9kcKL07Sz5qf_e7xs2eNofat7DIjiu2v8bKaPtCOTqxB5/exec";
 
     const { createApp, ref, computed, onMounted } = Vue;
 
@@ -421,13 +420,15 @@
           } catch (e) { console.error(e); } finally { loading.value = false; }
         };
 
+        // 强力修复版的统一数据提交方法
         const postAction = async (action, body) => {
           loading.value = true;
           try {
+            const payload = JSON.stringify({ action: action, ...body });
             const res = await fetch(GAS_API_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({ action, ...body })
+              body: payload
             });
             const json = await res.json();
             if (json.status === 'success' && json.data) {
@@ -436,13 +437,14 @@
               goldList.value = json.data.goldList || [];
               epfData.value = json.data.epfData || [];
               historyList.value = json.data.history || [];
+              alert('操作保存成功！');
             } else {
+              if (json.message) alert(json.message);
               await fetchData();
             }
-            alert('成功更新！');
           } catch (e) {
             console.error(e);
-            alert('提交失败，请重试');
+            alert('提交发生网络错误，请稍后重试');
           } finally {
             loading.value = false;
           }
