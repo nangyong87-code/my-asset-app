@@ -98,7 +98,7 @@
           </div>
         </section>
 
-        <!-- CASH & BANK -->
+        <!-- CASH -->
         <section v-if="activeTab === 'cash'" class="space-y-4">
           <div class="flex justify-between items-center bg-[#132219] p-4 rounded-2xl border border-[#1f3329]">
             <div>
@@ -111,27 +111,23 @@
             </div>
           </div>
 
-          <!-- Cash Section -->
           <div class="space-y-2">
             <div class="text-xs font-bold text-slate-300 px-1">💵 现金 (Cash)</div>
-            <div v-if="cashAccounts.filter(a => a.Type === 'Cash').length === 0" class="text-xs text-slate-500 p-3 text-center border border-dashed border-[#1f3329] rounded-xl">暂无现金户口</div>
-            <div v-for="acc in cashAccounts.filter(a => a.Type === 'Cash')" :key="acc.Account_ID" @click="openTxnHistoryModal(acc)" class="forest-card rounded-2xl p-3.5 flex justify-between items-center active:scale-98 transition cursor-pointer">
+            <div v-for="acc in cashAccounts.filter(a => a.Type === 'Cash')" :key="acc.Account_ID" @click="openTxnHistoryModal(acc)" class="forest-card rounded-2xl p-3.5 flex justify-between items-center cursor-pointer active:scale-98 transition">
               <div>
                 <div class="font-bold text-sm text-slate-100">{{ acc.Account_Nickname }}</div>
-                <div class="text-[10px] text-amber-400/80 mt-0.5">点击查看交易历史 ➔</div>
+                <div class="text-[10px] text-amber-400/80 mt-0.5">点击查看历史明细 ➔</div>
               </div>
               <div class="font-serif-num font-bold text-slate-100">RM {{ formatNumber(acc.Current_Balance) }}</div>
             </div>
           </div>
 
-          <!-- Bank Section -->
           <div class="space-y-2 pt-2">
             <div class="text-xs font-bold text-slate-300 px-1">🏦 银行存款户口</div>
-            <div v-if="cashAccounts.filter(a => a.Type === 'Bank').length === 0" class="text-xs text-slate-500 p-3 text-center border border-dashed border-[#1f3329] rounded-xl">暂无存款户口</div>
-            <div v-for="acc in cashAccounts.filter(a => a.Type === 'Bank')" :key="acc.Account_ID" @click="openTxnHistoryModal(acc)" class="forest-card rounded-2xl p-3.5 flex justify-between items-center active:scale-98 transition cursor-pointer">
+            <div v-for="acc in cashAccounts.filter(a => a.Type === 'Bank')" :key="acc.Account_ID" @click="openTxnHistoryModal(acc)" class="forest-card rounded-2xl p-3.5 flex justify-between items-center cursor-pointer active:scale-98 transition">
               <div>
                 <div class="font-bold text-sm text-slate-100">{{ acc.Bank_Name }} <span class="text-xs font-normal text-slate-400">({{ acc.Account_Nickname }})</span></div>
-                <div class="text-[10px] text-amber-400/80 mt-0.5">点击查看交易历史 ➔</div>
+                <div class="text-[10px] text-amber-400/80 mt-0.5">点击查看历史明细 ➔</div>
               </div>
               <div class="font-serif-num font-bold text-slate-100">RM {{ formatNumber(acc.Current_Balance) }}</div>
             </div>
@@ -145,7 +141,10 @@
               <div class="text-xs text-amber-400 font-medium">黄金总市值</div>
               <div class="font-serif-num text-2xl font-bold text-slate-100 mt-1">RM {{ formatNumber(totals.paperGold + totals.physicalGold) }}</div>
             </div>
-            <button @click="showAddGoldModal = true" class="btn-gold-border px-3 py-1.5 rounded-xl text-xs font-bold">± 黄金买入/卖出</button>
+            <div class="flex gap-1.5">
+              <button @click="showAddGoldModal = true" class="btn-gold-border px-2.5 py-1.5 rounded-xl text-xs font-bold">± 黄金买卖</button>
+              <button @click="showGoldTxnModal = true" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1.5 rounded-xl text-xs font-bold">📜 交易明细</button>
+            </div>
           </div>
 
           <div class="space-y-2">
@@ -166,14 +165,18 @@
               <div class="text-xs text-purple-400">公积金 & PRS 总额</div>
               <div class="font-serif-num text-2xl font-bold text-slate-100 mt-1">RM {{ formatNumber(totals.epf) }}</div>
             </div>
-            <button @click="showAddEPFModal = true" class="btn-gold-border px-3 py-1.5 rounded-xl text-xs font-bold">+ 本月供款/提取</button>
+            <div class="flex gap-1.5">
+              <button @click="showAddEPFAccModal = true" class="btn-gold-border px-2.5 py-1.5 rounded-xl text-xs font-bold">+ 新增账户</button>
+              <button @click="showAddEPFModal = true" class="bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2.5 py-1.5 rounded-xl text-xs font-bold">± 供款/提取</button>
+            </div>
           </div>
 
           <div class="space-y-2.5">
-            <div v-for="fund in epfData" :key="fund.Account_Key" class="forest-card rounded-2xl p-4 flex justify-between items-center">
+            <div v-for="fund in epfData" :key="fund.Account_Key" @click="openEPFTxnModal(fund)" class="forest-card rounded-2xl p-4 flex justify-between items-center cursor-pointer active:scale-98 transition">
               <div>
                 <span class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full font-bold">{{ fund.Category }}</span>
                 <div class="font-bold text-slate-100 text-base mt-1.5">{{ fund.Fund_Name }}</div>
+                <div class="text-[10px] text-purple-300/80 mt-0.5">点击查看明细 ➔</div>
               </div>
               <div class="font-serif-num font-bold text-slate-100 text-base">RM {{ formatNumber(fund.Current_Balance) }}</div>
             </div>
@@ -219,18 +222,148 @@
 
       <!-- MODALS -->
 
-      <!-- 1. 新增户口 Modal -->
+      <!-- Cash Txn History (含 Edit & Delete) -->
+      <div v-if="showTxnHistoryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-sm rounded-3xl p-5 space-y-4 max-h-[80vh] flex flex-col shadow-2xl">
+          <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
+            <div>
+              <h3 class="font-bold text-base text-white">{{ selectedAccount?.Type === 'Cash' ? 'Cash' : selectedAccount?.Bank_Name }}</h3>
+              <p class="text-xs text-amber-400">{{ selectedAccount?.Account_Nickname }} · RM {{ formatNumber(selectedAccount?.Current_Balance) }}</p>
+            </div>
+            <button @click="showTxnHistoryModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
+          </div>
+
+          <div class="flex-1 overflow-y-auto space-y-2 pr-1">
+            <div v-if="currentAccountTxns.length === 0" class="text-xs text-slate-500 py-8 text-center">暂无明细记录</div>
+            <div v-for="t in currentAccountTxns" :key="t.Txn_ID" class="bg-[#132219]/70 border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
+              <div>
+                <div class="font-bold" :class="t.Type.includes('Deposit') || t.Type.includes('In') ? 'text-emerald-400' : 'text-rose-400'">
+                  {{ t.Type }}
+                </div>
+                <div class="text-[10px] text-slate-400">{{ t.Date }}</div>
+                <div v-if="t.Remark" class="text-[11px] text-slate-300 italic">“{{ t.Remark }}”</div>
+              </div>
+              <div class="text-right space-y-1">
+                <div class="font-serif-num font-bold text-sm" :class="t.Type.includes('Deposit') || t.Type.includes('In') ? 'text-emerald-400' : 'text-rose-400'">
+                  RM {{ formatNumber(t.Amount) }}
+                </div>
+                <div class="flex gap-2 justify-end text-[10px]">
+                  <button @click="promptEditCashTxn(t)" class="text-amber-400 hover:underline">编辑</button>
+                  <button @click="deleteCashTxn(t)" class="text-rose-400 hover:underline">删除</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gold Txn History Modal (含 Edit & Delete & 机构名字) -->
+      <div v-if="showGoldTxnModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-sm rounded-3xl p-5 space-y-4 max-h-[80vh] flex flex-col shadow-2xl">
+          <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
+            <h3 class="font-bold text-base text-white">🪙 黄金交易明细历史</h3>
+            <button @click="showGoldTxnModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
+          </div>
+
+          <div class="flex-1 overflow-y-auto space-y-2 pr-1">
+            <div v-if="goldTxns.length === 0" class="text-xs text-slate-500 py-8 text-center">暂无黄金交易历史</div>
+            <div v-for="gt in goldTxns.slice().reverse()" :key="gt.Txn_ID" class="bg-[#132219]/70 border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
+              <div>
+                <div class="font-bold text-slate-100">{{ gt.Account_Name || '黄金账户' }} <span class="text-[10px] text-amber-400">({{ gt.Gold_Type === 'Paper' ? '纸黄金' : '实体金条' }})</span></div>
+                <div class="text-[10px] text-slate-400">{{ gt.Date }} · {{ gt.Grams }}g @ RM {{ formatNumber(gt.Price_Per_Gram) }}/g</div>
+              </div>
+              <div class="text-right space-y-1">
+                <div :class="gt.Txn_Type === 'buy' ? 'text-emerald-400' : 'text-rose-400'" class="font-serif-num font-bold text-sm">
+                  {{ gt.Txn_Type === 'buy' ? '买入' : '卖出' }} RM {{ formatNumber(gt.Grams * gt.Price_Per_Gram) }}
+                </div>
+                <div class="flex gap-2 justify-end text-[10px]">
+                  <button @click="promptEditGoldTxn(gt)" class="text-amber-400 hover:underline">编辑</button>
+                  <button @click="deleteGoldTxn(gt)" class="text-rose-400 hover:underline">删除</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 新增黄金交易 Modal -->
+      <div v-if="showAddGoldModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
+          <h3 class="font-bold text-base text-white">🪙 黄金交易 (买入 / 卖出)</h3>
+          <div><label class="block text-[11px] text-slate-400 mb-1">交易类型</label>
+            <select v-model="goldForm.txnType" class="input-dark">
+              <option value="buy">➕ 买入 (Buy)</option>
+              <option value="sell">➖ 卖出 (Sell)</option>
+            </select>
+          </div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">黄金类型</label>
+            <select v-model="goldForm.goldType" class="input-dark"><option value="Paper">纸黄金 (Paper Gold)</option><option value="Physical">实体金条 (Gold Bar)</option></select>
+          </div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">银行 / 购买机构名字</label><input type="text" v-model="goldForm.accountName" placeholder="如 Maybank Gold / Public Bank" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">克数 (Grams)</label><input type="number" v-model="goldForm.grams" placeholder="如 5" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">单价 (RM/g)</label><input type="number" v-model="goldForm.price" placeholder="如 380" class="input-dark"></div>
+          <div class="flex gap-2 pt-2">
+            <button @click="showAddGoldModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button>
+            <button @click="submitAddGold" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">提交</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EPF 新增账户 Modal -->
+      <div v-if="showAddEPFAccModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
+          <h3 class="font-bold text-base text-white">🏛️ 新增 EPF / PRS 账户</h3>
+          <div><label class="block text-[11px] text-slate-400 mb-1">类别</label>
+            <select v-model="epfAccForm.category" class="input-dark"><option value="EPF">EPF 公积金</option><option value="PRS">PRS 私人退休计划</option></select>
+          </div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">账户/基金名字</label><input type="text" v-model="epfAccForm.fundName" placeholder="如 Public Mutual PRS / EPF Account 1" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">初始余额 (RM)</label><input type="number" v-model="epfAccForm.balance" placeholder="0.00" class="input-dark"></div>
+          <div class="flex gap-2 pt-2">
+            <button @click="showAddEPFAccModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button>
+            <button @click="submitAddEPFAcc" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存账户</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EPF History Modal (含 Edit & Delete) -->
+      <div v-if="showEPFTxnModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-sm rounded-3xl p-5 space-y-4 max-h-[80vh] flex flex-col shadow-2xl">
+          <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
+            <div>
+              <h3 class="font-bold text-base text-white">{{ selectedEPFAccount?.Fund_Name }}</h3>
+              <p class="text-xs text-purple-300">当前余额: RM {{ formatNumber(selectedEPFAccount?.Current_Balance) }}</p>
+            </div>
+            <button @click="showEPFTxnModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
+          </div>
+
+          <div class="flex-1 overflow-y-auto space-y-2 pr-1">
+            <div v-if="currentEPFTxns.length === 0" class="text-xs text-slate-500 py-8 text-center">暂无供款记录</div>
+            <div v-for="et in currentEPFTxns" :key="et.Txn_ID" class="bg-[#132219]/70 border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
+              <div>
+                <div class="font-bold" :class="et.Type === 'Deposit' ? 'text-emerald-400' : 'text-rose-400'">{{ et.Type === 'Deposit' ? '➕ 供款' : '➖ 提取' }}</div>
+                <div class="text-[10px] text-slate-400">{{ et.Date }}</div>
+              </div>
+              <div class="text-right space-y-1">
+                <div class="font-serif-num font-bold text-sm" :class="et.Type === 'Deposit' ? 'text-emerald-400' : 'text-rose-400'">RM {{ formatNumber(et.Amount) }}</div>
+                <div class="flex gap-2 justify-end text-[10px]">
+                  <button @click="promptEditEPFTxn(et)" class="text-amber-400 hover:underline">编辑</button>
+                  <button @click="deleteEPFTxn(et)" class="text-rose-400 hover:underline">删除</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 其他模态框保留... -->
       <div v-if="showAddCashModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
           <h3 class="font-bold text-base text-white">➕ 新增户口</h3>
           <div><label class="block text-[11px] text-slate-400 mb-1">账户类型</label>
-            <select v-model="cashForm.type" class="input-dark">
-              <option value="Bank">银行存款 (Bank)</option>
-              <option value="Cash">现金 (Cash)</option>
-            </select>
+            <select v-model="cashForm.type" class="input-dark"><option value="Bank">银行存款 (Bank)</option><option value="Cash">现金 (Cash)</option></select>
           </div>
-          <div v-if="cashForm.type === 'Bank'"><label class="block text-[11px] text-slate-400 mb-1">机构名字</label><input type="text" v-model="cashForm.bankName" placeholder="如 Maybank / CIMB" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">户口小名 / 别名</label><input type="text" v-model="cashForm.nickname" placeholder="如 钱包现金 / 主储蓄" class="input-dark"></div>
+          <div v-if="cashForm.type === 'Bank'"><label class="block text-[11px] text-slate-400 mb-1">机构名字</label><input type="text" v-model="cashForm.bankName" placeholder="如 Maybank" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">户口小名</label><input type="text" v-model="cashForm.nickname" placeholder="如 钱包现金" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">初始余额 (RM)</label><input type="number" v-model="cashForm.balance" placeholder="0.00" class="input-dark"></div>
           <div class="flex gap-2 pt-2">
             <button @click="showAddCashModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button>
@@ -239,118 +372,36 @@
         </div>
       </div>
 
-      <!-- 2. 资金存取与转账 Modal (含 Remark) -->
       <div v-if="showCashTxnModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
           <h3 class="font-bold text-base text-white">💳 资金存取 / 账户转账</h3>
           <div><label class="block text-[11px] text-slate-400 mb-1">交易类型</label>
-            <select v-model="cashTxnForm.type" class="input-dark">
-              <option value="in">➕ 存入 / 加钱 (Deposit)</option>
-              <option value="out">➖ 支出 / 扣钱 (Withdrawal)</option>
-              <option value="transfer">🔄 账户间转账 (Transfer)</option>
-            </select>
+            <select v-model="cashTxnForm.type" class="input-dark"><option value="in">➕ 存入</option><option value="out">➖ 支出</option><option value="transfer">🔄 转账</option></select>
           </div>
-
           <div v-if="cashTxnForm.type !== 'transfer'">
             <label class="block text-[11px] text-slate-400 mb-1">选择账户</label>
-            <select v-model="cashTxnForm.accountId" class="input-dark">
-              <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Type === 'Cash' ? 'Cash' : a.Bank_Name }} - {{ a.Account_Nickname }} (RM {{ a.Current_Balance }})</option>
-            </select>
+            <select v-model="cashTxnForm.accountId" class="input-dark"><option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Type === 'Cash' ? 'Cash' : a.Bank_Name }} - {{ a.Account_Nickname }}</option></select>
           </div>
-
           <template v-else>
-            <div>
-              <label class="block text-[11px] text-slate-400 mb-1">转出账户 (From)</label>
-              <select v-model="cashTxnForm.fromAccountId" class="input-dark">
-                <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Type === 'Cash' ? 'Cash' : a.Bank_Name }} - {{ a.Account_Nickname }} (RM {{ a.Current_Balance }})</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-[11px] text-slate-400 mb-1">转入账户 (To)</label>
-              <select v-model="cashTxnForm.toAccountId" class="input-dark">
-                <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Type === 'Cash' ? 'Cash' : a.Bank_Name }} - {{ a.Account_Nickname }} (RM {{ a.Current_Balance }})</option>
-              </select>
-            </div>
+            <div><label class="block text-[11px] text-slate-400 mb-1">转出账户</label><select v-model="cashTxnForm.fromAccountId" class="input-dark"><option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name }}</option></select></div>
+            <div><label class="block text-[11px] text-slate-400 mb-1">转入账户</label><select v-model="cashTxnForm.toAccountId" class="input-dark"><option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name }}</option></select></div>
           </template>
-
           <div><label class="block text-[11px] text-slate-400 mb-1">变动金额 (RM)</label><input type="number" v-model="cashTxnForm.amount" placeholder="0.00" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">Remark (交易备注)</label><input type="text" v-model="cashTxnForm.remark" placeholder="如 提现 / 发工资 / 吃午饭" class="input-dark"></div>
-
+          <div><label class="block text-[11px] text-slate-400 mb-1">Remark (交易备注)</label><input type="text" v-model="cashTxnForm.remark" placeholder="备注" class="input-dark"></div>
           <div class="flex gap-2 pt-2">
             <button @click="showCashTxnModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button>
-            <button @click="submitCashTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">提交变动</button>
+            <button @click="submitCashTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">提交</button>
           </div>
         </div>
       </div>
 
-      <!-- 3. 查看 Transaction History Modal -->
-      <div v-if="showTxnHistoryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-sm rounded-3xl p-5 space-y-4 max-h-[80vh] flex flex-col shadow-2xl">
-          <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
-            <div>
-              <h3 class="font-bold text-base text-white">{{ selectedAccount?.Type === 'Cash' ? 'Cash' : selectedAccount?.Bank_Name }}</h3>
-              <p class="text-xs text-amber-400">{{ selectedAccount?.Account_Nickname }} · 余额: RM {{ formatNumber(selectedAccount?.Current_Balance) }}</p>
-            </div>
-            <button @click="showTxnHistoryModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
-          </div>
-
-          <div class="flex-1 overflow-y-auto space-y-2 pr-1">
-            <div v-if="currentAccountTxns.length === 0" class="text-xs text-slate-500 py-8 text-center">暂无交易历史记录</div>
-            <div v-for="t in currentAccountTxns" :key="t.Txn_ID" class="bg-[#132219]/70 border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
-              <div class="space-y-0.5">
-                <div class="flex items-center gap-1.5">
-                  <span :class="t.Type.includes('Deposit') || t.Type.includes('In') ? 'text-emerald-400' : 'text-rose-400'" class="font-bold">
-                    {{ t.Type.includes('Deposit') || t.Type.includes('In') ? '➕ ' + t.Type : '➖ ' + t.Type }}
-                  </span>
-                </div>
-                <div class="text-[10px] text-slate-400">{{ t.Date }}</div>
-                <div v-if="t.Remark" class="text-[11px] text-slate-300 italic">“{{ t.Remark }}”</div>
-              </div>
-              <div class="text-right">
-                <div :class="t.Type.includes('Deposit') || t.Type.includes('In') ? 'text-emerald-400' : 'text-rose-400'" class="font-serif-num font-bold text-sm">
-                  {{ t.Type.includes('Deposit') || t.Type.includes('In') ? '+' : '-' }} RM {{ formatNumber(t.Amount) }}
-                </div>
-                <div class="text-[10px] text-slate-500">结余: RM {{ formatNumber(t.Balance_After) }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 4. 黄金 Modal -->
-      <div v-if="showAddGoldModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
-          <h3 class="font-bold text-base text-white">🪙 黄金交易 (买入 / 卖出)</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">交易类型</label>
-            <select v-model="goldForm.txnType" class="input-dark">
-              <option value="buy">➕ 买入黄金 (Buy)</option>
-              <option value="sell">➖ 卖出 / 变现 (Sell)</option>
-            </select>
-          </div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">黄金种类</label>
-            <select v-model="goldForm.goldType" class="input-dark"><option value="Paper">纸黄金 (Paper Gold)</option><option value="Physical">实体金条 (Gold Bar)</option></select>
-          </div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">克数 (Grams)</label><input type="number" v-model="goldForm.grams" placeholder="如 5" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">单价 (RM/g)</label><input type="number" v-model="goldForm.price" placeholder="如 380" class="input-dark"></div>
-          <div class="flex gap-2 pt-2">
-            <button @click="showAddGoldModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button>
-            <button @click="submitAddGold" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">确认变动</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 5. EPF Modal -->
       <div v-if="showAddEPFModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
           <h3 class="font-bold text-base text-white">🏛️ EPF / PRS 变动</h3>
           <div><label class="block text-[11px] text-slate-400 mb-1">账户</label>
-            <select v-model="epfForm.accountKey" class="input-dark">
-              <option v-for="f in epfData" :key="f.Account_Key" :value="f.Account_Key">{{ f.Fund_Name }} ({{ f.Category }})</option>
-            </select>
+            <select v-model="epfForm.accountKey" class="input-dark"><option v-for="f in epfData" :key="f.Account_Key" :value="f.Account_Key">{{ f.Fund_Name }} ({{ f.Category }})</option></select>
           </div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">类型</label>
-            <select v-model="epfForm.type" class="input-dark"><option value="Deposit">供款 / 缴存 (+)</option><option value="Withdrawal">提取 (-)</option></select>
-          </div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">类型</label><select v-model="epfForm.type" class="input-dark"><option value="Deposit">供款 (+)</option><option value="Withdrawal">提取 (-)</option></select></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">金额 (RM)</label><input type="number" v-model="epfForm.amount" placeholder="0.00" class="input-dark"></div>
           <div class="flex gap-2 pt-2">
             <button @click="showAddEPFModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button>
@@ -359,13 +410,10 @@
         </div>
       </div>
 
-      <!-- 6. 快照 Modal -->
       <div v-if="showSnapshotModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-4">
           <h3 class="font-bold text-base text-white">📷 记录月度资产快照</h3>
-          <div class="text-xs text-slate-300 bg-[#132219] p-3 rounded-xl border border-[#1f3329]">
-            当前净值: <span class="font-bold text-amber-400 font-serif-num">RM {{ formatNumber(displayedNetWorth) }}</span>
-          </div>
+          <div class="text-xs text-slate-300 bg-[#132219] p-3 rounded-xl border border-[#1f3329]">当前净值: <span class="font-bold text-amber-400 font-serif-num">RM {{ formatNumber(displayedNetWorth) }}</span></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">快照日期</label><input type="date" v-model="snapshotForm.date" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">Remarks 备注</label><input type="text" v-model="snapshotForm.remarks" placeholder="备注" class="input-dark"></div>
           <div class="flex gap-2 pt-2">
@@ -380,7 +428,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycby9ajExX8ZAdL8PNamZRTGn5k5-6sQcxeEVXr8ABN0Qwn7LZbmZRAD6e96vnxxch9nd/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbxeow4z3gg09vzznemCsvrUfYLDdOiv_NIGmvo2X_DqYVFgpPwS7usMHvlnq8tazDA9/exec";
 
     const { createApp, ref, computed, onMounted } = Vue;
 
@@ -407,7 +455,9 @@
         const cashTxns = ref([]);
         const stockData = ref([]);
         const goldList = ref([]);
+        const goldTxns = ref([]);
         const epfData = ref([]);
+        const epfTxns = ref([]);
         const historyList = ref([]);
 
         const showAddCashModal = ref(false);
@@ -420,10 +470,17 @@
         const selectedAccount = ref(null);
 
         const showAddGoldModal = ref(false);
-        const goldForm = ref({ txnType: 'buy', goldType: 'Paper', grams: '', price: '' });
+        const showGoldTxnModal = ref(false);
+        const goldForm = ref({ txnType: 'buy', goldType: 'Paper', accountName: 'Maybank Gold', grams: '', price: '' });
+
+        const showAddEPFAccModal = ref(false);
+        const epfAccForm = ref({ category: 'EPF', fundName: '', balance: '' });
 
         const showAddEPFModal = ref(false);
         const epfForm = ref({ accountKey: '', type: 'Deposit', amount: '' });
+
+        const showEPFTxnModal = ref(false);
+        const selectedEPFAccount = ref(null);
 
         const showSnapshotModal = ref(false);
         const snapshotForm = ref({ date: '', remarks: '' });
@@ -453,9 +510,12 @@
 
         const currentAccountTxns = computed(() => {
           if (!selectedAccount.value) return [];
-          return cashTxns.value
-            .filter(t => String(t.Account_ID).trim() === String(selectedAccount.value.Account_ID).trim())
-            .reverse();
+          return cashTxns.value.filter(t => String(t.Account_ID).trim() === String(selectedAccount.value.Account_ID).trim()).reverse();
+        });
+
+        const currentEPFTxns = computed(() => {
+          if (!selectedEPFAccount.value) return [];
+          return epfTxns.value.filter(t => String(t.Account_Key).trim() === String(selectedEPFAccount.value.Account_Key).trim()).reverse();
         });
 
         const fetchData = async () => {
@@ -468,7 +528,9 @@
               cashTxns.value = json.data.cashTxns || [];
               stockData.value = json.data.stockData || [];
               goldList.value = json.data.goldList || [];
+              goldTxns.value = json.data.goldTxns || [];
               epfData.value = json.data.epfData || [];
+              epfTxns.value = json.data.epfTxns || [];
               historyList.value = json.data.history || [];
             }
           } catch (e) { console.error(e); } finally { loading.value = false; }
@@ -477,36 +539,28 @@
         const postAction = async (action, body) => {
           loading.value = true;
           try {
-            const payload = JSON.stringify({ action: action, ...body });
-            const res = await fetch(GAS_API_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: payload
-            });
+            const payload = JSON.stringify({ action, ...body });
+            const res = await fetch(GAS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: payload });
             const json = await res.json();
             if (json.status === 'success' && json.data) {
               cashAccounts.value = json.data.cashAccounts || [];
               cashTxns.value = json.data.cashTxns || [];
               stockData.value = json.data.stockData || [];
               goldList.value = json.data.goldList || [];
+              goldTxns.value = json.data.goldTxns || [];
               epfData.value = json.data.epfData || [];
+              epfTxns.value = json.data.epfTxns || [];
               historyList.value = json.data.history || [];
               alert('操作保存成功！');
             } else {
               if (json.message) alert(json.message);
               await fetchData();
             }
-          } catch (e) {
-            console.error(e);
-            alert('提交发生网络错误，请稍后重试');
-          } finally {
-            loading.value = false;
-          }
+          } catch (e) { alert('网络开小差了，请重试'); } finally { loading.value = false; }
         };
 
         const submitAddCash = async () => {
-          if (cashForm.value.type === 'Bank' && !cashForm.value.bankName) return alert('请输入机构/银行名字！');
-          if (!cashForm.value.nickname) return alert('请输入户口小名/别名！');
+          if (cashForm.value.type === 'Bank' && !cashForm.value.bankName) return alert('请输入机构名字！');
           showAddCashModal.value = false;
           await postAction('addCashAccount', cashForm.value);
         };
@@ -518,20 +572,64 @@
           cashTxnForm.value.remark = '';
         };
 
-        const openTxnHistoryModal = (acc) => {
-          selectedAccount.value = acc;
-          showTxnHistoryModal.value = true;
+        const openTxnHistoryModal = (acc) => { selectedAccount.value = acc; showTxnHistoryModal.value = true; };
+
+        const promptEditCashTxn = async (t) => {
+          const newAmt = prompt('修改变动金额:', t.Amount);
+          if (newAmt === null) return;
+          const newRemark = prompt('修改 Remark 备注:', t.Remark || '');
+          await postAction('editCashTxn', { txnId: t.Txn_ID, accountId: t.Account_ID, amount: newAmt, remark: newRemark });
+        };
+
+        const deleteCashTxn = async (t) => {
+          if (confirm('确认删除此笔明细？系统将自动重算总结余。')) {
+            await postAction('deleteCashTxn', { txnId: t.Txn_ID, accountId: t.Account_ID });
+          }
         };
 
         const submitAddGold = async () => {
-          if (!goldForm.value.grams || !goldForm.value.price) return alert('请填全克数与单价！');
+          if (!goldForm.value.grams || !goldForm.value.price) return alert('请填全克数和价格！');
           showAddGoldModal.value = false;
           await postAction('addGoldTransaction', goldForm.value);
+        };
+
+        const promptEditGoldTxn = async (gt) => {
+          const newGrams = prompt('修改克数:', gt.Grams);
+          if (newGrams === null) return;
+          const newPrice = prompt('修改单价:', gt.Price_Per_Gram);
+          const newAcc = prompt('修改购买机构名字:', gt.Account_Name);
+          await postAction('editGoldTxn', { txnId: gt.Txn_ID, grams: newGrams, price: newPrice, accountName: newAcc });
+        };
+
+        const deleteGoldTxn = async (gt) => {
+          if (confirm('确定删除此笔黄金交易？')) {
+            await postAction('deleteGoldTxn', { txnId: gt.Txn_ID });
+          }
+        };
+
+        const submitAddEPFAcc = async () => {
+          if (!epfAccForm.value.fundName) return alert('请输入基金/账户名字！');
+          showAddEPFAccModal.value = false;
+          await postAction('addEPFAccount', epfAccForm.value);
         };
 
         const submitAddEPF = async () => {
           showAddEPFModal.value = false;
           await postAction('addEPFTransaction', epfForm.value);
+        };
+
+        const openEPFTxnModal = (fund) => { selectedEPFAccount.value = fund; showEPFTxnModal.value = true; };
+
+        const promptEditEPFTxn = async (et) => {
+          const newAmt = prompt('修改变动金额:', et.Amount);
+          if (newAmt === null) return;
+          await postAction('editEPFTxn', { txnId: et.Txn_ID, accountKey: et.Account_Key, amount: newAmt });
+        };
+
+        const deleteEPFTxn = async (et) => {
+          if (confirm('确认删除此笔 EPF 变动？')) {
+            await postAction('deleteEPFTxn', { txnId: et.Txn_ID, accountKey: et.Account_Key });
+          }
         };
 
         const openSnapshotModal = () => {
@@ -555,10 +653,11 @@
 
         return {
           isLocked, pinInput, pressPin, loading, activeTab, tabs, useTP, currentTabTitle,
-          cashAccounts, cashTxns, stockData, goldList, epfData, historyList, totals, displayedNetWorth,
-          showAddCashModal, cashForm, showCashTxnModal, cashTxnForm, showTxnHistoryModal, selectedAccount, currentAccountTxns, openTxnHistoryModal,
-          showAddGoldModal, goldForm, showAddEPFModal, epfForm, showSnapshotModal, snapshotForm,
-          fetchData, submitAddCash, submitCashTxn, submitAddGold, submitAddEPF, openSnapshotModal, submitSnapshot, formatNumber
+          cashAccounts, cashTxns, stockData, goldList, goldTxns, epfData, epfTxns, historyList, totals, displayedNetWorth,
+          showAddCashModal, cashForm, showCashTxnModal, cashTxnForm, showTxnHistoryModal, selectedAccount, currentAccountTxns, openTxnHistoryModal, promptEditCashTxn, deleteCashTxn,
+          showAddGoldModal, showGoldTxnModal, goldForm, promptEditGoldTxn, deleteGoldTxn,
+          showAddEPFAccModal, epfAccForm, submitAddEPFAcc, showAddEPFModal, epfForm, showEPFTxnModal, selectedEPFAccount, currentEPFTxns, openEPFTxnModal, promptEditEPFTxn, deleteEPFTxn,
+          showSnapshotModal, snapshotForm, fetchData, submitAddCash, submitCashTxn, submitAddGold, submitAddEPF, openSnapshotModal, submitSnapshot, formatNumber
         };
       }
     }).mount('#app');
