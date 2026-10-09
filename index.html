@@ -183,7 +183,7 @@
           </div>
         </section>
 
-        <!-- STOCKS 模块 (完美还原截图 UI) -->
+        <!-- STOCKS 模块 -->
         <section v-if="activeTab === 'stocks'" class="space-y-3">
           <div class="flex justify-between items-center bg-[#132219] p-4 rounded-2xl border border-[#1f3329]">
             <div>
@@ -218,7 +218,6 @@
                   <div class="font-serif-num font-bold text-slate-100 text-lg">
                     RM {{ formatNumber(getStockMarketValMYR(s)) }}
                   </div>
-                  <!-- 未实现盈亏 -->
                   <div :class="getStockUnrealizedPL(s) >= 0 ? 'text-emerald-400' : 'text-rose-400'" class="text-[11px] font-bold">
                     {{ getStockUnrealizedPL(s) >= 0 ? '+' : '' }}RM {{ formatNumber(getStockUnrealizedPL(s)) }}
                     ({{ getStockUnrealizedPLPct(s) }}%)
@@ -254,7 +253,7 @@
         </button>
       </footer>
 
-      <!-- STOCKS DETAIL MODAL (还原截图 3 完美总结与明细) -->
+      <!-- STOCKS DETAIL MODAL -->
       <div v-if="showStockDetailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[90vh] flex flex-col shadow-2xl overflow-y-auto">
           
@@ -447,7 +446,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbzPvW8I9VHV0ExGHtEeD69aJr_hSTTwiFOKMy8hmvY_RlhZ2IdO6xatNf1WU8Tk7Ffz/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbwfMaFx3DjkTEw2EeZBeqPdgXfkaxn9T4pYE4n9fdVsZ5ofBUH_2koaoLbY3rFQnH5i/exec";
 
     const { createApp, ref, computed, onMounted } = Vue;
 
@@ -669,6 +668,11 @@
 
         const submitAddStockTxn = async () => {
           if (!stockTxnForm.value.ticker || !stockTxnForm.value.shares) return alert('请填全代号与股数！');
+          
+          // 确保必须传 market & currency 参数
+          if (!stockTxnForm.value.market) stockTxnForm.value.market = '大马股';
+          if (!stockTxnForm.value.currency) stockTxnForm.value.currency = 'MYR';
+
           showAddStockTxnModal.value = false;
           await postAction('addStockTxn', stockTxnForm.value);
         };
