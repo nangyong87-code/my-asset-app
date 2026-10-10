@@ -69,6 +69,14 @@
               <span class="font-serif-num text-4xl text-slate-100">{{ formatNumber(displayedNetWorth) }}</span>
             </div>
 
+            <!-- 月度增幅显示 -->
+            <div v-if="monthlyDiff" class="text-xs flex items-center gap-2 bg-[#0d1711] p-2.5 rounded-xl border border-[#1f3329]">
+              <span class="text-slate-400">相比上月:</span>
+              <span class="font-serif-num font-bold" :class="monthlyDiff.amount >= 0 ? 'text-emerald-400' : 'text-rose-400'">
+                {{ monthlyDiff.amount >= 0 ? '+' : '' }}RM {{ formatNumber(monthlyDiff.amount) }} ({{ monthlyDiff.pct >= 0 ? '+' : '' }}{{ monthlyDiff.pct }}%)
+              </span>
+            </div>
+
             <div class="grid grid-cols-2 gap-2 pt-1">
               <button @click="useTP = false" :class="!useTP ? 'bg-[#1d3326] text-amber-300 border-[#2e4e3b]' : 'bg-[#132219]/60 text-slate-400 border-[#1f3329]'" class="py-2 rounded-xl text-xs font-bold border">按市值</button>
               <button @click="useTP = true" :class="useTP ? 'bg-[#1d3326] text-amber-300 border-[#2e4e3b]' : 'bg-[#132219]/60 text-slate-400 border-[#1f3329]'" class="py-2 rounded-xl text-xs font-bold border">按目标价 TP</button>
@@ -82,15 +90,15 @@
               <div><span class="text-purple-400">● EPF/PRS</span><div class="font-serif-num font-bold">RM {{ formatNumber(totals.epf) }}</div></div>
             </div>
 
-            <button @click="openSnapshotModal" class="w-full btn-gold-border font-bold py-3 rounded-2xl text-xs flex items-center justify-center gap-2"><i class="fa-solid fa-camera"></i> 记录本月净值 (Snapshot)</button>
+            <button @click="openSnapshotModal" class="w-full btn-gold-border font-bold py-3 rounded-2xl text-xs flex items-center justify-center gap-2"><i class="fa-solid fa-camera"></i> 手动记录快照</button>
           </div>
 
           <div class="space-y-2">
-            <div class="text-xs text-slate-400 font-bold px-1">📜 历史快照列表</div>
-            <div v-for="h in historyList.slice().reverse()" :key="h.Record_Date" class="forest-card rounded-2xl p-3.5 flex justify-between items-center text-xs">
+            <div class="text-xs text-slate-400 font-bold px-1">📜 历史结账与快照列表 (点击查看分类详情)</div>
+            <div v-for="h in historyList.slice().reverse()" :key="h.Record_Date" @click="openHistoryDetail(h)" class="forest-card rounded-2xl p-3.5 flex justify-between items-center cursor-pointer active:scale-98 transition text-xs">
               <div>
-                <div class="font-bold text-slate-200 font-mono">{{ h.Record_Date }}</div>
-                <div class="text-[10px] text-slate-400">{{ h.Remarks || '月度快照' }}</div>
+                <div class="font-bold text-slate-200 font-mono">{{ cleanDate(h.Record_Date) }}</div>
+                <div class="text-[10px] text-amber-400/80 mt-0.5">{{ h.Remarks || '月度结账' }} ➔ 点击看分类详情</div>
               </div>
               <div class="font-serif-num font-bold text-slate-100 text-sm">RM {{ formatNumber(h.Total_Net_Worth) }}</div>
             </div>
@@ -133,7 +141,7 @@
           </div>
         </section>
 
-        <!-- GOLD (完美修复黄金买卖与明细) -->
+        <!-- GOLD (黄金页面：市值、盈亏、修改现价) -->
         <section v-if="activeTab === 'gold'" class="space-y-4">
           <div class="flex justify-between items-center bg-[#132219] p-4 rounded-2xl border border-[#1f3329]">
             <div>
@@ -142,17 +150,29 @@
             </div>
             <div class="flex gap-1.5">
               <button @click="showAddGoldModal = true" class="btn-gold-border px-2.5 py-1.5 rounded-xl text-xs font-bold">± 黄金买卖</button>
-              <button @click="showGoldTxnModal = true" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1.5 rounded-xl text-xs font-bold">📜 交易明细</button>
+              <button @click="showGoldTxnModal = true" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1.5 rounded-xl text-xs font-bold">📜 明细</button>
             </div>
           </div>
 
-          <div class="space-y-2">
-            <div v-for="g in goldList" :key="g.Type" class="forest-card rounded-2xl p-4 flex justify-between items-center">
-              <div>
-                <div class="font-bold text-sm text-slate-100">{{ g.Type === 'Paper' ? '🪙 纸黄金 (Paper Gold)' : '🥇 实体金条 (Gold Bar)' }}</div>
-                <div class="text-[10px] text-slate-400 mt-0.5">{{ g.Grams }} 克 · 均价 RM {{ formatNumber(g.Avg_Price) }}/g</div>
+          <div class="space-y-2.5">
+            <div v-for="g in goldList" :key="g.Type" class="forest-card rounded-2xl p-4 space-y-3">
+              <div class="flex justify-between items-center">
+                <div>
+                  <div class="font-bold text-sm text-slate-100">{{ g.Type === 'Paper' ? '🪙 纸黄金 (Paper Gold)' : '🥇 实体金条 (Gold Bar)' }}</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5">{{ g.Grams }} 克 · 买入均价 RM {{ formatNumber(g.Avg_Price) }}/g</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-serif-num font-bold text-amber-300 text-base">RM {{ formatNumber(g.Market_Value) }}</div>
+                  <div :class="getGoldPL(g) >= 0 ? 'text-emerald-400' : 'text-rose-400'" class="text-[11px] font-bold">
+                    {{ getGoldPL(g) >= 0 ? '+' : '' }}RM {{ formatNumber(getGoldPL(g)) }}
+                  </div>
+                </div>
               </div>
-              <div class="font-serif-num font-bold text-amber-300">RM {{ formatNumber(g.Market_Value) }}</div>
+
+              <div class="flex justify-between items-center pt-2 border-t border-[#1a2e22] text-xs">
+                <span class="text-slate-400">当前市价: RM {{ formatNumber(g.Market_Price_Per_Gram) }}/g</span>
+                <button @click="promptUpdateGoldPrice(g)" class="btn-gold-border px-2.5 py-1 rounded-xl text-[11px] font-bold">修改当前市价 ✏️</button>
+              </div>
             </div>
           </div>
         </section>
@@ -185,7 +205,6 @@
         <!-- STOCKS 模块 -->
         <section v-if="activeTab === 'stocks'" class="space-y-3">
           
-          <!-- 股票摘要面板 (Summary & Dividend Summary) -->
           <div class="forest-card rounded-3xl p-4 space-y-3">
             <div class="flex justify-between items-center">
               <div>
@@ -216,20 +235,22 @@
             </div>
           </div>
 
-          <!-- 排序栏与汇率 -->
+          <!-- 4种排序选项 -->
           <div class="flex justify-between items-center px-1 text-xs">
             <div class="flex items-center gap-2">
               <span class="text-slate-400">排序:</span>
               <select v-model="stockSortMode" class="bg-[#132219] border border-[#2e4e3b] text-amber-300 rounded-lg px-2 py-1 text-xs outline-none">
                 <option value="default">默认</option>
                 <option value="valueDesc">市值由高到低</option>
+                <option value="valueAsc">市值由低到高</option>
                 <option value="plDesc">赚幅由高至低</option>
+                <option value="plAsc">赚幅由低到高</option>
               </select>
             </div>
             <span class="text-[10px] text-slate-500">1 USD = {{ usdFxRate }} MYR</span>
           </div>
 
-          <!-- 股票卡片列表 -->
+          <!-- 股票列表 -->
           <div class="space-y-2.5">
             <div v-if="sortedStockData.length === 0" class="text-xs text-slate-500 p-8 text-center border border-dashed border-[#1f3329] rounded-2xl">
               暂无股票卡片，点击右上角“+ 新增”创建
@@ -287,15 +308,51 @@
         </button>
       </footer>
 
+      <!-- 历史快照详情 Modal -->
+      <div v-if="showHistoryDetailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-sm rounded-3xl p-5 space-y-4">
+          <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
+            <div>
+              <h3 class="font-extrabold text-base text-white">📊 资产结账详情</h3>
+              <p class="text-xs text-amber-400 font-mono">{{ cleanDate(selectedHistory?.Record_Date) }}</p>
+            </div>
+            <button @click="showHistoryDetailModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
+          </div>
+          <div class="text-center bg-[#132219] p-3 rounded-2xl border border-[#1f3329]">
+            <div class="text-[10px] text-slate-400">净资产总额</div>
+            <div class="font-serif-num text-2xl font-bold text-white mt-0.5">RM {{ formatNumber(selectedHistory?.Total_Net_Worth) }}</div>
+            <div class="text-[10px] text-slate-400 mt-1">{{ selectedHistory?.Remarks || '' }}</div>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]">
+              <span class="text-blue-400">● 现金与存款</span>
+              <span class="font-serif-num font-bold">RM {{ formatNumber(selectedHistory?.Cash_Val) }}</span>
+            </div>
+            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]">
+              <span class="text-amber-400">● 黄金市值</span>
+              <span class="font-serif-num font-bold">RM {{ formatNumber(selectedHistory?.Gold_Val) }}</span>
+            </div>
+            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]">
+              <span class="text-rose-400">● 股票市值</span>
+              <span class="font-serif-num font-bold">RM {{ formatNumber(selectedHistory?.Stock_Val) }}</span>
+            </div>
+            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]">
+              <span class="text-purple-400">● 公积金 / PRS</span>
+              <span class="font-serif-num font-bold">RM {{ formatNumber(selectedHistory?.EPF_Val) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 黄金买卖 Modal -->
       <div v-if="showAddGoldModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
           <h3 class="font-bold text-base text-white">🪙 黄金买卖记录</h3>
           <div><label class="block text-[11px] text-slate-400 mb-1">买/卖</label><select v-model="goldForm.txnType" class="input-dark"><option value="buy">➕ 买入 (Buy)</option><option value="sell">➖ 卖出 (Sell)</option></select></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">黄金类型</label><select v-model="goldForm.goldType" class="input-dark"><option value="Paper">纸黄金 (Paper Gold)</option><option value="Physical">实体金条 (Gold Bar)</option></select></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">账户/机构名称</label><input type="text" v-model="goldForm.accountName" placeholder="如 Maybank Gold" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="goldForm.date" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">重量 (克 Grams)</label><input type="number" step="0.01" v-model="goldForm.grams" placeholder="0.00" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">单价 (RM / 克)</label><input type="number" step="0.01" v-model="goldForm.price" placeholder="0.00" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">买入单价 (RM / 克)</label><input type="number" step="0.01" v-model="goldForm.price" placeholder="0.00" class="input-dark"></div>
           <div class="flex gap-2 pt-2"><button @click="showAddGoldModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitAddGold" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存</button></div>
         </div>
       </div>
@@ -307,12 +364,11 @@
             <h3 class="font-extrabold text-base text-white">📜 黄金买卖交易明细</h3>
             <button @click="showGoldTxnModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
           </div>
-
           <div class="space-y-2 overflow-y-auto flex-1">
             <div v-if="goldTxns.length === 0" class="text-xs text-slate-500 py-6 text-center">暂无黄金交易历史</div>
             <div v-for="t in goldTxns.slice().reverse()" :key="t.Txn_ID" class="bg-[#132219] border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
               <div>
-                <div class="font-bold text-slate-200">{{ t.Txn_Type === 'buy' ? '➕ 买入' : '➖ 卖出' }} · {{ t.Date }}</div>
+                <div class="font-bold text-slate-200">{{ t.Txn_Type === 'buy' ? '➕ 买入' : '➖ 卖出' }} · {{ cleanDate(t.Date) }}</div>
                 <div class="text-[10px] text-slate-400 mt-0.5">{{ t.Gold_Type === 'Paper' ? '纸黄金' : '实体金条' }} · {{ t.Grams }} 克 @ RM {{ formatNumber(t.Price) }}/g</div>
               </div>
               <div class="text-right">
@@ -333,11 +389,10 @@
           <div><label class="block text-[11px] text-slate-400 mb-1">市场</label>
             <select v-model="newStockForm.market" class="input-dark">
               <option value="大马股">🇲🇾 大马股 (自动加 .kl)</option>
-              <option value="美股">🇺🇸 美股 (USD)</option>
+              <option value="美股">🇺🇸 美股 (USD - 目标价输入美金)</option>
               <option value="港股">🇭🇰 港股 (HKD)</option>
             </select>
           </div>
-          
           <div class="flex gap-2 pt-2">
             <button @click="showNewStockModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button>
             <button @click="submitNewStock" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">确认建卡</button>
@@ -345,7 +400,7 @@
         </div>
       </div>
 
-      <!-- 2. 股票详情 Modal (双币 + TP + 严谨校验) -->
+      <!-- 2. 股票详情 Modal (智能多币种显示 + 美股TP输入美金) -->
       <div v-if="showStockDetailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[90vh] flex flex-col shadow-2xl overflow-y-auto">
           
@@ -357,6 +412,7 @@
             <button @click="showStockDetailModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
           </div>
 
+          <!-- 智能货币大/小字展示 (美股/港股原币大、马币小; 马股纯马币) -->
           <div class="grid grid-cols-3 gap-2 bg-[#132219] p-3 rounded-2xl border border-[#1f3329] text-center text-xs">
             <div>
               <div class="text-[10px] text-slate-400">持股</div>
@@ -364,15 +420,31 @@
             </div>
             <div>
               <div class="text-[10px] text-slate-400">平均成本</div>
-              <div class="font-serif-num font-bold text-slate-100 text-sm mt-0.5">RM {{ formatNumber((parseFloat(selectedStock?.Avg_Cost_Per_Share) || 0) * (selectedStock?.Currency === 'USD' ? usdFxRate : 1)) }}</div>
-              <div v-if="selectedStock?.Currency !== 'MYR'" class="text-[10px] text-amber-400/80 font-mono">({{ selectedStock?.Currency === 'USD' ? '$' : 'HKD' }} {{ formatNumber(selectedStock?.Avg_Cost_Per_Share) }})</div>
+              <template v-if="selectedStock?.Currency === 'USD'">
+                <div class="font-serif-num font-bold text-white text-sm mt-0.5">$ {{ formatNumber(selectedStock?.Avg_Cost_Per_Share) }}</div>
+                <div class="text-[10px] text-slate-400 font-mono">(RM {{ formatNumber((parseFloat(selectedStock?.Avg_Cost_Per_Share)||0) * usdFxRate) }})</div>
+              </template>
+              <template v-else-if="selectedStock?.Currency === 'HKD'">
+                <div class="font-serif-num font-bold text-white text-sm mt-0.5">HKD {{ formatNumber(selectedStock?.Avg_Cost_Per_Share) }}</div>
+                <div class="text-[10px] text-slate-400 font-mono">(RM {{ formatNumber(selectedStock?.Avg_Cost_Per_Share) }})</div>
+              </template>
+              <template v-else>
+                <div class="font-serif-num font-bold text-white text-sm mt-0.5">RM {{ formatNumber(selectedStock?.Avg_Cost_Per_Share) }}</div>
+              </template>
             </div>
             <div>
               <div class="text-[10px] text-slate-400">现价 (点击修改)</div>
-              <div @click="promptUpdatePrice(selectedStock)" class="font-serif-num font-bold text-amber-300 text-sm mt-0.5 cursor-pointer underline">
-                RM {{ formatNumber((parseFloat(selectedStock?.Current_Price) || 0) * (selectedStock?.Currency === 'USD' ? usdFxRate : 1)) }} ✏️
-              </div>
-              <div class="text-[10px] text-amber-400/80 font-mono">({{ selectedStock?.Currency === 'USD' ? '$' : 'RM' }}{{ formatNumber(selectedStock?.Current_Price) }})</div>
+              <template v-if="selectedStock?.Currency === 'USD'">
+                <div @click="promptUpdatePrice(selectedStock)" class="font-serif-num font-bold text-amber-300 text-sm mt-0.5 cursor-pointer underline">$ {{ formatNumber(selectedStock?.Current_Price) }} ✏️</div>
+                <div class="text-[10px] text-slate-400 font-mono">(RM {{ formatNumber((parseFloat(selectedStock?.Current_Price)||0) * usdFxRate) }})</div>
+              </template>
+              <template v-else-if="selectedStock?.Currency === 'HKD'">
+                <div @click="promptUpdatePrice(selectedStock)" class="font-serif-num font-bold text-amber-300 text-sm mt-0.5 cursor-pointer underline">HKD {{ formatNumber(selectedStock?.Current_Price) }} ✏️</div>
+                <div class="text-[10px] text-slate-400 font-mono">(RM {{ formatNumber(selectedStock?.Current_Price) }})</div>
+              </template>
+              <template v-else>
+                <div @click="promptUpdatePrice(selectedStock)" class="font-serif-num font-bold text-amber-300 text-sm mt-0.5 cursor-pointer underline">RM {{ formatNumber(selectedStock?.Current_Price) }} ✏️</div>
+              </template>
             </div>
             
             <div class="pt-2 border-t border-[#1f3329]">
@@ -395,10 +467,17 @@
             </div>
           </div>
 
+          <!-- 目标价 TP (美股输入美金) -->
           <div class="bg-[#132219] p-3 rounded-2xl border border-[#1f3329] flex justify-between items-center text-xs">
             <div>
               <div class="text-[10px] text-amber-400 font-medium">🎯 目标价 TP (Target Price)</div>
-              <div class="font-serif-num font-bold text-white text-sm mt-0.5">RM {{ formatNumber((parseFloat(selectedStock?.Target_Price_TP) || selectedStock?.Current_Price || 0) * (selectedStock?.Currency === 'USD' ? usdFxRate : 1)) }}</div>
+              <template v-if="selectedStock?.Currency === 'USD'">
+                <div class="font-serif-num font-bold text-white text-sm mt-0.5">$ {{ formatNumber(selectedStock?.Target_Price_TP || selectedStock?.Current_Price) }}</div>
+                <div class="text-[10px] text-slate-400">(RM {{ formatNumber((parseFloat(selectedStock?.Target_Price_TP || selectedStock?.Current_Price)||0) * usdFxRate) }})</div>
+              </template>
+              <template v-else>
+                <div class="font-serif-num font-bold text-white text-sm mt-0.5">RM {{ formatNumber(selectedStock?.Target_Price_TP || selectedStock?.Current_Price) }}</div>
+              </template>
             </div>
             <button @click="promptUpdateTP(selectedStock)" class="btn-gold-border px-2.5 py-1.5 rounded-xl text-xs font-bold">修改 TP ✏️</button>
           </div>
@@ -417,7 +496,7 @@
             <div v-for="t in selectedStockTxns" :key="t.Txn_ID" class="bg-[#132219]/70 border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
               <div>
                 <div class="font-bold flex items-center gap-1.5" :class="t.Txn_Type === 'Buy' ? 'text-emerald-400' : 'text-rose-400'">
-                  <span>{{ t.Txn_Type === 'Buy' ? '买入' : '卖出' }} · {{ t.Date }}</span>
+                  <span>{{ t.Txn_Type === 'Buy' ? '买入' : '卖出' }} · {{ cleanDate(t.Date) }}</span>
                 </div>
                 <div class="text-[10px] text-slate-400 mt-0.5">
                   {{ t.Shares }} 股 @ {{ selectedStock?.Currency === 'USD' ? '$' : 'RM' }}{{ formatNumber(t.Price) }} · 水钱 RM {{ formatNumber(t.Txn_Fees) }} · <span class="text-amber-400 font-bold">{{ t.Broker }}</span>
@@ -427,7 +506,7 @@
             </div>
           </div>
 
-          <!-- 股息记录区 -->
+          <!-- 股息记录区 (含公布日期、Ex-Date、派息日、Units、Total自动算) -->
           <div class="space-y-2 pt-2 border-t border-[#1f3329]">
             <div class="flex justify-between items-center">
               <span class="text-xs font-bold text-slate-300">💰 股息记录</span>
@@ -437,8 +516,8 @@
             <div v-if="selectedStockDivs.length === 0" class="text-xs text-slate-500 py-4 text-center">暂无股息记录</div>
             <div v-for="d in selectedStockDivs" :key="d.Div_ID" class="bg-[#132219]/70 border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
               <div>
-                <div class="font-bold text-slate-200">除权日 {{ d.Ex_Date }}</div>
-                <div class="text-[10px] text-slate-400 mt-0.5">每股派发: RM {{ formatNumber(d.Per_Share_Amount) }}</div>
+                <div class="font-bold text-slate-200">Ex-Date: {{ cleanDate(d.Ex_Date) }} (派息: {{ cleanDate(d.Pay_Date) }})</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">{{ d.Units }} 股 × RM {{ formatNumber(d.Per_Share_Amount) }}</div>
               </div>
               <div class="text-right">
                 <div class="font-serif-num font-bold text-amber-300 text-sm">RM {{ formatNumber(d.Total_Dividend_MYR) }}</div>
@@ -466,7 +545,7 @@
 
           <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="stockTxnForm.date" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">股数 (Shares) {{ stockTxnForm.txnType === 'Sell' ? '(当前最大可卖: ' + (selectedStock?.Total_Shares || 0) + ' 股)' : '' }}</label><input type="number" v-model="stockTxnForm.shares" placeholder="如 1000" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">单价 (Price)</label><input type="number" step="0.001" v-model="stockTxnForm.price" placeholder="0.00" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">单价 (Price {{ selectedStock?.Currency }})</label><input type="number" step="0.001" v-model="stockTxnForm.price" placeholder="0.00" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">手续费/水钱 (Fees)</label><input type="number" step="0.01" v-model="stockTxnForm.fees" placeholder="0.00" class="input-dark"></div>
 
           <div>
@@ -484,13 +563,21 @@
         </div>
       </div>
 
-      <!-- 4. 记录股息 Modal -->
+      <!-- 4. 记录股息 Modal (4个东西: 公布日期、Ex-date、派息日、Units) -->
       <div v-if="showAddDivModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
+        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3 max-h-[85vh] overflow-y-auto">
           <h3 class="font-bold text-base text-white">💰 记录股息 - {{ divForm.ticker }}</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">除权日 / 派息日</label><input type="date" v-model="divForm.exDate" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">每股派息额 (Per Share)</label><input type="number" step="0.001" v-model="divForm.perShareAmount" placeholder="0.00" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">净收到总股息 (RM)</label><input type="number" step="0.01" v-model="divForm.totalDividend" placeholder="0.00" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">公布日期 (Announce Date)</label><input type="date" v-model="divForm.announceDate" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">除权日 (Ex-Date)</label><input type="date" v-model="divForm.exDate" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">派息日 (Pay Date)</label><input type="date" v-model="divForm.payDate" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">持股数 (Units)</label><input type="number" v-model="divForm.units" placeholder="如 1000" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">每股派息额 (Per Share RM)</label><input type="number" step="0.001" v-model="divForm.perShareAmount" placeholder="0.00" class="input-dark"></div>
+          
+          <div class="bg-[#132219] p-2.5 rounded-xl border border-[#1f3329] text-xs">
+            <span class="text-slate-400">自动计算总股息:</span> 
+            <span class="font-serif-num font-bold text-amber-300 ml-1">RM {{ formatNumber((parseFloat(divForm.units)||0) * (parseFloat(divForm.perShareAmount)||0)) }}</span>
+          </div>
+
           <div>
             <label class="block text-[11px] text-slate-400 mb-1">存入现金户口</label>
             <select v-model="divForm.linkedAccountId" class="input-dark">
@@ -521,7 +608,7 @@
             <div v-if="accountTxns.length === 0" class="text-xs text-slate-500 py-6 text-center">暂无历史明细</div>
             <div v-for="t in accountTxns" :key="t.Txn_ID" class="bg-[#132219] border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
               <div>
-                <div class="font-bold text-slate-200">{{ t.Type }} · {{ t.Date }}</div>
+                <div class="font-bold text-slate-200">{{ t.Type }} · {{ cleanDate(t.Date) }}</div>
                 <div class="text-[10px] text-slate-400 mt-0.5">{{ t.Remark || '无备注' }}</div>
               </div>
               <div class="text-right">
@@ -551,7 +638,7 @@
             <div v-if="epfAccountTxns.length === 0" class="text-xs text-slate-500 py-6 text-center">暂无历史明细</div>
             <div v-for="t in epfAccountTxns" :key="t.Txn_ID" class="bg-[#132219] border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
               <div>
-                <div class="font-bold text-slate-200">{{ t.Type === 'Deposit' ? '➕ 供款' : '➖ 提取' }} · {{ t.Date }}</div>
+                <div class="font-bold text-slate-200">{{ t.Type === 'Deposit' ? '➕ 供款' : '➖ 提取' }} · {{ cleanDate(t.Date) }}</div>
               </div>
               <div class="text-right">
                 <div class="font-serif-num font-bold text-sm" :class="t.Type === 'Deposit' ? 'text-emerald-400' : 'text-rose-400'">
@@ -613,7 +700,7 @@
 
       <div v-if="showSnapshotModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-4">
-          <h3 class="font-bold text-base text-white">📷 记录月度资产快照</h3>
+          <h3 class="font-bold text-base text-white">📷 手动记录快照</h3>
           <div class="text-xs text-slate-300 bg-[#132219] p-3 rounded-xl border border-[#1f3329]">当前净值: <span class="font-bold text-amber-400 font-serif-num">RM {{ formatNumber(displayedNetWorth) }}</span></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">快照日期</label><input type="date" v-model="snapshotForm.date" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">Remarks 备注</label><input type="text" v-model="snapshotForm.remarks" placeholder="备注" class="input-dark"></div>
@@ -626,7 +713,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbzA3CAhPJxK7eutjvuJQKk0sEUZAriELbBatFpOv9LDnaHjWbX0natGQgMWT_Ycf9Xc/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbwjRClclRfQcRKI8htYt_Iz04o-i-BYO58shrEmAQ0r8_nsJnnzUScaMRFksesDH3aI/exec";
 
     const { createApp, ref, computed, onMounted } = Vue;
 
@@ -680,7 +767,7 @@
         // GOLD
         const showAddGoldModal = ref(false);
         const showGoldTxnModal = ref(false);
-        const goldForm = ref({ txnType: 'buy', goldType: 'Paper', accountName: 'Maybank Gold', grams: '', price: '' });
+        const goldForm = ref({ txnType: 'buy', goldType: 'Paper', accountName: 'Maybank Gold', date: new Date().toISOString().split('T')[0], grams: '', price: '' });
 
         const submitAddGold = async () => {
           if (!goldForm.value.grams || !goldForm.value.price) return alert('请填全重量与单价！');
@@ -692,6 +779,18 @@
           if (confirm('确定删除此笔黄金交易记录？')) {
             await postAction('deleteGoldTxn', { txnId: t.Txn_ID });
           }
+        };
+
+        const promptUpdateGoldPrice = async (g) => {
+          const newPrice = prompt(`更新 [${g.Type === 'Paper' ? '纸黄金' : '实体金条'}] 当前每克市价 (RM/克):`, g.Market_Price_Per_Gram || 300);
+          if (newPrice === null) return;
+          await postAction('updateGoldMarketPrice', { goldType: g.Type, marketPrice: newPrice });
+        };
+
+        const getGoldPL = (g) => {
+          const costVal = (parseFloat(g.Grams) || 0) * (parseFloat(g.Avg_Price) || 0);
+          const marketVal = parseFloat(g.Market_Value) || 0;
+          return marketVal - costVal;
         };
 
         // EPF
@@ -717,10 +816,18 @@
         const stockTxnForm = ref({ txnType: 'Buy', ticker: '', broker: 'moomoo', date: '', shares: '', price: '', fees: '', linkedAccountId: '' });
 
         const showAddDivModal = ref(false);
-        const divForm = ref({ ticker: '', exDate: '', perShareAmount: '', totalDividend: '', linkedAccountId: '' });
+        const divForm = ref({ ticker: '', announceDate: '', exDate: '', payDate: '', units: '', perShareAmount: '', linkedAccountId: '' });
 
         const showSnapshotModal = ref(false);
         const snapshotForm = ref({ date: '', remarks: '' });
+
+        // 历史快照详情弹窗
+        const showHistoryDetailModal = ref(false);
+        const selectedHistory = ref(null);
+        const openHistoryDetail = (h) => {
+          selectedHistory.value = h;
+          showHistoryDetailModal.value = true;
+        };
 
         const pressPin = (num) => {
           if (pinInput.value.length < 6) {
@@ -751,6 +858,17 @@
 
         const displayedNetWorth = computed(() => totals.value.cash + totals.value.bank + totals.value.gold + (useTP.value ? totals.value.stockTP : totals.value.stockMarket) + totals.value.epf);
 
+        // 计算本月比上月增幅
+        const monthlyDiff = computed(() => {
+          if (historyList.value.length < 2) return null;
+          const sorted = [...historyList.value].sort((a, b) => new Date(a.Record_Date) - new Date(b.Record_Date));
+          const latest = sorted[sorted.length - 1];
+          const prev = sorted[sorted.length - 2];
+          const diff = parseFloat(latest.Total_Net_Worth) - parseFloat(prev.Total_Net_Worth);
+          const pct = prev.Total_Net_Worth > 0 ? ((diff / parseFloat(prev.Total_Net_Worth)) * 100).toFixed(2) : '0.00';
+          return { amount: diff, pct: pct };
+        });
+
         const totalUnrealizedPL = computed(() => {
           let total = 0;
           stockData.value.forEach(s => { total += getStockUnrealizedPL(s); });
@@ -767,8 +885,12 @@
           let list = [...stockData.value];
           if (stockSortMode.value === 'valueDesc') {
             list.sort((a, b) => getStockMarketValMYR(b) - getStockMarketValMYR(a));
+          } else if (stockSortMode.value === 'valueAsc') {
+            list.sort((a, b) => getStockMarketValMYR(a) - getStockMarketValMYR(b));
           } else if (stockSortMode.value === 'plDesc') {
             list.sort((a, b) => getStockUnrealizedPL(b) - getStockUnrealizedPL(a));
+          } else if (stockSortMode.value === 'plAsc') {
+            list.sort((a, b) => getStockUnrealizedPL(a) - getStockUnrealizedPL(b));
           }
           return list;
         });
@@ -819,6 +941,12 @@
             }
           });
           return total * fx;
+        };
+
+        // 清理 ISO 日期中的 T16:00:00.000Z
+        const cleanDate = (dateStr) => {
+          if (!dateStr) return '';
+          return String(dateStr).split('T')[0];
         };
 
         const fetchData = async () => {
@@ -948,12 +1076,20 @@
 
         const openAddDivForStock = () => {
           const today = new Date().toISOString().split('T')[0];
-          divForm.value = { ticker: selectedStock.value.Ticker, exDate: today, perShareAmount: '', totalDividend: '', linkedAccountId: '' };
+          divForm.value = { 
+            ticker: selectedStock.value.Ticker, 
+            announceDate: today, 
+            exDate: today, 
+            payDate: today, 
+            units: selectedStock.value.Total_Shares || '', 
+            perShareAmount: '', 
+            linkedAccountId: '' 
+          };
           showAddDivModal.value = true;
         };
 
         const submitAddDiv = async () => {
-          if (!divForm.value.totalDividend) return alert('请输入派发总金额！');
+          if (!divForm.value.perShareAmount || !divForm.value.units) return alert('请填全持股数与每股派息额！');
           showAddDivModal.value = false;
           await postAction('addStockDividend', divForm.value);
         };
@@ -1002,14 +1138,22 @@
 
         const openSnapshotModal = () => {
           const now = new Date();
-          snapshotForm.value = { date: new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0], remarks: '' };
+          snapshotForm.value = { date: new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0], remarks: '手动快照' };
           showSnapshotModal.value = true;
         };
 
         const submitSnapshot = async () => {
           if (!snapshotForm.value.remarks) return alert('请填写 Remarks！');
           showSnapshotModal.value = false;
-          await postAction('logSnapshot', { totalNetWorth: displayedNetWorth.value, recordDate: snapshotForm.value.date, remarks: snapshotForm.value.remarks });
+          await postAction('logSnapshot', { 
+            totalNetWorth: displayedNetWorth.value, 
+            cashVal: totals.value.cash + totals.value.bank, 
+            goldVal: totals.value.gold, 
+            stockVal: totals.value.stockMarket, 
+            epfVal: totals.value.epf, 
+            recordDate: snapshotForm.value.date, 
+            remarks: snapshotForm.value.remarks 
+          });
         };
 
         const formatNumber = (val) => {
@@ -1022,9 +1166,10 @@
         return {
           isLocked, pinInput, pressPin, loading, updatingPrices, activeTab, tabs, useTP, usdFxRate, stockSortMode, currentTabTitle,
           cashAccounts, cashTxns, goldList, goldTxns, stockData, sortedStockData, stockTxns, stockDividends, epfData, epfTxns, historyList, totals, displayedNetWorth,
-          totalUnrealizedPL, totalDividendsSum, autoFetchAllPrices,
+          monthlyDiff, totalUnrealizedPL, totalDividendsSum, autoFetchAllPrices, cleanDate,
+          showHistoryDetailModal, selectedHistory, openHistoryDetail,
           showAddCashModal, cashForm, showCashTxnModal, cashTxnForm, showTxnHistoryModal, selectedAccount, accountTxns, openTxnHistoryModal, deleteCashTxn,
-          showAddGoldModal, showGoldTxnModal, goldForm, submitAddGold, deleteGoldTxn,
+          showAddGoldModal, showGoldTxnModal, goldForm, submitAddGold, deleteGoldTxn, promptUpdateGoldPrice, getGoldPL,
           showAddEPFAccModal, epfAccForm, showAddEPFModal, epfForm, showEPFTxnModal, selectedEPFAccount, epfAccountTxns, openEPFTxnModal, submitAddEPFAccount, submitAddEPFTransaction, deleteEPFTxn,
           showNewStockModal, newStockForm, submitNewStock, deleteStockCard,
           showStockDetailModal, selectedStock, selectedStockTxns, selectedStockDivs, openStockDetail, promptUpdatePrice, promptUpdateTP,
