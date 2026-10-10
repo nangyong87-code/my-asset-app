@@ -188,20 +188,20 @@
           <div class="flex justify-between items-center bg-[#132219] p-4 rounded-2xl border border-[#1f3329]">
             <div>
               <div class="text-xs text-emerald-400 font-medium">📈 股票持仓总市值</div>
-              <div class="font-serif-num text-2xl font-bold text-slate-100 mt-1">RM {{ formatNumber(useTP ? totals.stockTP : totals.stockMarket) }}</div>
+              <div class="font-serif-num text-2xl font-bold text-slate-100 mt-1">RM {{ formatNumber(totals.stockMarket) }}</div>
             </div>
-            <button @click="openNewStockModal" class="btn-gold-border px-3 py-2 rounded-xl text-xs font-bold">+ 买入/添加股票</button>
+            <button @click="showNewStockModal = true" class="btn-gold-border px-3 py-2 rounded-xl text-xs font-bold">+ 新增股票</button>
           </div>
 
           <div class="flex justify-between items-center px-1 text-xs">
-            <span class="text-slate-400">当前持仓 (共 {{ stockData.length }} 只)</span>
+            <span class="text-slate-400">股票列表 (共 {{ stockData.length }} 只)</span>
             <span class="text-[10px] text-slate-500">美元汇率: 1 USD = {{ usdFxRate }} MYR</span>
           </div>
 
           <!-- 股票卡片列表 -->
           <div class="space-y-2.5">
             <div v-if="stockData.length === 0" class="text-xs text-slate-500 p-8 text-center border border-dashed border-[#1f3329] rounded-2xl">
-              暂无持仓股票，点击右上角添加买入交易
+              暂无股票卡片，点击右上角“+ 新增股票”创建
             </div>
 
             <div v-for="s in stockData" :key="s.Ticker" @click="openStockDetail(s)" class="forest-card rounded-2xl p-4 space-y-2 cursor-pointer active:scale-98 transition">
@@ -226,8 +226,8 @@
               </div>
 
               <div class="flex justify-between items-center pt-2 border-t border-[#1a2e22] text-[11px] text-slate-400">
-                <div>{{ s.Total_Shares }} 股 · 现价 {{ s.Currency === 'USD' ? '$' : 'RM' }}{{ formatNumber(s.Current_Price) }}</div>
-                <div class="text-amber-400">点击查看详情与记录 ➔</div>
+                <div>{{ s.Total_Shares || 0 }} 股 · 现价 {{ s.Currency === 'USD' ? '$' : 'RM' }}{{ formatNumber(s.Current_Price) }}</div>
+                <div class="text-amber-400">按入记录买卖详情 ➔</div>
               </div>
             </div>
           </div>
@@ -253,7 +253,29 @@
         </button>
       </footer>
 
-      <!-- STOCKS DETAIL MODAL -->
+      <!-- 1. 第一层：简单新增股票 Modal -->
+      <div v-if="showNewStockModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
+          <h3 class="font-bold text-base text-white">➕ 新增股票</h3>
+          <div><label class="block text-[11px] text-slate-400 mb-1">股票名字</label><input type="text" v-model="newStockForm.stockName" placeholder="如 YTL / Apple" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">代码 Ticker</label><input type="text" v-model="newStockForm.ticker" placeholder="如 4677.KL / AAPL" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">市场</label>
+            <select v-model="newStockForm.market" class="input-dark">
+              <option value="大马股">🇲🇾 大马股 (MYR)</option>
+              <option value="美股">🇺🇸 美股 (USD)</option>
+              <option value="港股">🇭🇰 港股 (HKD)</option>
+            </select>
+          </div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">最新股价 Current Price</label><input type="number" step="0.001" v-model="newStockForm.currentPrice" placeholder="如 2.40" class="input-dark"></div>
+          
+          <div class="flex gap-2 pt-2">
+            <button @click="showNewStockModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button>
+            <button @click="submitNewStock" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">建卡片</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 第二层：股票详情 Modal (6块核心总结 + 买卖/股息记录) -->
       <div v-if="showStockDetailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[90vh] flex flex-col shadow-2xl overflow-y-auto">
           
@@ -267,7 +289,7 @@
 
           <!-- 顶部 6 块核心总结小面板 -->
           <div class="grid grid-cols-3 gap-2 bg-[#132219] p-3 rounded-2xl border border-[#1f3329] text-center text-xs">
-            <div><div class="text-[10px] text-slate-400">持股</div><div class="font-serif-num font-bold text-slate-100 text-sm mt-0.5">{{ selectedStock?.Total_Shares }}</div></div>
+            <div><div class="text-[10px] text-slate-400">持股</div><div class="font-serif-num font-bold text-slate-100 text-sm mt-0.5">{{ selectedStock?.Total_Shares || 0 }}</div></div>
             <div><div class="text-[10px] text-slate-400">平均成本</div><div class="font-serif-num font-bold text-slate-100 text-sm mt-0.5">RM {{ formatNumber(selectedStock?.Avg_Cost_Per_Share) }}</div></div>
             <div><div class="text-[10px] text-slate-400">现价</div>
               <div @click="promptUpdatePrice(selectedStock)" class="font-serif-num font-bold text-amber-300 text-sm mt-0.5 cursor-pointer underline">
@@ -296,12 +318,12 @@
             <div class="flex justify-between items-center">
               <span class="text-xs font-bold text-slate-300">🧾 交易记录</span>
               <div class="flex gap-1.5">
-                <button @click="openAddTxnForStock('Buy')" class="btn-gold-border px-2 py-1 rounded-lg text-[10px] font-bold">+ 买入</button>
-                <button @click="openAddTxnForStock('Sell')" class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-1 rounded-lg text-[10px] font-bold">+ 卖出</button>
+                <button @click="openAddTxnForStock('Buy')" class="btn-gold-border px-2.5 py-1 rounded-lg text-[10px] font-bold">+ 买入</button>
+                <button @click="openAddTxnForStock('Sell')" class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-1 rounded-lg text-[10px] font-bold">+ 卖出</button>
               </div>
             </div>
 
-            <div v-if="selectedStockTxns.length === 0" class="text-xs text-slate-500 py-4 text-center">无交易明细</div>
+            <div v-if="selectedStockTxns.length === 0" class="text-xs text-slate-500 py-4 text-center">暂无买卖交易记录，点击右上角添加</div>
             <div v-for="t in selectedStockTxns" :key="t.Txn_ID" class="bg-[#132219]/70 border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
               <div>
                 <div class="font-bold flex items-center gap-1.5" :class="t.Txn_Type === 'Buy' ? 'text-emerald-400' : 'text-rose-400'">
@@ -319,14 +341,14 @@
           <div class="space-y-2 pt-2 border-t border-[#1f3329]">
             <div class="flex justify-between items-center">
               <span class="text-xs font-bold text-slate-300">💰 股息记录</span>
-              <button @click="openAddDivForStock" class="btn-gold-border px-2 py-1 rounded-lg text-[10px] font-bold">+ 记录股息</button>
+              <button @click="openAddDivForStock" class="btn-gold-border px-2.5 py-1 rounded-lg text-[10px] font-bold">+ 记录股息</button>
             </div>
 
-            <div v-if="selectedStockDivs.length === 0" class="text-xs text-slate-500 py-4 text-center">无股息记录</div>
+            <div v-if="selectedStockDivs.length === 0" class="text-xs text-slate-500 py-4 text-center">暂无股息记录</div>
             <div v-for="d in selectedStockDivs" :key="d.Div_ID" class="bg-[#132219]/70 border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
               <div>
                 <div class="font-bold text-slate-200">除权日 {{ d.Ex_Date }}</div>
-                <div class="text-[10px] text-slate-400 mt-0.5">每股 {{ selectedStock?.Currency === 'USD' ? '$' : 'RM' }}{{ formatNumber(d.Per_Share_Amount) }}</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">每股派发: RM {{ formatNumber(d.Per_Share_Amount) }}</div>
               </div>
               <div class="text-right">
                 <div class="font-serif-num font-bold text-amber-300 text-sm">RM {{ formatNumber(d.Total_Dividend_MYR) }}</div>
@@ -338,15 +360,12 @@
         </div>
       </div>
 
-      <!-- 添加/买入股票 Modal -->
+      <!-- 3. 买入/卖出明细 Modal -->
       <div v-if="showAddStockTxnModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3 max-h-[85vh] overflow-y-auto">
-          <h3 class="font-bold text-base text-white">📈 {{ stockTxnForm.txnType === 'Buy' ? '买入股票' : '卖出股票' }}</h3>
+          <h3 class="font-bold text-base text-white">📈 {{ stockTxnForm.txnType === 'Buy' ? '买入股票' : '卖出股票' }} - {{ stockTxnForm.ticker }}</h3>
           
-          <div><label class="block text-[11px] text-slate-400 mb-1">股票代号 Ticker</label><input type="text" v-model="stockTxnForm.ticker" placeholder="如 4677.KL / AAPL" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">股票名字</label><input type="text" v-model="stockTxnForm.stockName" placeholder="如 YTL / Apple Inc" class="input-dark"></div>
-
-          <div><label class="block text-[11px] text-slate-400 mb-1">交易券商</label>
+          <div><label class="block text-[11px] text-slate-400 mb-1">交易券商 Broker</label>
             <select v-model="stockTxnForm.broker" class="input-dark">
               <option value="moomoo">moomoo</option>
               <option value="M+ Global">M+ Global</option>
@@ -355,21 +374,13 @@
             </select>
           </div>
 
-          <div><label class="block text-[11px] text-slate-400 mb-1">股票市场 / 货币</label>
-            <select v-model="stockTxnForm.market" class="input-dark" @change="onMarketChange">
-              <option value="大马股">🇲🇾 大马股 (MYR)</option>
-              <option value="美股">🇺🇸 美股 (USD)</option>
-              <option value="港股">🇭🇰 港股 (HKD)</option>
-            </select>
-          </div>
-
           <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="stockTxnForm.date" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">股数 (Shares)</label><input type="number" v-model="stockTxnForm.shares" placeholder="如 1000" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">单价 ({{ stockTxnForm.currency }})</label><input type="number" step="0.001" v-model="stockTxnForm.price" placeholder="0.00" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">手续费/水钱 ({{ stockTxnForm.currency }})</label><input type="number" step="0.01" v-model="stockTxnForm.fees" placeholder="0.00" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">单价 (Price)</label><input type="number" step="0.001" v-model="stockTxnForm.price" placeholder="0.00" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">手续费/水钱 (Fees)</label><input type="number" step="0.01" v-model="stockTxnForm.fees" placeholder="0.00" class="input-dark"></div>
 
           <div>
-            <label class="block text-[11px] text-slate-400 mb-1">资金联动账户 (可选)</label>
+            <label class="block text-[11px] text-slate-400 mb-1">资金联动账户 (扣款/进账)</label>
             <select v-model="stockTxnForm.linkedAccountId" class="input-dark">
               <option value="">不联动资金户口</option>
               <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name }} - {{ a.Account_Nickname }} (RM {{ a.Current_Balance }})</option>
@@ -378,15 +389,15 @@
 
           <div class="flex gap-2 pt-2">
             <button @click="showAddStockTxnModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button>
-            <button @click="submitAddStockTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存交易</button>
+            <button @click="submitAddStockTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存明细</button>
           </div>
         </div>
       </div>
 
-      <!-- 添加股息 Modal -->
+      <!-- 4. 添加股息 Modal -->
       <div v-if="showAddDivModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
-          <h3 class="font-bold text-base text-white">💰 记录股票股息</h3>
+          <h3 class="font-bold text-base text-white">💰 记录股息 - {{ divForm.ticker }}</h3>
           <div><label class="block text-[11px] text-slate-400 mb-1">除权日 / 派息日</label><input type="date" v-model="divForm.exDate" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">每股派息额 (Per Share)</label><input type="number" step="0.001" v-model="divForm.perShareAmount" placeholder="0.00" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">净收到总股息 (RM)</label><input type="number" step="0.01" v-model="divForm.totalDividend" placeholder="0.00" class="input-dark"></div>
@@ -404,7 +415,7 @@
         </div>
       </div>
 
-      <!-- 其他 Modals... -->
+      <!-- 其他通用 Modals... -->
       <div v-if="showAddCashModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
           <h3 class="font-bold text-base text-white">➕ 新增户口</h3>
@@ -446,7 +457,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbwfMaFx3DjkTEw2EeZBeqPdgXfkaxn9T4pYE4n9fdVsZ5ofBUH_2koaoLbY3rFQnH5i/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbzaV1h_0KNDsahj9ReyC7m8_APZ-t2UOkP8D_NiUj-XYO6OIbUViZnbVZ0qXGrltSAj/exec";
 
     const { createApp, ref, computed, onMounted } = Vue;
 
@@ -501,11 +512,14 @@
         const showEPFTxnModal = ref(false);
         const selectedEPFAccount = ref(null);
 
+        const showNewStockModal = ref(false);
+        const newStockForm = ref({ stockName: '', ticker: '', market: '大马股', currentPrice: '' });
+
         const showStockDetailModal = ref(false);
         const selectedStock = ref(null);
 
         const showAddStockTxnModal = ref(false);
-        const stockTxnForm = ref({ txnType: 'Buy', ticker: '', stockName: '', broker: 'moomoo', market: '大马股', currency: 'MYR', date: '', shares: '', price: '', fees: '', linkedAccountId: '' });
+        const stockTxnForm = ref({ txnType: 'Buy', ticker: '', broker: 'moomoo', date: '', shares: '', price: '', fees: '', linkedAccountId: '' });
 
         const showAddDivModal = ref(false);
         const divForm = ref({ ticker: '', exDate: '', perShareAmount: '', totalDividend: '', linkedAccountId: '' });
@@ -635,15 +649,15 @@
           } catch (e) { alert('网络开小差了，请重试'); } finally { loading.value = false; }
         };
 
+        const submitNewStock = async () => {
+          if (!newStockForm.value.stockName || !newStockForm.value.ticker) return alert('请填全名字和代码！');
+          showNewStockModal.value = false;
+          await postAction('addNewStock', newStockForm.value);
+        };
+
         const openStockDetail = (s) => {
           selectedStock.value = s;
           showStockDetailModal.value = true;
-        };
-
-        const openNewStockModal = () => {
-          const today = new Date().toISOString().split('T')[0];
-          stockTxnForm.value = { txnType: 'Buy', ticker: '', stockName: '', broker: 'moomoo', market: '大马股', currency: 'MYR', date: today, shares: '', price: '', fees: '', linkedAccountId: '' };
-          showAddStockTxnModal.value = true;
         };
 
         const openAddTxnForStock = (type) => {
@@ -651,40 +665,26 @@
           stockTxnForm.value = { 
             txnType: type, 
             ticker: selectedStock.value.Ticker, 
-            stockName: selectedStock.value.Stock_Name, 
-            broker: selectedStock.value.Broker || 'moomoo', 
-            market: selectedStock.value.Market || '大马股', 
-            currency: selectedStock.value.Currency || 'MYR', 
+            broker: 'moomoo', 
             date: today, shares: '', price: '', fees: '', linkedAccountId: '' 
           };
           showAddStockTxnModal.value = true;
         };
 
-        const onMarketChange = () => {
-          if (stockTxnForm.value.market === '美股') stockTxnForm.value.currency = 'USD';
-          else if (stockTxnForm.value.market === '港股') stockTxnForm.value.currency = 'HKD';
-          else stockTxnForm.value.currency = 'MYR';
-        };
-
         const submitAddStockTxn = async () => {
-          if (!stockTxnForm.value.ticker || !stockTxnForm.value.shares) return alert('请填全代号与股数！');
-          
-          // 确保必须传 market & currency 参数
-          if (!stockTxnForm.value.market) stockTxnForm.value.market = '大马股';
-          if (!stockTxnForm.value.currency) stockTxnForm.value.currency = 'MYR';
-
+          if (!stockTxnForm.value.shares || !stockTxnForm.value.price) return alert('请填全股数与单价！');
           showAddStockTxnModal.value = false;
           await postAction('addStockTxn', stockTxnForm.value);
         };
 
         const promptUpdatePrice = async (s) => {
-          const newPrice = prompt(`更新 ${s.Ticker} 的当前现价 (${s.Currency}):`, s.Current_Price);
+          const newPrice = prompt(`更新 ${s.Ticker} 的当前现价:`, s.Current_Price);
           if (newPrice === null) return;
           await postAction('updateStockPrice', { ticker: s.Ticker, currentPrice: newPrice });
         };
 
         const deleteStockTxn = async (t) => {
-          if (confirm('确定删除此笔交易明细？持仓将被自动修正。')) {
+          if (confirm('确定删除此笔交易明细？')) {
             await postAction('deleteStockTxn', { txnId: t.Txn_ID });
           }
         };
@@ -746,8 +746,9 @@
           cashAccounts, cashTxns, stockData, stockTxns, stockDividends, goldList, goldTxns, epfData, epfTxns, historyList, totals, displayedNetWorth,
           showAddCashModal, cashForm, showCashTxnModal, cashTxnForm, showTxnHistoryModal, selectedAccount, openTxnHistoryModal,
           showAddGoldModal, showGoldTxnModal, goldForm, showAddEPFAccModal, epfAccForm, showAddEPFModal, epfForm, showEPFTxnModal, selectedEPFAccount, openEPFTxnModal,
+          showNewStockModal, newStockForm, submitNewStock,
           showStockDetailModal, selectedStock, selectedStockTxns, selectedStockDivs, openStockDetail, promptUpdatePrice,
-          showAddStockTxnModal, stockTxnForm, openNewStockModal, openAddTxnForStock, onMarketChange, submitAddStockTxn, deleteStockTxn,
+          showAddStockTxnModal, stockTxnForm, openAddTxnForStock, submitAddStockTxn, deleteStockTxn,
           showAddDivModal, divForm, openAddDivForStock, submitAddDiv, deleteStockDividend,
           getStockMarketValMYR, getStockUnrealizedPL, getStockUnrealizedPLPct, getStockRealizedPL,
           showSnapshotModal, snapshotForm, fetchData, submitAddCash, submitCashTxn, openSnapshotModal, submitSnapshot, formatNumber
