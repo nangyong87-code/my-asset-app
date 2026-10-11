@@ -1,1267 +1,690 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TrackEzy Asset Tracker</title>
-  
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <style>
-    [v-cloak] { display: none !important; }
-    body { background-color: #0b120e; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-    .font-serif-num { font-family: 'Playfair Display', serif; }
-    .forest-card { background: linear-gradient(145deg, #132219 0%, #0d1711 100%); border: 1px solid rgba(46, 78, 59, 0.4); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5); }
-    .btn-gold-border { background: rgba(19, 34, 25, 0.8); border: 1px solid #9a7b38; color: #d4af37; }
-    .input-dark { background-color: #090f0b; border: 1px solid #1f3329; color: white; border-radius: 0.75rem; padding: 0.5rem 0.75rem; font-size: 0.75rem; width: 100%; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人资产管理系统 (Net Worth Dashboard)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome 图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="min-h-screen pb-28 antialiased">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased">
 
-  <div id="app" v-cloak class="max-w-md mx-auto min-h-screen flex flex-col justify-between relative shadow-2xl bg-[#090f0b] border-x border-[#1a2e22]">
+    <!-- 顶部导航与总览栏 -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-emerald-500/10 text-emerald-400 p-2.5 rounded-xl border border-emerald-500/20">
+                    <i class="fa-solid fa-chart-pie text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight">个人净资产全景看板</h1>
+                    <p class="text-xs text-slate-400">独立按键防错架构 · 绝对防负数 · 防清零保护</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="loadAppData()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg text-sm font-medium border border-slate-700 transition flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-right" id="refresh-icon"></i> 刷新数据
+                </button>
+            </div>
+        </div>
+    </header>
 
-    <!-- PIN Lock Modal -->
-    <div v-if="isLocked" class="fixed inset-0 z-50 bg-[#090f0b] flex flex-col items-center justify-center p-6 space-y-6">
-      <div class="w-16 h-16 rounded-full bg-[#132219] border border-[#2e4e3b] flex items-center justify-center text-amber-400 text-2xl shadow-xl">
-        <i class="fa-solid fa-shield-halved"></i>
-      </div>
-      <div class="text-center space-y-1">
-        <h2 class="text-xl font-bold text-white tracking-wide">TrackEzy 安全保护</h2>
-        <p class="text-xs text-slate-400">请输入解锁 PIN 码</p>
-      </div>
+    <!-- 主容器 -->
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-      <div class="flex gap-3 my-4">
-        <div v-for="i in 6" :key="i" class="w-4 h-4 rounded-full border border-[#2e4e3b]" :class="pinInput.length >= i ? 'bg-amber-400' : 'bg-[#132219]'"></div>
-      </div>
+        <!-- 总资产概览卡片 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                <div class="text-xs text-slate-400 font-medium">总净资产 (Net Worth)</div>
+                <div id="summary-nw" class="text-2xl font-bold text-emerald-400 mt-1">RM 0.00</div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                <div class="text-xs text-slate-400 font-medium">现金存款 (Cash)</div>
+                <div id="summary-cash" class="text-xl font-semibold text-slate-100 mt-1">RM 0.00</div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                <div class="text-xs text-slate-400 font-medium">黄金资产 (Gold)</div>
+                <div id="summary-gold" class="text-xl font-semibold text-slate-100 mt-1">RM 0.00</div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                <div class="text-xs text-slate-400 font-medium">股票市值 (Stocks)</div>
+                <div id="summary-stocks" class="text-xl font-semibold text-slate-100 mt-1">RM 0.00</div>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                <div class="text-xs text-slate-400 font-medium">公积金 (EPF)</div>
+                <div id="summary-epf" class="text-xl font-semibold text-slate-100 mt-1">RM 0.00</div>
+            </div>
+        </div>
 
-      <div class="grid grid-cols-3 gap-4 w-full max-w-xs pt-4">
-        <button v-for="n in [1,2,3,4,5,6,7,8,9]" :key="n" @click="pressPin(n)" class="w-16 h-16 rounded-2xl bg-[#132219] border border-[#1f3329] text-white font-serif-num text-xl font-bold active:scale-95 flex items-center justify-center mx-auto">{{ n }}</button>
-        <button @click="pinInput = ''" class="w-16 h-16 rounded-2xl bg-[#132219]/40 text-slate-400 text-xs font-bold active:scale-95 flex items-center justify-center mx-auto">清空</button>
-        <button @click="pressPin(0)" class="w-16 h-16 rounded-2xl bg-[#132219] border border-[#1f3329] text-white font-serif-num text-xl font-bold active:scale-95 flex items-center justify-center mx-auto">0</button>
-        <button @click="pinInput = pinInput.slice(0, -1)" class="w-16 h-16 rounded-2xl bg-[#132219]/40 text-slate-400 text-sm active:scale-95 flex items-center justify-center mx-auto"><i class="fa-solid fa-delete-left"></i></button>
-      </div>
+        <!-- 资产明细模块标签区 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- 1. 公积金 (EPF) 模块 -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <h2 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-shield-halved text-amber-400"></i> 公积金资产 (EPF / KWSP)</h2>
+                    <button onclick="openAddEPFAccountModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition">
+                        <i class="fa-solid fa-plus"></i> 新增账户
+                    </button>
+                </div>
+                <div id="epf-accounts-container" class="space-y-3">
+                    <div class="text-slate-500 text-sm text-center py-4">加载中...</div>
+                </div>
+            </div>
+
+            <!-- 2. 现金存款 (Cash) 模块 -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <h2 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-wallet text-blue-400"></i> 现金与存款账户 (Cash)</h2>
+                    <button onclick="openAddCashAccountModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition">
+                        <i class="fa-solid fa-plus"></i> 新增账户
+                    </button>
+                </div>
+                <div id="cash-accounts-container" class="space-y-3">
+                    <div class="text-slate-500 text-sm text-center py-4">加载中...</div>
+                </div>
+            </div>
+
+            <!-- 3. 黄金 (Gold) 模块 -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <h2 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-coins text-yellow-400"></i> 黄金资产 (Gold)</h2>
+                </div>
+                <div id="gold-container" class="space-y-3">
+                    <div class="text-slate-500 text-sm text-center py-4">加载中...</div>
+                </div>
+            </div>
+
+            <!-- 4. 股票 (Stocks) 模块 -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <h2 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-arrow-trend-up text-emerald-400"></i> 股票持仓 (Stocks)</h2>
+                    <button onclick="openAddStockModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition">
+                        <i class="fa-solid fa-plus"></i> 新增股票
+                    </button>
+                </div>
+                <div id="stocks-container" class="space-y-3">
+                    <div class="text-slate-500 text-sm text-center py-4">加载中...</div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 通用弹窗 -->
+    <div id="app-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div id="modal-content" class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <!-- 动态注入内容 -->
+        </div>
     </div>
 
-    <!-- MAIN UI -->
-    <template v-else>
+    <!-- 完整前端控制逻辑脚本 -->
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbyN6-GP-VIklUctbZ3963WRpCaiSeG70xEKGHHRBwceh2kRI6saLa5NPaWsMYX8N9T0/exec";
 
-      <header class="px-5 pt-6 pb-3 flex justify-between items-center bg-[#090f0b]/80 backdrop-blur-md sticky top-0 z-30 border-b border-[#1a2e22]">
-        <h1 class="text-2xl font-black text-slate-100 tracking-tight">{{ currentTabTitle }}</h1>
-        <div class="flex items-center gap-2">
-          <button @click="fetchData" class="w-8 h-8 rounded-full bg-[#132219] border border-[#2e4e3b] flex items-center justify-center text-slate-300">
-            <i class="fa-solid fa-rotate" :class="{'fa-spin': loading}"></i>
-          </button>
-          <button @click="isLocked = true" class="w-8 h-8 rounded-full bg-[#132219] border border-[#2e4e3b] flex items-center justify-center text-amber-400"><i class="fa-solid fa-lock text-xs"></i></button>
-        </div>
-      </header>
+        let globalData = {};
 
-      <main class="p-4 space-y-4 flex-1">
-
-        <!-- OVERVIEW -->
-        <section v-if="activeTab === 'overview'" class="space-y-4">
-          <div class="forest-card rounded-3xl p-5 relative overflow-hidden space-y-4">
-            <div class="text-xs text-slate-400 font-medium">净资产总额</div>
-            <div class="text-3xl font-bold tracking-tight text-white flex items-baseline gap-1.5">
-              <span class="text-xl font-bold text-slate-200">RM</span>
-              <span class="font-serif-num text-3xl sm:text-4xl text-slate-100 truncate">{{ formatNumber(displayedNetWorth) }}</span>
-            </div>
-
-            <!-- 月度增幅显示 -->
-            <div v-if="monthlyDiff" class="text-xs flex items-center gap-2 bg-[#0d1711] p-2.5 rounded-xl border border-[#1f3329]">
-              <span class="text-slate-400">相比上月:</span>
-              <span class="font-serif-num font-bold" :class="monthlyDiff.amount >= 0 ? 'text-emerald-400' : 'text-rose-400'">
-                {{ monthlyDiff.amount >= 0 ? '+' : '' }}RM {{ formatNumber(monthlyDiff.amount) }} ({{ monthlyDiff.pct >= 0 ? '+' : '' }}{{ monthlyDiff.pct }}%)
-              </span>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2 pt-1">
-              <button @click="useTP = false" :class="!useTP ? 'bg-[#1d3326] text-amber-300 border-[#2e4e3b]' : 'bg-[#132219]/60 text-slate-400 border-[#1f3329]'" class="py-2 rounded-xl text-xs font-bold border">按市值</button>
-              <button @click="useTP = true" :class="useTP ? 'bg-[#1d3326] text-amber-300 border-[#2e4e3b]' : 'bg-[#132219]/60 text-slate-400 border-[#1f3329]'" class="py-2 rounded-xl text-xs font-bold border">按目标价 TP</button>
-            </div>
-
-            <div class="grid grid-cols-2 gap-y-2.5 gap-x-3 pt-3 border-t border-[#1a2e22] text-xs">
-              <div class="flex justify-between items-center"><span class="text-blue-400">● 现金</span><span class="font-serif-num font-bold">RM {{ formatNumber(totals.cash) }}</span></div>
-              <div class="flex justify-between items-center"><span class="text-blue-300">● 银行存款</span><span class="font-serif-num font-bold">RM {{ formatNumber(totals.bank) }}</span></div>
-              <div class="flex justify-between items-center"><span class="text-amber-400">● 纸黄金</span><span class="font-serif-num font-bold">RM {{ formatNumber(totals.paperGold) }}</span></div>
-              <div class="flex justify-between items-center"><span class="text-amber-300">● 实体金条</span><span class="font-serif-num font-bold">RM {{ formatNumber(totals.physicalGold) }}</span></div>
-              <div class="flex justify-between items-center"><span class="text-rose-400">● 股票</span><span class="font-serif-num font-bold">RM {{ formatNumber(useTP ? totals.stockTP : totals.stockMarket) }}</span></div>
-              <div class="flex justify-between items-center"><span class="text-purple-400">● EPF/PRS</span><span class="font-serif-num font-bold">RM {{ formatNumber(totals.epf) }}</span></div>
-            </div>
-
-            <button @click="openSnapshotModal" class="w-full btn-gold-border font-bold py-3 rounded-2xl text-xs flex items-center justify-center gap-2"><i class="fa-solid fa-camera"></i> 手动记录快照</button>
-          </div>
-
-          <div class="space-y-2">
-            <div class="text-xs text-slate-400 font-bold px-1">📜 历史结账与快照列表 (点击查看分类详情)</div>
-            <div v-for="h in historyList.slice().reverse()" :key="h.Record_Date" @click="openHistoryDetail(h)" class="forest-card rounded-2xl p-3.5 flex justify-between items-center cursor-pointer active:scale-98 transition text-xs">
-              <div>
-                <div class="font-bold text-slate-200 font-mono">{{ cleanDate(h.Record_Date) }}</div>
-                <div class="text-[10px] text-amber-400/80 mt-0.5">{{ h.Remarks || '月度结账' }} ➔ 点击看分类详情</div>
-              </div>
-              <div class="font-serif-num font-bold text-slate-100 text-sm">RM {{ formatNumber(h.Total_Net_Worth) }}</div>
-            </div>
-          </div>
-        </section>
-
-        <!-- CASH (存款页面) -->
-        <section v-if="activeTab === 'cash'" class="space-y-4">
-          <div class="flex justify-between items-center bg-[#132219] p-4 rounded-2xl border border-[#1f3329]">
-            <div>
-              <div class="text-xs text-slate-400">存款与现金总计</div>
-              <div class="font-serif-num text-2xl font-bold text-slate-100 mt-1">RM {{ formatNumber(totals.cash + totals.bank) }}</div>
-            </div>
-            <div class="flex gap-1.5">
-              <button @click="showAddCashModal = true" class="btn-gold-border px-2.5 py-1.5 rounded-xl text-xs font-bold">+ 新增账户</button>
-              <button @click="showCashTxnModal = true" class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1.5 rounded-xl text-xs font-bold">± 存取/转账</button>
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <div class="text-xs font-bold text-slate-300 px-1">💵 现金 (Cash)</div>
-            <div v-for="acc in cashAccounts.filter(a => a.Type === 'Cash')" :key="acc.Account_ID" class="forest-card rounded-2xl p-3.5 flex justify-between items-center">
-              <div @click="openTxnHistoryModal(acc)" class="cursor-pointer flex-1">
-                <div class="font-bold text-sm text-slate-100">{{ acc.Account_Nickname }}</div>
-                <div class="text-[10px] text-amber-400/80 mt-0.5">点击查看历史明细 ➔</div>
-              </div>
-              <div class="flex items-center gap-3">
-                <div class="font-serif-num font-bold text-slate-100">RM {{ formatNumber(acc.Current_Balance) }}</div>
-                <button @click="deleteCashAccount(acc)" class="text-rose-400 text-xs hover:underline">删除</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="space-y-2 pt-2">
-            <div class="text-xs font-bold text-slate-300 px-1">🏦 银行存款户口</div>
-            <div v-for="acc in cashAccounts.filter(a => a.Type === 'Bank')" :key="acc.Account_ID" class="forest-card rounded-2xl p-3.5 flex justify-between items-center">
-              <div @click="openTxnHistoryModal(acc)" class="cursor-pointer flex-1">
-                <div class="font-bold text-sm text-slate-100">{{ acc.Bank_Name }} <span class="text-xs font-normal text-slate-400">({{ acc.Account_Nickname }})</span></div>
-                <div class="text-[10px] text-amber-400/80 mt-0.5">点击查看历史明细 ➔</div>
-              </div>
-              <div class="flex items-center gap-3">
-                <div class="font-serif-num font-bold text-slate-100">RM {{ formatNumber(acc.Current_Balance) }}</div>
-                <button @click="deleteCashAccount(acc)" class="text-rose-400 text-xs hover:underline">删除</button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- GOLD (黄金页面) -->
-        <section v-if="activeTab === 'gold'" class="space-y-4">
-          <div class="flex justify-between items-center bg-[#132219] p-4 rounded-2xl border border-[#1f3329]">
-            <div>
-              <div class="text-xs text-amber-400 font-medium">黄金总市值</div>
-              <div class="font-serif-num text-2xl font-bold text-slate-100 mt-1">RM {{ formatNumber(totals.gold) }}</div>
-            </div>
-            <div>
-              <button @click="showAddGoldModal = true" class="btn-gold-border px-3 py-2 rounded-xl text-xs font-bold">± 黄金买卖</button>
-            </div>
-          </div>
-
-          <div class="space-y-3">
-            <div v-for="g in goldList" :key="g.Type" class="forest-card rounded-2xl p-4 space-y-3">
-              <div class="flex justify-between items-center">
-                <div>
-                  <div class="font-bold text-sm text-slate-100">{{ g.Type === 'Paper' ? '🪙 纸黄金 (Paper Gold)' : '🥇 实体金条 (Gold Bar)' }}</div>
-                  <div class="text-[10px] text-slate-400 mt-0.5">{{ g.Grams }} 克 · 买入均价 RM {{ formatNumber(g.Avg_Price) }}/g</div>
-                </div>
-                <div class="text-right">
-                  <div class="font-serif-num font-bold text-amber-300 text-base">RM {{ formatNumber(g.Market_Value) }}</div>
-                  <div :class="getGoldPL(g) >= 0 ? 'text-emerald-400' : 'text-rose-400'" class="text-[11px] font-bold">
-                    {{ getGoldPL(g) >= 0 ? '+' : '' }}RM {{ formatNumber(getGoldPL(g)) }}
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-between items-center pt-2 border-t border-[#1a2e22] text-xs">
-                <span class="text-slate-400">当前市价: RM {{ formatNumber(g.Market_Price_Per_Gram) }}/g</span>
-                <button @click="promptUpdateGoldPrice(g)" class="btn-gold-border px-2.5 py-1 rounded-xl text-[11px] font-bold">修改当前市价 ✏️</button>
-              </div>
-
-              <div class="pt-2 border-t border-[#1a2e22] space-y-2">
-                <div class="text-[11px] font-bold text-slate-300">📜 {{ g.Type === 'Paper' ? '纸黄金' : '实体金条' }} 交易历史</div>
-                <div v-if="getGoldTxnsByType(g.Type).length === 0" class="text-[10px] text-slate-500 py-2">暂无交易记录</div>
-                <div v-for="t in getGoldTxnsByType(g.Type)" :key="t.Txn_ID" class="bg-[#0d1711] border border-[#1f3329] rounded-xl p-2.5 flex justify-between items-center text-xs">
-                  <div>
-                    <div class="font-bold text-slate-200">{{ t.Txn_Type === 'buy' ? '➕ 买入' : '➖ 卖出' }} · {{ cleanDate(t.Date) }}</div>
-                    <div class="text-[10px] text-slate-400">{{ t.Grams }} 克 @ RM {{ formatNumber(t.Price) }}/g</div>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <div class="text-right font-serif-num font-bold text-amber-300">RM {{ formatNumber(t.Grams * t.Price) }}</div>
-                    <button @click="openEditGoldTxn(t)" class="text-amber-400 text-[10px] hover:underline">编辑</button>
-                    <button @click="deleteGoldTxn(t)" class="text-rose-400 text-[10px] hover:underline">删除</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- EPF -->
-        <section v-if="activeTab === 'epf'" class="space-y-4">
-          <div class="bg-[#132219] p-4 rounded-2xl border border-[#1f3329] flex justify-between items-center">
-            <div>
-              <div class="text-xs text-purple-400">公积金 & PRS 总额</div>
-              <div class="font-serif-num text-2xl font-bold text-slate-100 mt-1">RM {{ formatNumber(totals.epf) }}</div>
-            </div>
-            <div class="flex gap-1.5">
-              <button @click="showAddEPFAccModal = true" class="btn-gold-border px-2.5 py-1.5 rounded-xl text-xs font-bold">+ 新增账户</button>
-              <button @click="showAddEPFModal = true" class="bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2.5 py-1.5 rounded-xl text-xs font-bold">± 供款/提取</button>
-            </div>
-          </div>
-
-          <div class="space-y-2.5">
-            <div v-for="fund in epfData" :key="fund.Account_Key" class="forest-card rounded-2xl p-4 flex justify-between items-center">
-              <div @click="openEPFTxnModal(fund)" class="cursor-pointer flex-1">
-                <span class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full font-bold">{{ fund.Category }}</span>
-                <div class="font-bold text-slate-100 text-base mt-1.5">{{ fund.Fund_Name }}</div>
-                <div class="text-[10px] text-purple-300/80 mt-0.5">点击查看明细 ➔</div>
-              </div>
-              <div class="flex items-center gap-3">
-                <div class="font-serif-num font-bold text-slate-100 text-base">RM {{ formatNumber(fund.Current_Balance) }}</div>
-                <button @click="deleteEPFAccount(fund)" class="text-rose-400 text-xs hover:underline">删除</button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- STOCKS -->
-        <section v-if="activeTab === 'stocks'" class="space-y-3">
-          <div class="forest-card rounded-3xl p-4 space-y-3">
-            <div class="flex justify-between items-center">
-              <div>
-                <div class="text-xs text-emerald-400 font-medium">📈 股票持仓总市值</div>
-                <div class="font-serif-num text-2xl font-bold text-white mt-0.5">RM {{ formatNumber(totals.stockMarket) }}</div>
-              </div>
-              <div class="flex gap-2">
-                <button @click="syncUsdStockPrices" class="btn-gold-border px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5">
-                  <i class="fa-solid fa-rotate" :class="{'fa-spin': updatingPrices}"></i> 更新股价
-                </button>
-                <button @click="showNewStockModal = true" class="btn-gold-border px-3 py-2 rounded-xl text-xs font-bold">+ 新增</button>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-[#1a2e22] text-xs">
-              <div class="bg-[#0d1711] p-2.5 rounded-xl border border-[#1f3329]">
-                <div class="text-[10px] text-slate-400">总未实现盈亏</div>
-                <div class="font-serif-num font-bold text-sm mt-0.5" :class="totalUnrealizedPL >= 0 ? 'text-emerald-400' : 'text-rose-400'">
-                  {{ totalUnrealizedPL >= 0 ? '+' : '' }}RM {{ formatNumber(totalUnrealizedPL) }}
-                </div>
-              </div>
-              <div @click="openDividendSummaryModal" class="bg-[#0d1711] p-2.5 rounded-xl border border-[#1f3329] cursor-pointer active:scale-98 transition">
-                <div class="text-[10px] text-amber-400 flex justify-between items-center"><span>💰 累计到账股息</span><span class="text-[9px]">点击看年度对比 ➔</span></div>
-                <div class="font-serif-num font-bold text-amber-300 text-sm mt-0.5">
-                  RM {{ formatNumber(totalDividendsSum) }}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex justify-between items-center px-1 text-xs">
-            <div class="flex items-center gap-2">
-              <span class="text-slate-400">排序:</span>
-              <select v-model="stockSortMode" class="bg-[#132219] border border-[#2e4e3b] text-amber-300 rounded-lg px-2 py-1 text-xs outline-none">
-                <option value="default">默认</option>
-                <option value="valueDesc">市值由高到低</option>
-                <option value="valueAsc">市值由低到高</option>
-                <option value="plDesc">赚幅由高至低</option>
-                <option value="plAsc">赚幅由低到高</option>
-              </select>
-            </div>
-            <span class="text-[10px] text-slate-500">1 USD = {{ usdFxRate }} MYR</span>
-          </div>
-
-          <div class="space-y-2.5">
-            <div v-if="sortedStockData.length === 0" class="text-xs text-slate-500 p-8 text-center border border-dashed border-[#1f3329] rounded-2xl">
-              暂无股票卡片，点击右上角“+ 新增”创建
-            </div>
-
-            <div v-for="s in sortedStockData" :key="s.Ticker" class="forest-card rounded-2xl p-4 space-y-2 transition">
-              <div @click="openStockDetail(s)" class="flex justify-between items-start cursor-pointer">
-                <div>
-                  <div class="font-extrabold text-base text-white flex items-center gap-2">
-                    {{ s.Stock_Name }}
-                  </div>
-                  <div class="text-xs text-slate-400 font-mono mt-0.5">
-                    {{ s.Ticker }} · <span class="text-amber-400">{{ s.Market || '大马股' }}</span>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <div class="font-serif-num font-bold text-slate-100 text-lg">
-                    RM {{ formatNumber(getStockMarketValMYR(s)) }}
-                  </div>
-                  <div :class="getStockUnrealizedPL(s) >= 0 ? 'text-emerald-400' : 'text-rose-400'" class="text-[11px] font-bold">
-                    {{ getStockUnrealizedPL(s) >= 0 ? '+' : '' }}RM {{ formatNumber(getStockUnrealizedPL(s)) }}
-                    ({{ getStockUnrealizedPLPct(s) }}%)
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-between items-center pt-2 border-t border-[#1a2e22] text-[11px] text-slate-400">
-                <div @click="openStockDetail(s)" class="cursor-pointer">{{ s.Total_Shares || 0 }} 股 · 现价 {{ s.Currency === 'USD' ? '$' : 'RM' }}{{ formatNumber(s.Current_Price) }}</div>
-                <div class="flex gap-3">
-                  <span @click="openStockDetail(s)" class="text-amber-400 cursor-pointer">详情/交易 ➔</span>
-                  <span @click="deleteStockCard(s)" class="text-rose-400 cursor-pointer hover:underline">删除</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- SETTINGS -->
-        <section v-if="activeTab === 'settings'" class="space-y-4">
-          <div class="forest-card rounded-2xl p-4 space-y-3">
-            <h3 class="font-bold text-sm text-white">⚙️ 汇率设置 (FX Rates)</h3>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1">1 美金 (USD) 折合马币 (MYR)</label>
-              <div class="flex gap-2">
-                <input type="number" step="0.01" v-model="usdFxRate" class="input-dark">
-                <button @click="saveFxRate" class="btn-gold-border px-3 py-1 rounded-xl text-xs font-bold">保存</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="forest-card rounded-2xl p-4 space-y-3">
-            <h3 class="font-bold text-sm text-white">🔐 修改解锁 PIN 码</h3>
-            <div><label class="block text-xs text-slate-400 mb-1">新 PIN 码 (跨设备同步)</label><input type="password" v-model="newPinInput" placeholder="输入新密码" class="input-dark mb-2"></div>
-            <button @click="saveNewPin" class="w-full btn-gold-border py-2.5 rounded-xl text-xs font-bold">更新 PIN 码</button>
-          </div>
-        </section>
-
-      </main>
-
-      <footer class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#080d09]/95 backdrop-blur-md border-t border-[#1a2e22] px-2 py-2.5 grid grid-cols-6 gap-1 text-[10px] text-center font-medium z-40">
-        <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id" :class="activeTab === tab.id ? 'text-amber-400 font-bold' : 'text-slate-500'" class="flex flex-col items-center justify-center gap-1 py-1">
-          <i :class="tab.icon" class="text-base"></i>
-          <span>{{ tab.name }}</span>
-        </button>
-      </footer>
-
-      <!-- Modals -->
-      <div v-if="showDividendSummaryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[85vh] flex flex-col">
-          <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
-            <h3 class="font-extrabold text-base text-white">💰 股息年度总览与同比分析</h3>
-            <button @click="showDividendSummaryModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
-          </div>
-          <div class="text-xs text-slate-400">注：仅统计派息日（Pay Date）已到账的实际股息。</div>
-          <div class="space-y-2.5 overflow-y-auto flex-1">
-            <div v-for="stat in dividendYearlyStats" :key="stat.year" class="bg-[#132219] border border-[#1f3329] rounded-2xl p-4 flex justify-between items-center">
-              <div>
-                <div class="font-extrabold text-base text-white font-mono">{{ stat.year }} 年</div>
-                <div class="text-[10px] text-slate-400 mt-0.5" v-if="stat.diffPct !== null">
-                  对比去年: <span :class="stat.diffAmt >= 0 ? 'text-emerald-400' : 'text-rose-400'">{{ stat.diffAmt >= 0 ? '+' : '' }}RM {{ formatNumber(stat.diffAmt) }} ({{ stat.diffPct >= 0 ? '+' : '' }}{{ stat.diffPct }}%)</span>
-                </div>
-              </div>
-              <div class="font-serif-num font-bold text-amber-300 text-base">RM {{ formatNumber(stat.total) }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="showHistoryDetailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-sm rounded-3xl p-5 space-y-4">
-          <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
-            <div>
-              <h3 class="font-extrabold text-base text-white">📊 资产结账详情</h3>
-              <p class="text-xs text-amber-400 font-mono">{{ cleanDate(selectedHistory?.Record_Date) }}</p>
-            </div>
-            <button @click="showHistoryDetailModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
-          </div>
-          <div class="text-center bg-[#132219] p-3 rounded-2xl border border-[#1f3329]">
-            <div class="text-[10px] text-slate-400">净资产总额</div>
-            <div class="font-serif-num text-2xl font-bold text-white mt-0.5">RM {{ formatNumber(selectedHistory?.Total_Net_Worth) }}</div>
-            <div class="text-[10px] text-slate-400 mt-1">{{ selectedHistory?.Remarks || '' }}</div>
-          </div>
-          <div class="space-y-2 text-xs">
-            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-blue-400">● 存款</span><span class="font-serif-num font-bold">RM {{ formatNumber(selectedHistory?.Cash_Val) }}</span></div>
-            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-amber-400">● 黄金市值</span><span class="font-serif-num font-bold">RM {{ formatNumber(selectedHistory?.Gold_Val) }}</span></div>
-            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-rose-400">● 股票市值</span><span class="font-serif-num font-bold">RM {{ formatNumber(selectedHistory?.Stock_Val) }}</span></div>
-            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-purple-400">● 公积金 / PRS</span><span class="font-serif-num font-bold">RM {{ formatNumber(selectedHistory?.EPF_Val) }}</span></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 编辑存款流水弹窗 -->
-      <div v-if="showEditCashTxnModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
-          <h3 class="font-bold text-base text-white">✏️ 编辑存款流水</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="editCashTxnForm.date" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">金额 (RM)</label><input type="number" step="0.01" v-model="editCashTxnForm.amount" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">备注 (Remark)</label><input type="text" v-model="editCashTxnForm.remark" class="input-dark"></div>
-          <div class="flex gap-2 pt-2"><button @click="showEditCashTxnModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitEditCashTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存修改</button></div>
-        </div>
-      </div>
-
-      <!-- 编辑黄金交易弹窗 -->
-      <div v-if="showEditGoldTxnModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
-          <h3 class="font-bold text-base text-white">✏️ 编辑黄金交易</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="editGoldTxnForm.date" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">重量 (克 Grams)</label><input type="number" step="0.01" v-model="editGoldTxnForm.grams" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">单价 (RM/克)</label><input type="number" step="0.01" v-model="editGoldTxnForm.price" class="input-dark"></div>
-          <div class="flex gap-2 pt-2"><button @click="showEditGoldTxnModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitEditGoldTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存修改</button></div>
-        </div>
-      </div>
-
-      <!-- 编辑股票交易弹窗 -->
-      <div v-if="showEditStockTxnModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
-          <h3 class="font-bold text-base text-white">✏️ 编辑股票交易</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">券商 Broker</label><select v-model="editStockTxnForm.broker" class="input-dark"><option value="moomoo">moomoo</option><option value="M+ Global">M+ Global</option><option value="RHB TradeSmart">RHB TradeSmart</option><option value="MBB CashTrade">MBB CashTrade</option></select></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="editStockTxnForm.date" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">股数 (Shares)</label><input type="number" v-model="editStockTxnForm.shares" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">单价 (Price)</label><input type="number" step="0.001" v-model="editStockTxnForm.price" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">手续费 (Fees)</label><input type="number" step="0.01" v-model="editStockTxnForm.fees" class="input-dark"></div>
-          <div class="flex gap-2 pt-2"><button @click="showEditStockTxnModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitEditStockTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存修改</button></div>
-        </div>
-      </div>
-
-      <!-- 编辑公积金流水弹窗 -->
-      <div v-if="showEditEPFTxnModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
-          <h3 class="font-bold text-base text-white">✏️ 编辑公积金明细</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="editEPFTxnForm.date" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">金额 (RM)</label><input type="number" step="0.01" v-model="editEPFTxnForm.amount" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">备注 (Remark)</label><input type="text" v-model="editEPFTxnForm.remark" class="input-dark"></div>
-          <div class="flex gap-2 pt-2"><button @click="showEditEPFTxnModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitEditEPFTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存修改</button></div>
-        </div>
-      </div>
-
-      <div v-if="showAddGoldModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
-          <h3 class="font-bold text-base text-white">🪙 黄金买卖记录</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">买/卖</label><select v-model="goldForm.txnType" class="input-dark"><option value="buy">➕ 买入 (Buy)</option><option value="sell">➖ 卖出 (Sell)</option></select></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">黄金类型</label><select v-model="goldForm.goldType" class="input-dark"><option value="Paper">纸黄金 (Paper Gold)</option><option value="Physical">实体金条 (Gold Bar)</option></select></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="goldForm.date" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">重量 (克 Grams)</label><input type="number" step="0.01" v-model="goldForm.grams" placeholder="0.00" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">买入单价 (RM / 克)</label><input type="number" step="0.01" v-model="goldForm.price" placeholder="0.00" class="input-dark"></div>
-          <div class="flex gap-2 pt-2"><button @click="showAddGoldModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitAddGold" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存</button></div>
-        </div>
-      </div>
-
-      <div v-if="showNewStockModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
-          <h3 class="font-bold text-base text-white">➕ 新增股票</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">股票名字</label><input type="text" v-model="newStockForm.stockName" placeholder="如 YTL / Apple" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">股票代码 Ticker</label><input type="text" v-model="newStockForm.ticker" placeholder="如 4677 或 AAPL" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">市场</label>
-            <select v-model="newStockForm.market" class="input-dark">
-              <option value="大马股">🇲🇾 大马股 (自动加 .kl)</option>
-              <option value="美股">🇺🇸 美股 (USD - 自动 Googlefinance)</option>
-              <option value="港股">🇭🇰 港股 (HKD)</option>
-            </select>
-          </div>
-          <div class="flex gap-2 pt-2">
-            <button @click="showNewStockModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button>
-            <button @click="submitNewStock" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">确认建卡</button>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="showStockDetailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[90vh] flex flex-col shadow-2xl overflow-y-auto">
-          <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
-            <div>
-              <h3 class="font-extrabold text-lg text-white">{{ selectedStock?.Stock_Name }}</h3>
-              <p class="text-xs text-amber-400">{{ selectedStock?.Ticker }} · {{ selectedStock?.Market }}</p>
-            </div>
-            <button @click="showStockDetailModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
-          </div>
-
-          <div class="grid grid-cols-3 gap-2 bg-[#132219] p-3 rounded-2xl border border-[#1f3329] text-center text-xs">
-            <div>
-              <div class="text-[10px] text-slate-400">持股</div>
-              <div class="font-serif-num font-bold text-slate-100 text-sm mt-0.5">{{ selectedStock?.Total_Shares || 0 }}</div>
-            </div>
-            <div>
-              <div class="text-[10px] text-slate-400">平均成本</div>
-              <template v-if="selectedStock?.Currency === 'USD'">
-                <div class="font-serif-num font-bold text-white text-sm mt-0.5">$ {{ formatNumber(selectedStock?.Avg_Cost_Per_Share) }}</div>
-                <div class="text-[10px] text-slate-400 font-mono">(RM {{ formatNumber((parseFloat(selectedStock?.Avg_Cost_Per_Share)||0) * usdFxRate) }})</div>
-              </template>
-              <template v-else>
-                <div class="font-serif-num font-bold text-white text-sm mt-0.5">RM {{ formatNumber(selectedStock?.Avg_Cost_Per_Share) }}</div>
-              </template>
-            </div>
-            <div>
-              <div class="text-[10px] text-slate-400">现价 (点击修改)</div>
-              <template v-if="selectedStock?.Currency === 'USD'">
-                <div @click="promptUpdatePrice(selectedStock)" class="font-serif-num font-bold text-amber-300 text-sm mt-0.5 cursor-pointer underline">$ {{ formatNumber(selectedStock?.Current_Price) }} ✏️</div>
-                <div class="text-[10px] text-slate-400 font-mono">(RM {{ formatNumber((parseFloat(selectedStock?.Current_Price)||0) * usdFxRate) }})</div>
-              </template>
-              <template v-else>
-                <div @click="promptUpdatePrice(selectedStock)" class="font-serif-num font-bold text-amber-300 text-sm mt-0.5 cursor-pointer underline">RM {{ formatNumber(selectedStock?.Current_Price) }} ✏️</div>
-              </template>
-            </div>
-            <div class="pt-2 border-t border-[#1f3329]"><div class="text-[10px] text-slate-400">未实现盈亏</div><div :class="getStockUnrealizedPL(selectedStock) >= 0 ? 'text-emerald-400' : 'text-rose-400'" class="font-serif-num font-bold text-xs mt-0.5">{{ getStockUnrealizedPL(selectedStock) >= 0 ? '+' : '' }}RM {{ formatNumber(getStockUnrealizedPL(selectedStock)) }}</div></div>
-            <div class="pt-2 border-t border-[#1f3329]"><div class="text-[10px] text-slate-400">已实现盈亏</div><div :class="getStockRealizedPL(selectedStock) >= 0 ? 'text-emerald-400' : 'text-rose-400'" class="font-serif-num font-bold text-xs mt-0.5">RM {{ formatNumber(getStockRealizedPL(selectedStock)) }}</div></div>
-            <div class="pt-2 border-t border-[#1f3329]"><div class="text-[10px] text-slate-400">市值</div><div class="font-serif-num font-bold text-slate-100 text-xs mt-0.5">RM {{ formatNumber(getStockMarketValMYR(selectedStock)) }}</div></div>
-          </div>
-
-          <div class="bg-[#132219] p-3 rounded-2xl border border-[#1f3329] flex justify-between items-center text-xs">
-            <div>
-              <div class="text-[10px] text-amber-400 font-medium">🎯 目标价 TP (Target Price)</div>
-              <template v-if="selectedStock?.Currency === 'USD'">
-                <div class="font-serif-num font-bold text-white text-sm mt-0.5">$ {{ formatNumber(selectedStock?.Target_Price_TP || selectedStock?.Current_Price) }}</div>
-                <div class="text-[10px] text-slate-400">(RM {{ formatNumber((parseFloat(selectedStock?.Target_Price_TP || selectedStock?.Current_Price)||0) * usdFxRate) }})</div>
-              </template>
-              <template v-else>
-                <div class="font-serif-num font-bold text-white text-sm mt-0.5">RM {{ formatNumber(selectedStock?.Target_Price_TP || selectedStock?.Current_Price) }}</div>
-              </template>
-            </div>
-            <button @click="promptUpdateTP(selectedStock)" class="btn-gold-border px-2.5 py-1.5 rounded-xl text-xs font-bold">修改 TP ✏️</button>
-          </div>
-
-          <div class="space-y-2">
-            <div class="flex justify-between items-center">
-              <span class="text-xs font-bold text-slate-300">🧾 交易记录</span>
-              <div class="flex gap-1.5">
-                <button @click="openAddTxnForStock('Buy')" class="btn-gold-border px-2.5 py-1 rounded-lg text-[10px] font-bold">+ 买入</button>
-                <button @click="openAddTxnForStock('Sell')" class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-1 rounded-lg text-[10px] font-bold">+ 卖出</button>
-              </div>
-            </div>
-            <div v-if="selectedStockTxns.length === 0" class="text-xs text-slate-500 py-4 text-center">暂无买卖记录</div>
-            <div v-for="t in selectedStockTxns" :key="t.Txn_ID" class="bg-[#132219]/70 border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
-              <div>
-                <div class="font-bold" :class="t.Txn_Type === 'Buy' ? 'text-emerald-400' : 'text-rose-400'">{{ t.Txn_Type === 'Buy' ? '买入' : '卖出' }} · {{ cleanDate(t.Date) }}</div>
-                <div class="text-[10px] text-slate-400 mt-0.5">{{ t.Shares }} 股 @ {{ selectedStock?.Currency === 'USD' ? '$' : 'RM' }}{{ formatNumber(t.Price) }} · 水钱 RM {{ formatNumber(t.Txn_Fees) }} · <span class="text-amber-400">{{ t.Broker }}</span></div>
-              </div>
-              <div class="flex items-center gap-2">
-                <button @click="openEditStockTxn(t)" class="text-amber-400 text-[10px] hover:underline">编辑</button>
-                <button @click="deleteStockTxn(t)" class="text-rose-400 hover:underline text-[10px]">删除</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="space-y-2 pt-2 border-t border-[#1f3329]">
-            <div class="flex justify-between items-center">
-              <span class="text-xs font-bold text-slate-300">💰 股息记录</span>
-              <button @click="openAddDivForStock" class="btn-gold-border px-2.5 py-1 rounded-lg text-[10px] font-bold">+ 记录股息</button>
-            </div>
-            <div v-if="selectedStockDivs.length === 0" class="text-xs text-slate-500 py-4 text-center">暂无股息记录</div>
-            <div v-for="d in selectedStockDivs" :key="d.Div_ID" class="bg-[#132219]/70 border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
-              <div>
-                <div class="font-bold text-slate-200">Ex-Date: {{ cleanDate(d.Ex_Date) }} (派息: {{ cleanDate(d.Pay_Date) }})</div>
-                <div class="text-[10px] text-slate-400 mt-0.5">{{ d.Units }} 股 × RM {{ formatNumber(d.Per_Share_Amount) }}</div>
-              </div>
-              <div class="text-right">
-                <div class="font-serif-num font-bold text-amber-300 text-sm">RM {{ formatNumber(d.Total_Dividend_MYR) }}</div>
-                <button @click="deleteStockDividend(d)" class="text-rose-400 hover:underline text-[10px]">删除</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="showAddStockTxnModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3 max-h-[85vh] overflow-y-auto">
-          <h3 class="font-bold text-base text-white">📈 {{ stockTxnForm.txnType === 'Buy' ? '买入股票' : '卖出股票' }} - {{ stockTxnForm.ticker }}</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">交易券商 Broker</label><select v-model="stockTxnForm.broker" class="input-dark"><option value="moomoo">moomoo</option><option value="M+ Global">M+ Global</option><option value="RHB TradeSmart">RHB TradeSmart</option><option value="MBB CashTrade">MBB CashTrade</option></select></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="stockTxnForm.date" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">股数 (Shares)</label><input type="number" v-model="stockTxnForm.shares" placeholder="如 1000" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">单价 (Price)</label><input type="number" step="0.001" v-model="stockTxnForm.price" placeholder="0.00" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">手续费 (Fees)</label><input type="number" step="0.01" v-model="stockTxnForm.fees" placeholder="0.00" class="input-dark"></div>
-          <div>
-            <label class="block text-[11px] text-slate-400 mb-1">资金联动账户</label>
-            <select v-model="stockTxnForm.linkedAccountId" class="input-dark">
-              <option value="">不联动资金户口</option>
-              <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name }} - {{ a.Account_Nickname }} (RM {{ a.Current_Balance }})</option>
-            </select>
-          </div>
-          <div class="flex gap-2 pt-2"><button @click="showAddStockTxnModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitAddStockTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存明细</button></div>
-        </div>
-      </div>
-
-      <div v-if="showAddDivModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3 max-h-[85vh] overflow-y-auto">
-          <h3 class="font-bold text-base text-white">💰 记录股息 - {{ divForm.ticker }}</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">公布日期</label><input type="date" v-model="divForm.announceDate" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">除权日 (Ex-Date)</label><input type="date" v-model="divForm.exDate" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">派息日 (Pay Date - 决定到账)</label><input type="date" v-model="divForm.payDate" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">持股数 (Units)</label><input type="number" v-model="divForm.units" placeholder="如 1000" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">每股派息额 (Per Share RM)</label><input type="number" step="0.001" v-model="divForm.perShareAmount" placeholder="0.00" class="input-dark"></div>
-          <div class="bg-[#132219] p-2.5 rounded-xl border border-[#1f3329] text-xs"><span class="text-slate-400">自动计算总股息:</span> <span class="font-serif-num font-bold text-amber-300 ml-1">RM {{ formatNumber((parseFloat(divForm.units)||0) * (parseFloat(divForm.perShareAmount)||0)) }}</span></div>
-          <div>
-            <label class="block text-[11px] text-slate-400 mb-1">存入现金户口 (派息日生效)</label>
-            <select v-model="divForm.linkedAccountId" class="input-dark">
-              <option value="">不存入现有户口</option>
-              <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name }} - {{ a.Account_Nickname }}</option>
-            </select>
-          </div>
-          <div class="flex gap-2 pt-2"><button @click="showAddDivModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitAddDiv" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存股息</button></div>
-        </div>
-      </div>
-
-      <div v-if="showTxnHistoryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[85vh] flex flex-col">
-          <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
-            <div>
-              <h3 class="font-extrabold text-base text-white">{{ selectedAccount?.Bank_Name }} - {{ selectedAccount?.Account_Nickname }}</h3>
-              <p class="text-xs text-amber-400">当前余额: RM {{ formatNumber(selectedAccount?.Current_Balance) }}</p>
-            </div>
-            <button @click="showTxnHistoryModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
-          </div>
-          <div class="space-y-2 overflow-y-auto flex-1">
-            <div class="text-xs font-bold text-slate-300">📜 账户资金变动明细</div>
-            <div v-if="accountTxns.length === 0" class="text-xs text-slate-500 py-6 text-center">暂无历史明细</div>
-            <div v-for="t in accountTxns" :key="t.Txn_ID" class="bg-[#132219] border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
-              <div>
-                <div class="font-bold text-slate-200">{{ t.Type }} · {{ cleanDate(t.Date) }}</div>
-                <div class="text-[10px] text-slate-400 mt-0.5">{{ t.Remark || '无备注' }}</div>
-              </div>
-              <div class="flex items-center gap-3">
-                <div class="text-right font-serif-num font-bold text-sm" :class="t.Type === 'Deposit' || t.Type === 'Transfer In' ? 'text-emerald-400' : 'text-rose-400'">{{ t.Type === 'Deposit' || t.Type === 'Transfer In' ? '+' : '-' }}RM {{ formatNumber(t.Amount) }}</div>
-                <div class="flex gap-1.5">
-                  <button @click="openEditCashTxn(t)" class="text-amber-400 text-[10px] hover:underline">编辑</button>
-                  <button @click="deleteCashTxn(t)" class="text-rose-400 text-[10px] hover:underline">删除</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="showEPFTxnModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[85vh] flex flex-col">
-          <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
-            <div>
-              <h3 class="font-extrabold text-base text-white">{{ selectedEPFAccount?.Fund_Name }}</h3>
-              <p class="text-xs text-purple-400">当前余额: RM {{ formatNumber(selectedEPFAccount?.Current_Balance) }}</p>
-            </div>
-            <button @click="showEPFTxnModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
-          </div>
-          <div class="space-y-2 overflow-y-auto flex-1">
-            <div class="text-xs font-bold text-slate-300">📜 供款与提取明细</div>
-            <div v-if="epfAccountTxns.length === 0" class="text-xs text-slate-500 py-6 text-center">暂无历史明细</div>
-            <div v-for="t in epfAccountTxns" :key="t.Txn_ID" class="bg-[#132219] border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
-              <div>
-                <div class="font-bold text-slate-200">{{ t.Type === 'Deposit' ? '➕ 供款' : '➖ 提取' }} · {{ cleanDate(t.Date) }}</div>
-                <div class="text-[10px] text-slate-400 mt-0.5">{{ t.Remark || '无备注' }}</div>
-              </div>
-              <div class="flex items-center gap-3">
-                <div class="text-right font-serif-num font-bold text-sm" :class="t.Type === 'Deposit' ? 'text-emerald-400' : 'text-rose-400'">{{ t.Type === 'Deposit' ? '+' : '-' }}RM {{ formatNumber(t.Amount) }}</div>
-                <div class="flex gap-1.5">
-                  <button @click="openEditEPFTxn(t)" class="text-amber-400 text-[10px] hover:underline">编辑</button>
-                  <button @click="deleteEPFTxn(t)" class="text-rose-400 text-[10px] hover:underline">删除</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="showAddCashModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
-          <h3 class="font-bold text-base text-white">➕ 新增存款账户</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">账户类型</label><select v-model="cashForm.type" class="input-dark"><option value="Bank">银行存款 (Bank)</option><option value="Cash">现金 (Cash)</option></select></div>
-          <div v-if="cashForm.type === 'Bank'"><label class="block text-[11px] text-slate-400 mb-1">机构名字</label><input type="text" v-model="cashForm.bankName" placeholder="如 Maybank" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">户口小名</label><input type="text" v-model="cashForm.nickname" placeholder="如 钱包现金" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">初始余额 (RM)</label><input type="number" v-model="cashForm.balance" placeholder="0.00" class="input-dark"></div>
-          <div class="flex gap-2 pt-2"><button @click="showAddCashModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitAddCash" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存</button></div>
-        </div>
-      </div>
-
-      <div v-if="showCashTxnModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
-          <h3 class="font-bold text-base text-white">💳 资金存取 / 转账</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">交易类型</label><select v-model="cashTxnForm.type" class="input-dark"><option value="in">➕ 存入</option><option value="out">➖ 支出</option><option value="transfer">🔄 转账</option></select></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="cashTxnForm.date" class="input-dark"></div>
-          <div v-if="cashTxnForm.type !== 'transfer'"><label class="block text-[11px] text-slate-400 mb-1">选择账户</label><select v-model="cashTxnForm.accountId" class="input-dark"><option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name }} - {{ a.Account_Nickname }}</option></select></div>
-          <template v-else>
-            <div><label class="block text-[11px] text-slate-400 mb-1">转出账户</label><select v-model="cashTxnForm.fromAccountId" class="input-dark"><option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name }}</option></select></div>
-            <div><label class="block text-[11px] text-slate-400 mb-1">转入账户</label><select v-model="cashTxnForm.toAccountId" class="input-dark"><option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name }}</option></select></div>
-          </template>
-          <div><label class="block text-[11px] text-slate-400 mb-1">变动金额 (RM)</label><input type="number" v-model="cashTxnForm.amount" placeholder="0.00" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">Remark 备注</label><input type="text" v-model="cashTxnForm.remark" placeholder="备注" class="input-dark"></div>
-          <div class="flex gap-2 pt-2"><button @click="showCashTxnModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitCashTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">提交</button></div>
-        </div>
-      </div>
-
-      <div v-if="showAddEPFAccModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
-          <h3 class="font-bold text-base text-white">➕ 新增公积金账户</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">分类</label><select v-model="epfAccForm.category" class="input-dark"><option value="EPF">EPF 公积金</option><option value="PRS">PRS 私人退休金</option></select></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">账户名称</label><input type="text" v-model="epfAccForm.fundName" placeholder="如 Account 2" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">初始余额 (RM)</label><input type="number" v-model="epfAccForm.balance" placeholder="0.00" class="input-dark"></div>
-          <div class="flex gap-2 pt-2"><button @click="showAddEPFAccModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitAddEPFAccount" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">保存</button></div>
-        </div>
-      </div>
-
-      <div v-if="showAddEPFModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
-          <h3 class="font-bold text-base text-white">± 公积金供款 / 提取</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">选择账户</label><select v-model="epfForm.accountKey" class="input-dark"><option v-for="e in epfData" :key="e.Account_Key" :value="e.Account_Key">{{ e.Fund_Name }}</option></select></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">类型</label><select v-model="epfForm.type" class="input-dark"><option value="Deposit">➕ 供款/存款</option><option value="Withdrawal">➖ 提取</option></select></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="epfForm.date" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">金额 (RM)</label><input type="number" v-model="epfForm.amount" placeholder="0.00" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">Remark 备注</label><input type="text" v-model="epfForm.remark" placeholder="备注" class="input-dark"></div>
-          <div class="flex gap-2 pt-2"><button @click="showAddEPFModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitAddEPFTransaction" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs">提交</button></div>
-        </div>
-      </div>
-
-      <div v-if="showSnapshotModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-4">
-          <h3 class="font-bold text-base text-white">📷 手动记录快照</h3>
-          <div class="text-xs text-slate-300 bg-[#132219] p-3 rounded-xl border border-[#1f3329]">当前净值: <span class="font-bold text-amber-400 font-serif-num">RM {{ formatNumber(displayedNetWorth) }}</span></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">快照日期</label><input type="date" v-model="snapshotForm.date" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">Remarks 备注</label><input type="text" v-model="snapshotForm.remarks" placeholder="备注" class="input-dark"></div>
-          <div class="flex gap-2 pt-2"><button @click="showSnapshotModal = false" class="flex-1 bg-[#132219] text-slate-200 py-2.5 rounded-xl text-xs">取消</button><button @click="submitSnapshot" class="flex-1 btn-gold-border font-bold py-2.5 rounded-xl text-xs">保存快照</button></div>
-        </div>
-      </div>
-
-    </template>
-
-  </div>
-
-  <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbyN6-GP-VIklUctbZ3963WRpCaiSeG70xEKGHHRBwceh2kRI6saLa5NPaWsMYX8N9T0/exec";
-
-    const { createApp, ref, computed, onMounted } = Vue;
-
-    createApp({
-      setup() {
-        const isLocked = ref(true);
-        const pinInput = ref('');
-        const correctPin = ref('123456');
-        const newPinInput = ref('');
-
-        const loading = ref(false);
-        const updatingPrices = ref(false);
-        const activeTab = ref('overview');
-        const useTP = ref(false);
-        const usdFxRate = ref(4.40);
-        const stockSortMode = ref('default');
-
-        const tabs = [
-          { id: 'overview', name: '总览', icon: 'fa-solid fa-house' },
-          { id: 'cash', name: '存款', icon: 'fa-solid fa-wallet' },
-          { id: 'gold', name: '黄金', icon: 'fa-solid fa-coins' },
-          { id: 'epf', name: '公积金', icon: 'fa-solid fa-shield-halved' },
-          { id: 'stocks', name: '股票', icon: 'fa-solid fa-chart-line' },
-          { id: 'settings', name: '设置', icon: 'fa-solid fa-gear' }
-        ];
-
-        const cashAccounts = ref([]);
-        const cashTxns = ref([]);
-        const goldList = ref([]);
-        const goldTxns = ref([]);
-        const stockData = ref([]);
-        const stockTxns = ref([]);
-        const stockDividends = ref([]);
-        const epfData = ref([]);
-        const epfTxns = ref([]);
-        const historyList = ref([]);
-
-        // 编辑相关弹窗及表单
-        const showEditCashTxnModal = ref(false);
-        const editCashTxnForm = ref({ txnId: '', accountId: '', date: '', amount: '', remark: '' });
-        const openEditCashTxn = (t) => {
-          editCashTxnForm.value = { txnId: t.Txn_ID, accountId: t.Account_ID, date: cleanDate(t.Date), amount: t.Amount, remark: t.Remark || '' };
-          showEditCashTxnModal.value = true;
-        };
-        const submitEditCashTxn = async () => {
-          showEditCashTxnModal.value = false;
-          await postAction('editCashTxn', editCashTxnForm.value);
+        window.onload = function() {
+            loadAppData();
         };
 
-        const showEditGoldTxnModal = ref(false);
-        const editGoldTxnForm = ref({ txnId: '', date: '', grams: '', price: '' });
-        const openEditGoldTxn = (t) => {
-          editGoldTxnForm.value = { txnId: t.Txn_ID, date: cleanDate(t.Date), grams: t.Grams, price: t.Price };
-          showEditGoldTxnModal.value = false; // 先隐藏防止bug
-          showEditGoldTxnModal.value = true;
-        };
-        const submitEditGoldTxn = async () => {
-          showEditGoldTxnModal.value = false;
-          await postAction('editGoldTxn', editGoldTxnForm.value);
-        };
+        function loadAppData() {
+            const icon = document.getElementById('refresh-icon');
+            if(icon) icon.classList.add('fa-spin');
 
-        const showEditStockTxnModal = ref(false);
-        const editStockTxnForm = ref({ txnId: '', broker: '', date: '', shares: '', price: '', fees: '' });
-        const openEditStockTxn = (t) => {
-          editStockTxnForm.value = { txnId: t.Txn_ID, broker: t.Broker || 'moomoo', date: cleanDate(t.Date), shares: t.Shares, price: t.Price, fees: t.Txn_Fees || 0 };
-          showEditStockTxnModal.value = true;
-        };
-        const submitEditStockTxn = async () => {
-          showEditStockTxnModal.value = false;
-          await postAction('editStockTxn', editStockTxnForm.value);
-        };
+            fetch(API_URL + "?action=getOverview")
+                .then(res => res.json())
+                .then(data => {
+                    globalData = data;
+                    renderDashboard(data);
+                    if(icon) icon.classList.remove('fa-spin');
+                })
+                .catch(err => {
+                    console.error("加载失败:", err);
+                    alert("无法连接到后端，请检查 API URL。");
+                    if(icon) icon.classList.remove('fa-spin');
+                });
+        }
 
-        const showEditEPFTxnModal = ref(false);
-        const editEPFTxnForm = ref({ txnId: '', accountKey: '', date: '', amount: '', remark: '' });
-        const openEditEPFTxn = (t) => {
-          editEPFTxnForm.value = { txnId: t.Txn_ID, accountKey: t.Account_Key, date: cleanDate(t.Date), amount: t.Amount, remark: t.Remark || '' };
-          showEditEPFTxnModal.value = true;
-        };
-        const submitEditEPFTxn = async () => {
-          showEditEPFTxnModal.value = false;
-          await postAction('editEPFTxn', editEPFTxnForm.value);
-        };
+        function renderDashboard(data) {
+            // 1. 渲染 EPF 公积金
+            let epfHtml = '';
+            let totalEpfVal = 0;
+            if (data.epfData && data.epfData.length > 0) {
+                data.epfData.forEach(acc => {
+                    let key = acc.Account_Key || acc.accountKey;
+                    let cat = acc.Category || acc.category;
+                    let name = acc.Fund_Name || acc.fundName;
+                    let bal = parseFloat(acc.Current_Balance || acc.balance || 0);
+                    totalEpfVal += bal;
 
-        const showAddCashModal = ref(false);
-        const cashForm = ref({ type: 'Bank', bankName: '', nickname: '', balance: '' });
-
-        const showCashTxnModal = ref(false);
-        const cashTxnForm = ref({ type: 'in', accountId: '', fromAccountId: '', toAccountId: '', amount: '', remark: '', date: new Date().toISOString().split('T')[0] });
-
-        const showTxnHistoryModal = ref(false);
-        const selectedAccount = ref(null);
-        const accountTxns = computed(() => {
-          if (!selectedAccount.value) return [];
-          return cashTxns.value.filter(t => String(t.Account_ID).trim() === String(selectedAccount.value.Account_ID).trim()).reverse();
-        });
-        const openTxnHistoryModal = (acc) => { selectedAccount.value = acc; showTxnHistoryModal.value = true; };
-
-        // GOLD
-        const showAddGoldModal = ref(false);
-        const goldForm = ref({ txnType: 'buy', goldType: 'Paper', accountName: 'Maybank Gold', date: new Date().toISOString().split('T')[0], grams: '', price: '' });
-
-        const submitAddGold = async () => {
-          if (!goldForm.value.grams || !goldForm.value.price) return alert('请填全重量与单价！');
-          showAddGoldModal.value = false;
-          await postAction('addGoldTransaction', goldForm.value);
-        };
-
-        const deleteGoldTxn = async (t) => {
-          if (confirm('确定删除此笔黄金交易记录？')) {
-            await postAction('deleteGoldTxn', { txnId: t.Txn_ID });
-          }
-        };
-
-        const promptUpdateGoldPrice = async (g) => {
-          const newPrice = prompt(`更新 [${g.Type === 'Paper' ? '纸黄金' : '实体金条'}] 当前每克市价 (RM/克):`, g.Market_Price_Per_Gram || 300);
-          if (newPrice === null) return;
-          await postAction('updateGoldMarketPrice', { goldType: g.Type, marketPrice: newPrice });
-        };
-
-        const getGoldPL = (g) => {
-          const costVal = (parseFloat(g.Grams) || 0) * (parseFloat(g.Avg_Price) || 0);
-          const marketVal = parseFloat(g.Market_Value) || 0;
-          return marketVal - costVal;
-        };
-
-        const getGoldTxnsByType = (type) => {
-          return goldTxns.value.filter(t => String(t.Gold_Type).trim() === String(type).trim()).slice().reverse();
-        };
-
-        // EPF
-        const showAddEPFAccModal = ref(false);
-        const epfAccForm = ref({ category: 'EPF', fundName: '', balance: '' });
-        const showAddEPFModal = ref(false);
-        const epfForm = ref({ accountKey: '', type: 'Deposit', amount: '', remark: '', date: new Date().toISOString().split('T')[0] });
-        const showEPFTxnModal = ref(false);
-        const selectedEPFAccount = ref(null);
-        const epfAccountTxns = computed(() => {
-          if (!selectedEPFAccount.value) return [];
-          return epfTxns.value.filter(t => String(t.Account_Key).trim() === String(selectedEPFAccount.value.Account_Key).trim()).reverse();
-        });
-        const openEPFTxnModal = (fund) => { selectedEPFAccount.value = fund; showEPFTxnModal.value = true; };
-
-        const showNewStockModal = ref(false);
-        const newStockForm = ref({ stockName: '', ticker: '', market: '大马股' });
-
-        const showStockDetailModal = ref(false);
-        const selectedStock = ref(null);
-
-        const showAddStockTxnModal = ref(false);
-        const stockTxnForm = ref({ txnType: 'Buy', ticker: '', broker: 'moomoo', date: '', shares: '', price: '', fees: '', linkedAccountId: '' });
-
-        const showAddDivModal = ref(false);
-        const divForm = ref({ ticker: '', announceDate: '', exDate: '', payDate: '', units: '', perShareAmount: '', linkedAccountId: '' });
-
-        const showDividendSummaryModal = ref(false);
-        const openDividendSummaryModal = () => { showDividendSummaryModal.value = true; };
-
-        const dividendYearlyStats = computed(() => {
-          const todayStr = new Date().toISOString().split('T')[0];
-          const map = {};
-          stockDividends.value.forEach(d => {
-            const payDate = cleanDate(d.Pay_Date);
-            if (payDate && payDate <= todayStr) {
-              const year = payDate.split('-')[0];
-              if (!map[year]) map[year] = 0;
-              map[year] += parseFloat(d.Total_Dividend_MYR) || 0;
-            }
-          });
-
-          const years = Object.keys(map).sort((a, b) => b - a);
-          const result = [];
-          for (let i = 0; i < years.length; i++) {
-            const y = years[i];
-            const total = map[y];
-            let diffAmt = null;
-            let diffPct = null;
-            const prevYearStr = String(parseInt(y) - 1);
-            if (map[prevYearStr] !== undefined) {
-              const prevTotal = map[prevYearStr];
-              diffAmt = total - prevTotal;
-              diffPct = prevTotal > 0 ? ((diffAmt / prevTotal) * 100).toFixed(1) : '0.0';
-            }
-            result.push({ year: y, total, diffAmt, diffPct });
-          }
-          return result;
-        });
-
-        const showSnapshotModal = ref(false);
-        const snapshotForm = ref({ date: '', remarks: '' });
-
-        const showHistoryDetailModal = ref(false);
-        const selectedHistory = ref(null);
-        const openHistoryDetail = (h) => {
-          selectedHistory.value = h;
-          showHistoryDetailModal.value = true;
-        };
-
-        const pressPin = (num) => {
-          if (pinInput.value.length < 6) {
-            pinInput.value += num;
-            if (pinInput.value.length === 6) {
-              if (pinInput.value === correctPin.value) isLocked.value = false;
-              else { alert('PIN 码错误！'); pinInput.value = ''; }
-            }
-          }
-        };
-
-        const currentTabTitle = computed(() => tabs.find(x => x.id === activeTab.value)?.name || 'TrackEzy');
-
-        const totals = computed(() => {
-          let cash = 0, bank = 0, paperGold = 0, physicalGold = 0, gold = 0, stockMarket = 0, stockTP = 0, epf = 0;
-          cashAccounts.value.forEach(a => { const v = parseFloat(a.Current_Balance) || 0; if (a.Type === 'Cash') cash += v; else bank += v; });
-          goldList.value.forEach(g => {
-            const val = parseFloat(g.Market_Value) || 0;
-            gold += val;
-            if (g.Type === 'Paper') paperGold += val;
-            else physicalGold += val;
-          });
-          stockData.value.forEach(s => {
-            const fx = s.Currency === 'USD' ? usdFxRate.value : 1;
-            stockMarket += (parseFloat(s.Market_Value_MYR) || 0) * fx;
-            stockTP += (parseFloat(s.TP_Value_MYR) || 0) * fx;
-          });
-          epfData.value.forEach(e => { epf += parseFloat(e.Current_Balance) || 0; });
-          return { cash, bank, paperGold, physicalGold, gold, stockMarket, stockTP, epf };
-        });
-
-        const displayedNetWorth = computed(() => totals.value.cash + totals.value.bank + totals.value.gold + (useTP.value ? totals.value.stockTP : totals.value.stockMarket) + totals.value.epf);
-
-        const monthlyDiff = computed(() => {
-          if (historyList.value.length < 2) return null;
-          const sorted = [...historyList.value].sort((a, b) => new Date(a.Record_Date) - new Date(b.Record_Date));
-          const latest = sorted[sorted.length - 1];
-          const prev = sorted[sorted.length - 2];
-          const diff = parseFloat(latest.Total_Net_Worth) - parseFloat(prev.Total_Net_Worth);
-          const pct = prev.Total_Net_Worth > 0 ? ((diff / parseFloat(prev.Total_Net_Worth)) * 100).toFixed(2) : '0.00';
-          return { amount: diff, pct: pct };
-        });
-
-        const totalUnrealizedPL = computed(() => {
-          let total = 0;
-          stockData.value.forEach(s => { total += getStockUnrealizedPL(s); });
-          return total;
-        });
-
-        const totalDividendsSum = computed(() => {
-          let total = 0;
-          const todayStr = new Date().toISOString().split('T')[0];
-          stockDividends.value.forEach(d => {
-            if (cleanDate(d.Pay_Date) <= todayStr) {
-              total += parseFloat(d.Total_Dividend_MYR) || 0;
-            }
-          });
-          return total;
-        });
-
-        const sortedStockData = computed(() => {
-          let list = [...stockData.value];
-          if (stockSortMode.value === 'valueDesc') list.sort((a, b) => getStockMarketValMYR(b) - getStockMarketValMYR(a));
-          else if (stockSortMode.value === 'valueAsc') list.sort((a, b) => getStockMarketValMYR(a) - getStockMarketValMYR(b));
-          else if (stockSortMode.value === 'plDesc') list.sort((a, b) => getStockUnrealizedPL(b) - getStockUnrealizedPL(a));
-          else if (stockSortMode.value === 'plAsc') list.sort((a, b) => getStockUnrealizedPL(a) - getStockUnrealizedPL(b));
-          return list;
-        });
-
-        const selectedStockTxns = computed(() => {
-          if (!selectedStock.value) return [];
-          return stockTxns.value.filter(t => String(t.Ticker).trim().toUpperCase() === String(selectedStock.value.Ticker).trim().toUpperCase()).reverse();
-        });
-
-        const selectedStockDivs = computed(() => {
-          if (!selectedStock.value) return [];
-          return stockDividends.value.filter(d => String(d.Ticker).trim().toUpperCase() === String(selectedStock.value.Ticker).trim().toUpperCase()).reverse();
-        });
-
-        const getStockMarketValMYR = (s) => {
-          if (!s) return 0;
-          const fx = s.Currency === 'USD' ? usdFxRate.value : 1;
-          const curPrice = parseFloat(s.Current_Price) || 0;
-          return (parseFloat(s.Total_Shares) || 0) * curPrice * fx;
-        };
-
-        const getStockUnrealizedPL = (s) => {
-          if (!s) return 0;
-          const fx = s.Currency === 'USD' ? usdFxRate.value : 1;
-          const currentVal = (parseFloat(s.Total_Shares) || 0) * (parseFloat(s.Current_Price) || 0);
-          const costVal = (parseFloat(s.Total_Shares) || 0) * (parseFloat(s.Avg_Cost_Per_Share) || 0);
-          return (currentVal - costVal) * fx;
-        };
-
-        const getStockUnrealizedPLPct = (s) => {
-          if (!s) return '0.0';
-          const cost = parseFloat(s.Avg_Cost_Per_Share) || 0;
-          if (cost === 0) return '0.0';
-          const cur = parseFloat(s.Current_Price) || 0;
-          return (((cur - cost) / cost) * 100).toFixed(1);
-        };
-
-        const getStockRealizedPL = (s) => {
-          if (!s) return 0;
-          let total = 0;
-          const fx = s.Currency === 'USD' ? usdFxRate.value : 1;
-          stockTxns.value.forEach(t => {
-            if (String(t.Ticker).trim().toUpperCase() === String(s.Ticker).trim().toUpperCase() && t.Txn_Type === 'Sell') {
-              const shares = parseFloat(t.Shares) || 0;
-              const price = parseFloat(t.Price) || 0;
-              const fees = parseFloat(t.Txn_Fees) || 0;
-              const avgCost = parseFloat(s.Avg_Cost_Per_Share) || 0;
-              total += ((shares * price) - fees - (shares * avgCost));
-            }
-          });
-          return total * fx;
-        };
-
-        const cleanDate = (dateStr) => {
-          if (!dateStr) return '';
-          return String(dateStr).split('T')[0];
-        };
-
-        const fetchData = async () => {
-          loading.value = true;
-          try {
-            const res = await fetch(`${GAS_API_URL}?action=getOverview&t=${Date.now()}`);
-            const json = await res.json();
-            if (json.status === 'success') {
-              cashAccounts.value = json.data.cashAccounts || [];
-              cashTxns.value = json.data.cashTxns || [];
-              goldList.value = json.data.goldList || [];
-              goldTxns.value = json.data.goldTxns || [];
-              stockData.value = json.data.stockData || [];
-              stockTxns.value = json.data.stockTxns || [];
-              stockDividends.value = json.data.stockDividends || [];
-              epfData.value = json.data.epfData || [];
-              epfTxns.value = json.data.epfTxns || [];
-              historyList.value = json.data.history || [];
-              
-              if (json.data.settings) {
-                if (json.data.settings.PIN) correctPin.value = String(json.data.settings.PIN);
-                if (json.data.settings.FX_USD) usdFxRate.value = parseFloat(json.data.settings.FX_USD) || 4.40;
-              }
-            }
-          } catch (e) { console.error(e); } finally { loading.value = false; }
-        };
-
-        const postAction = async (action, body) => {
-          loading.value = true;
-          try {
-            const payload = JSON.stringify({ action, ...body });
-            const res = await fetch(GAS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: payload });
-            const json = await res.json();
-            if (json.status === 'success' && json.data) {
-              cashAccounts.value = json.data.cashAccounts || [];
-              cashTxns.value = json.data.cashTxns || [];
-              goldList.value = json.data.goldList || [];
-              goldTxns.value = json.data.goldTxns || [];
-              stockData.value = json.data.stockData || [];
-              stockTxns.value = json.data.stockTxns || [];
-              stockDividends.value = json.data.stockDividends || [];
-              epfData.value = json.data.epfData || [];
-              epfTxns.value = json.data.epfTxns || [];
-              historyList.value = json.data.history || [];
-              
-              if (json.data.settings) {
-                if (json.data.settings.PIN) correctPin.value = String(json.data.settings.PIN);
-                if (json.data.settings.FX_USD) usdFxRate.value = parseFloat(json.data.settings.FX_USD) || 4.40;
-              }
-              alert('操作成功！');
+                    epfHtml += `
+                        <div class="bg-slate-950/50 border border-slate-800/80 p-4 rounded-xl flex flex-col gap-3">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="text-xs text-amber-400 font-semibold">${cat || ''}</div>
+                                    <div class="font-bold text-base text-slate-100">${name || ''}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-slate-400">当前余额</div>
+                                    <div class="text-lg font-bold text-emerald-400">RM ${bal.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 pt-2 border-t border-slate-900">
+                                <button onclick="openEPFTxnModal('Deposit', '${key}', '${name}', ${bal})" class="flex-1 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white py-1.5 rounded-lg text-xs font-semibold transition border border-emerald-500/30">
+                                    ➕ 账户供款
+                                </button>
+                                <button onclick="openEPFTxnModal('Withdrawal', '${key}', '${name}', ${bal})" class="flex-1 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white py-1.5 rounded-lg text-xs font-semibold transition border border-red-500/30">
+                                    ➖ 账户提款
+                                </button>
+                                <button onclick="openEPFHistoryModal('${key}', '${name}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                                    明细
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
             } else {
-              if (json.message) alert(json.message);
-              await fetchData();
+                epfHtml = '<div class="text-slate-500 text-sm text-center py-4">暂无公积金账户</div>';
             }
-          } catch (e) { alert('网络开小差了，请重试'); } finally { loading.value = false; }
-        };
+            document.getElementById('epf-accounts-container').innerHTML = epfHtml;
+            document.getElementById('summary-epf').innerText = 'RM ' + totalEpfVal.toLocaleString('en-US', {minimumFractionDigits: 2});
 
-        const saveNewPin = async () => {
-          if (!newPinInput.value || newPinInput.value.length < 4) return alert('请输入至少 4 位新 PIN 码！');
-          await postAction('updatePin', { newPin: newPinInput.value });
-          newPinInput.value = '';
-        };
+            // 2. 渲染 Cash 存款
+            let cashHtml = '';
+            let totalCashVal = 0;
+            if (data.cashAccounts && data.cashAccounts.length > 0) {
+                data.cashAccounts.forEach(acc => {
+                    let id = acc.Account_ID || acc.accountId;
+                    let type = acc.Type || acc.type;
+                    let bank = acc.Bank_Name || acc.bankName;
+                    let nick = acc.Nickname || acc.nickname;
+                    let bal = parseFloat(acc.Balance || acc.balance || 0);
+                    totalCashVal += bal;
 
-        const saveFxRate = async () => {
-          await postAction('updateFx', { fxUsd: usdFxRate.value });
-        };
+                    cashHtml += `
+                        <div class="bg-slate-950/50 border border-slate-800/80 p-4 rounded-xl flex flex-col gap-3">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="text-xs text-blue-400 font-semibold">${type || ''} - ${bank || ''}</div>
+                                    <div class="font-bold text-base text-slate-100">${nick || ''}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-slate-400">可用余额</div>
+                                    <div class="text-lg font-bold text-emerald-400">RM ${bal.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 pt-2 border-t border-slate-900">
+                                <button onclick="openCashTxnModal('Deposit', '${id}', '${nick}', ${bal})" class="flex-1 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white py-1.5 rounded-lg text-xs font-semibold transition border border-emerald-500/30">
+                                    ➕ 存入
+                                </button>
+                                <button onclick="openCashTxnModal('Withdrawal', '${id}', '${nick}', ${bal})" class="flex-1 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white py-1.5 rounded-lg text-xs font-semibold transition border border-red-500/30">
+                                    ➖ 提取支出
+                                </button>
+                                <button onclick="openCashHistoryModal('${id}', '${nick}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                                    明细
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                cashHtml = '<div class="text-slate-500 text-sm text-center py-4">暂无存款账户</div>';
+            }
+            document.getElementById('cash-accounts-container').innerHTML = cashHtml;
+            document.getElementById('summary-cash').innerText = 'RM ' + totalCashVal.toLocaleString('en-US', {minimumFractionDigits: 2});
 
-        const syncUsdStockPrices = async () => {
-          updatingPrices.value = true;
-          try {
-            await postAction('autoSyncStockPrices', {});
-            alert('股价更新指令已下发至后台表格！');
-          } finally { updatingPrices.value = false; }
-        };
+            // 3. 渲染 Gold 黄金
+            let goldHtml = '';
+            let totalGoldVal = 0;
+            if (data.goldList && data.goldList.length > 0) {
+                data.goldList.forEach(g => {
+                    let gType = g.Gold_Type || g.goldType;
+                    let grams = parseFloat(g.Total_Grams || g.grams || 0);
+                    let mVal = parseFloat(g.Market_Value || g.marketValue || 0);
+                    totalGoldVal += mVal;
 
-        const submitNewStock = async () => {
-          if (!newStockForm.value.stockName || !newStockForm.value.ticker) return alert('请填全名字和代码！');
-          showNewStockModal.value = false;
-          await postAction('addNewStock', newStockForm.value);
-        };
+                    goldHtml += `
+                        <div class="bg-slate-950/50 border border-slate-800/80 p-4 rounded-xl flex flex-col gap-3">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="text-xs text-yellow-400 font-semibold">黄金类型</div>
+                                    <div class="font-bold text-base text-slate-100">${gType || ''}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-slate-400">克数: ${grams.toFixed(2)} g</div>
+                                    <div class="text-lg font-bold text-emerald-400">RM ${mVal.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 pt-2 border-t border-slate-900">
+                                <button onclick="openGoldTxnModal('buy', '${gType}')" class="flex-1 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white py-1.5 rounded-lg text-xs font-semibold transition border border-emerald-500/30">
+                                    ➕ 买入黄金
+                                </button>
+                                <button onclick="openGoldTxnModal('sell', '${gType}')" class="flex-1 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white py-1.5 rounded-lg text-xs font-semibold transition border border-red-500/30">
+                                    ➖ 卖出黄金
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                goldHtml = '<div class="text-slate-500 text-sm text-center py-4">暂无黄金持仓</div>';
+            }
+            document.getElementById('gold-container').innerHTML = goldHtml;
+            document.getElementById('summary-gold').innerText = 'RM ' + totalGoldVal.toLocaleString('en-US', {minimumFractionDigits: 2});
 
-        const deleteStockCard = async (s) => {
-          if (confirm(`确认删除股票 ${s.Stock_Name} (${s.Ticker}) 吗？`)) {
-            await postAction('deleteStock', { ticker: s.Ticker });
-          }
-        };
+            // 4. 渲染 Stocks 股票
+            let stocksHtml = '';
+            let totalStockVal = 0;
+            if (data.stockData && data.stockData.length > 0) {
+                data.stockData.forEach(st => {
+                    let ticker = st.Ticker || st.ticker;
+                    let name = st.Stock_Name || st.stockName;
+                    let shares = parseFloat(st.Total_Shares || st.shares || 0);
+                    let curPrice = parseFloat(st.Current_Price || st.currentPrice || 0);
+                    let mVal = shares * curPrice;
+                    totalStockVal += mVal;
 
-        const openStockDetail = (s) => { selectedStock.value = s; showStockDetailModal.value = true; };
+                    stocksHtml += `
+                        <div class="bg-slate-950/50 border border-slate-800/80 p-4 rounded-xl flex flex-col gap-2">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="text-xs text-emerald-400 font-semibold">${ticker || ''}</div>
+                                    <div class="font-bold text-sm text-slate-100">${name || ''}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-slate-400">持有: ${shares} 股</div>
+                                    <div class="text-base font-bold text-emerald-400">RM ${mVal.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 pt-2 border-t border-slate-900">
+                                <button onclick="openStockTxnModal('Buy', '${ticker}')" class="flex-1 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white py-1 rounded text-xs">➕ 买入</button>
+                                <button onclick="openStockTxnModal('Sell', '${ticker}')" class="flex-1 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white py-1 rounded text-xs">➖ 卖出</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                stocksHtml = '<div class="text-slate-500 text-sm text-center py-4">暂无股票持仓</div>';
+            }
+            document.getElementById('stocks-container').innerHTML = stocksHtml;
+            document.getElementById('summary-stocks').innerText = 'RM ' + totalStockVal.toLocaleString('en-US', {minimumFractionDigits: 2});
 
-        const openAddTxnForStock = (type) => {
-          const today = new Date().toISOString().split('T')[0];
-          stockTxnForm.value = { txnType: type, ticker: selectedStock.value.Ticker, broker: 'moomoo', date: today, shares: '', price: '', fees: '', linkedAccountId: '' };
-          showAddStockTxnModal.value = true;
-        };
+            // 总净资产
+            let totalNw = totalEpfVal + totalCashVal + totalGoldVal + totalStockVal;
+            document.getElementById('summary-nw').innerText = 'RM ' + totalNw.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
 
-        const submitAddStockTxn = async () => {
-          if (!stockTxnForm.value.shares || !stockTxnForm.value.price) return alert('请填全股数与单价！');
-          if (stockTxnForm.value.txnType === 'Sell') {
-            const currentShares = parseFloat(selectedStock.value.Total_Shares) || 0;
-            const sellShares = parseFloat(stockTxnForm.value.shares) || 0;
-            if (sellShares > currentShares) return alert(`当前持有 ${currentShares} 股，无法卖出 ${sellShares} 股！`);
-          }
-          showAddStockTxnModal.value = false;
-          await postAction('addStockTxn', stockTxnForm.value);
-        };
+        // ================= 弹窗与交互函数 =================
+        function openEPFTxnModal(type, accountKey, fundName, currentBal) {
+            let isDep = (type === 'Deposit');
+            let title = isDep ? '账户供款 (Deposit)' : '账户提款 (Withdrawal)';
+            let btnClass = isDep ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-red-600 hover:bg-red-500';
 
-        const promptUpdatePrice = async (s) => {
-          const newPrice = prompt(`更新 ${s.Ticker} 的现价 (${s.Currency}):`, s.Current_Price);
-          if (newPrice === null) return;
-          await postAction('updateStockPrice', { ticker: s.Ticker, currentPrice: newPrice });
-        };
+            showModal(`
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-base text-slate-100">${fundName} - ${title}</h3>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-slate-400">金额 (RM)</label>
+                        <input type="number" id="epf-amount" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400">日期</label>
+                        <input type="date" id="epf-date" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" value="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400">备注 (Remark)</label>
+                        <input type="text" id="epf-remark" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="例如：每月正常供款">
+                    </div>
+                    <button id="submit-btn" onclick="submitEPFTxn('${accountKey}', '${type}', ${currentBal})" class="w-full ${btnClass} text-white font-medium py-2.5 rounded-lg text-sm transition mt-2">
+                        确认提交
+                    </button>
+                </div>
+            `);
+        }
 
-        const promptUpdateTP = async (s) => {
-          const newTP = prompt(`更新 ${s.Ticker} 的目标价 TP (${s.Currency}):`, s.Target_Price_TP || s.Current_Price);
-          if (newTP === null) return;
-          await postAction('updateStockTP', { ticker: s.Ticker, targetPrice: newTP });
-        };
+        function submitEPFTxn(accountKey, type, currentBal) {
+            let amt = parseFloat(document.getElementById('epf-amount').value);
+            let date = document.getElementById('epf-date').value;
+            let remark = document.getElementById('epf-remark').value;
 
-        const deleteStockTxn = async (t) => {
-          if (confirm('确定删除此笔交易明细？')) await postAction('deleteStockTxn', { txnId: t.Txn_ID });
-        };
+            if (!amt || amt <= 0) { alert('请输入有效金额！'); return; }
+            if (type === 'Withdrawal' && amt > currentBal) { alert('提取金额不能大于当前可用余额！'); return; }
 
-        const openAddDivForStock = () => {
-          const today = new Date().toISOString().split('T')[0];
-          divForm.value = { ticker: selectedStock.value.Ticker, announceDate: today, exDate: today, payDate: today, units: selectedStock.value.Total_Shares || '', perShareAmount: '', linkedAccountId: '' };
-          showAddDivModal.value = true;
-        };
+            let btn = document.getElementById('submit-btn');
+            btn.disabled = true; btn.innerText = '提交中...';
 
-        const submitAddDiv = async () => {
-          if (!divForm.value.perShareAmount || !divForm.value.units) return alert('请填全持股数与每股派息额！');
-          showAddDivModal.value = false;
-          await postAction('addStockDividend', divForm.value);
-        };
+            sendApi({ action: 'addEPFTransaction', accountKey: accountKey, type: type, amount: amt, date: date, remark: remark.trim() });
+        }
 
-        const deleteStockDividend = async (d) => {
-          if (confirm('确认删除此笔股息？')) await postAction('deleteStockDividend', { divId: d.Div_ID });
-        };
+        function openCashTxnModal(type, accountId, nick, currentBal) {
+            let isDep = (type === 'Deposit');
+            let title = isDep ? '存入现金 (Deposit)' : '提取支出 (Withdrawal)';
+            let btnClass = isDep ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-red-600 hover:bg-red-500';
 
-        const submitAddCash = async () => {
-          if (cashForm.value.type === 'Bank' && !cashForm.value.bankName) return alert('请输入机构名字！');
-          showAddCashModal.value = false;
-          await postAction('addCashAccount', cashForm.value);
-        };
+            showModal(`
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-base text-slate-100">${nick} - ${title}</h3>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-slate-400">金额 (RM)</label>
+                        <input type="number" id="cash-amount" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400">日期</label>
+                        <input type="date" id="cash-date" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" value="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400">备注 (Remark)</label>
+                        <input type="text" id="cash-remark" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="例如：薪水入账">
+                    </div>
+                    <button id="submit-btn" onclick="submitCashTxn('${accountId}', '${type}', ${currentBal})" class="w-full ${btnClass} text-white font-medium py-2.5 rounded-lg text-sm transition mt-2">
+                        确认提交
+                    </button>
+                </div>
+            `);
+        }
 
-        const deleteCashAccount = async (acc) => {
-          if (confirm(`确认删除存款账户 [${acc.Bank_Name} - ${acc.Account_Nickname}] 吗？`)) await postAction('deleteCashAccount', { accountId: acc.Account_ID });
-        };
+        function submitCashTxn(accountId, type, currentBal) {
+            let amt = parseFloat(document.getElementById('cash-amount').value);
+            let date = document.getElementById('cash-date').value;
+            let remark = document.getElementById('cash-remark').value;
 
-        const submitCashTxn = async () => {
-          if (!cashTxnForm.value.amount) return alert('请输入变动金额！');
-          showCashTxnModal.value = false;
-          await postAction('updateCashBalance', cashTxnForm.value);
-        };
+            if (!amt || amt <= 0) { alert('请输入有效金额！'); return; }
+            if (type === 'Withdrawal' && amt > currentBal) { alert('提取金额不能大于当前可用余额！'); return; }
 
-        const deleteCashTxn = async (t) => {
-          if (confirm('确认删除此笔资金流水？')) await postAction('deleteCashTxn', { txnId: t.Txn_ID, accountId: t.Account_ID });
-        };
+            let btn = document.getElementById('submit-btn');
+            btn.disabled = true; btn.innerText = '提交中...';
 
-        const submitAddEPFAccount = async () => {
-          if (!epfAccForm.value.fundName) return alert('请输入公积金账户名称！');
-          showAddEPFAccModal.value = false;
-          await postAction('addEPFAccount', epfAccForm.value);
-        };
+            sendApi({ action: 'updateCashBalance', accountId: accountId, type: type === 'Deposit' ? 'in' : 'out', amount: amt, date: date, remark: remark.trim() });
+        }
 
-        const deleteEPFAccount = async (fund) => {
-          if (confirm(`确认删除公积金账户 [${fund.Fund_Name}] 吗？`)) await postAction('deleteEPFAccount', { accountKey: fund.Account_Key });
-        };
+        function openGoldTxnModal(txnType, goldType) {
+            let isBuy = (txnType === 'buy');
+            let title = isBuy ? '买入黄金 (Buy)' : '卖出黄金 (Sell)';
+            let btnClass = isBuy ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-red-600 hover:bg-red-500';
 
-        const submitAddEPFTransaction = async () => {
-          if (!epfForm.value.amount) return alert('请输入金额！');
-          showAddEPFModal.value = false;
-          await postAction('addEPFTransaction', epfForm.value);
-        };
+            showModal(`
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-base text-slate-100">${goldType} - ${title}</h3>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-slate-400">克数 (Grams)</label>
+                        <input type="number" id="gold-grams" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400">单价 (RM per gram)</label>
+                        <input type="number" id="gold-price" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400">日期</label>
+                        <input type="date" id="gold-date" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" value="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                    <button id="submit-btn" onclick="submitGoldTxn('${goldType}', '${txnType}')" class="w-full ${btnClass} text-white font-medium py-2.5 rounded-lg text-sm transition mt-2">
+                        确认提交
+                    </button>
+                </div>
+            `);
+        }
 
-        const deleteEPFTxn = async (t) => {
-          if (confirm('确认删除此笔公积金明细？')) await postAction('deleteEPFTxn', { txnId: t.Txn_ID, accountKey: t.Account_Key });
-        };
+        function submitGoldTxn(goldType, txnType) {
+            let grams = parseFloat(document.getElementById('gold-grams').value);
+            let price = parseFloat(document.getElementById('gold-price').value);
+            let date = document.getElementById('gold-date').value;
 
-        const openSnapshotModal = () => {
-          const now = new Date();
-          snapshotForm.value = { date: new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0], remarks: '手动快照' };
-          showSnapshotModal.value = true;
-        };
+            if (!grams || !price || grams <= 0 || price <= 0) { alert('请填写正确的克数与单价！'); return; }
 
-        const submitSnapshot = async () => {
-          if (!snapshotForm.value.remarks) return alert('请填写 Remarks！');
-          showSnapshotModal.value = false;
-          await postAction('logSnapshot', { 
-            totalNetWorth: displayedNetWorth.value, 
-            cashVal: totals.value.cash + totals.value.bank, 
-            goldVal: totals.value.gold, 
-            stockVal: totals.value.stockMarket, 
-            epfVal: totals.value.epf, 
-            recordDate: snapshotForm.value.date, 
-            remarks: snapshotForm.value.remarks 
-          });
-        };
+            let btn = document.getElementById('submit-btn');
+            btn.disabled = true; btn.innerText = '提交中...';
 
-        const formatNumber = (val) => {
-          const num = parseFloat(String(val).replace(/,/g, ''));
-          return isNaN(num) ? '0.00' : num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        };
+            sendApi({ action: 'addGoldTransaction', goldType: goldType, txnType: txnType, grams: grams, price: price, date: date });
+        }
 
-        onMounted(() => { fetchData(); });
+        function openAddEPFAccountModal() {
+            showModal(`
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-base text-slate-100">新增公积金账户</h3>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-slate-400">账户类别 (Category)</label>
+                        <input type="text" id="epf-cat" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="例如：KWSP">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400">基金名称 (Fund Name)</label>
+                        <input type="text" id="epf-name" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="例如：Account 1">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400">初始本金 (RM)</label>
+                        <input type="number" id="epf-bal" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0.00">
+                    </div>
+                    <button id="submit-btn" onclick="submitAddEPFAccount()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition mt-2">
+                        创建账户
+                    </button>
+                </div>
+            `);
+        }
 
-        return {
-          isLocked, pinInput, correctPin, newPinInput, pressPin, saveNewPin, saveFxRate, loading, updatingPrices, activeTab, tabs, useTP, usdFxRate, stockSortMode, currentTabTitle,
-          cashAccounts, cashTxns, goldList, goldTxns, stockData, sortedStockData, stockTxns, stockDividends, epfData, epfTxns, historyList, totals, displayedNetWorth,
-          monthlyDiff, totalUnrealizedPL, totalDividendsSum, syncUsdStockPrices, cleanDate,
-          showHistoryDetailModal, selectedHistory, openHistoryDetail,
-          showDividendSummaryModal, openDividendSummaryModal, dividendYearlyStats,
-          showAddCashModal, cashForm, deleteCashAccount, showCashTxnModal, cashTxnForm, showTxnHistoryModal, selectedAccount, accountTxns, openTxnHistoryModal, deleteCashTxn,
-          showAddGoldModal, goldForm, submitAddGold, deleteGoldTxn, promptUpdateGoldPrice, getGoldPL, getGoldTxnsByType,
-          showAddEPFAccModal, epfAccForm, deleteEPFAccount, showAddEPFModal, epfForm, showEPFTxnModal, selectedEPFAccount, epfAccountTxns, openEPFTxnModal, submitAddEPFAccount, submitAddEPFTransaction, deleteEPFTxn,
-          showNewStockModal, newStockForm, submitNewStock, deleteStockCard,
-          showStockDetailModal, selectedStock, selectedStockTxns, selectedStockDivs, openStockDetail, promptUpdatePrice, promptUpdateTP,
-          showAddStockTxnModal, stockTxnForm, openAddTxnForStock, submitAddStockTxn, deleteStockTxn,
-          showAddDivModal, divForm, openAddDivForStock, submitAddDiv, deleteStockDividend,
-          getStockMarketValMYR, getStockUnrealizedPL, getStockUnrealizedPLPct, getStockRealizedPL,
-          showSnapshotModal, snapshotForm, fetchData, submitAddCash, submitCashTxn, openSnapshotModal, submitSnapshot, formatNumber,
-          showEditCashTxnModal, editCashTxnForm, openEditCashTxn, submitEditCashTxn,
-          showEditGoldTxnModal, editGoldTxnForm, openEditGoldTxn, submitEditGoldTxn,
-          showEditStockTxnModal, editStockTxnForm, openEditStockTxn, submitEditStockTxn,
-          showEditEPFTxnModal, editEPFTxnForm, openEditEPFTxn, submitEditEPFTxn
-        };
-      }
-    }).mount('#app');
-  </script>
+        function submitAddEPFAccount() {
+            let cat = document.getElementById('epf-cat').value;
+            let name = document.getElementById('epf-name').value;
+            let bal = parseFloat(document.getElementById('epf-bal').value) || 0;
+            if (!cat || !name) { alert('请填写完整！'); return; }
+            sendApi({ action: 'addEPFAccount', category: cat, fundName: name, balance: bal });
+        }
+
+        function openAddCashAccountModal() {
+            showModal(`
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-base text-slate-100">新增存款账户</h3>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="space-y-3">
+                    <div><label class="text-xs text-slate-400">类型</label><input type="text" id="cash-type" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="Savings"></div>
+                    <div><label class="text-xs text-slate-400">银行</label><input type="text" id="cash-bank" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="Maybank"></div>
+                    <div><label class="text-xs text-slate-400">昵称</label><input type="text" id="cash-nick" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="工资账户"></div>
+                    <div><label class="text-xs text-slate-400">初始余额</label><input type="number" id="cash-bal" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0.00"></div>
+                    <button id="submit-btn" onclick="submitAddCashAccount()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition mt-2">创建</button>
+                </div>
+            `);
+        }
+
+        function submitAddCashAccount() {
+            let type = document.getElementById('cash-type').value;
+            let bank = document.getElementById('cash-bank').value;
+            let nick = document.getElementById('cash-nick').value;
+            let bal = parseFloat(document.getElementById('cash-bal').value) || 0;
+            if (!type || !bank || !nick) { alert('请完整填写！'); return; }
+            sendApi({ action: 'addCashAccount', type: type, bankName: bank, nickname: nick, balance: bal });
+        }
+
+        function openAddStockModal() {
+            showModal(`
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-base text-slate-100">新增股票</h3>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="space-y-3">
+                    <div><label class="text-xs text-slate-400">代码 (Ticker)</label><input type="text" id="st-ticker" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="7277.KL"></div>
+                    <div><label class="text-xs text-slate-400">名称</label><input type="text" id="st-name" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="Dialog Group"></div>
+                    <div><label class="text-xs text-slate-400">市场</label><input type="text" id="st-market" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="大马股市"></div>
+                    <button id="submit-btn" onclick="submitAddStock()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition mt-2">添加</button>
+                </div>
+            `);
+        }
+
+        function submitAddStock() {
+            let ticker = document.getElementById('st-ticker').value;
+            let name = document.getElementById('st-name').value;
+            let market = document.getElementById('st-market').value;
+            if (!ticker || !name) { alert('请填写代码与名称！'); return; }
+            sendApi({ action: 'addNewStock', ticker: ticker, stockName: name, market: market });
+        }
+
+        function openStockTxnModal(txnType, ticker) {
+            showModal(`
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-base text-slate-100">${ticker} - ${txnType} 股票</h3>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="space-y-3">
+                    <div><label class="text-xs text-slate-400">股数 (Shares)</label><input type="number" id="st-shares" step="1" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0"></div>
+                    <div><label class="text-xs text-slate-400">单价 (Price)</label><input type="number" id="st-price" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0.00"></div>
+                    <div><label class="text-xs text-slate-400">手续费 (Fees)</label><input type="number" id="st-fees" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" value="0.00"></div>
+                    <div><label class="text-xs text-slate-400">券商 (Broker)</label><input type="text" id="st-broker" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="Mplus"></div>
+                    <button id="submit-btn" onclick="submitStockTxn('${ticker}', '${txnType}')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition mt-2">提交</button>
+                </div>
+            `);
+        }
+
+        function submitStockTxn(ticker, txnType) {
+            let shares = parseFloat(document.getElementById('st-shares').value);
+            let price = parseFloat(document.getElementById('st-price').value);
+            let fees = parseFloat(document.getElementById('st-fees').value) || 0;
+            let broker = document.getElementById('st-broker').value;
+
+            if (!shares || !price) { alert('请输入正确的股数与单价！'); return; }
+            sendApi({ action: 'addStockTxn', ticker: ticker, txnType: txnType, shares: shares, price: price, fees: fees, broker: broker });
+        }
+
+        function openEPFHistoryModal(accountKey, fundName) {
+            let txns = (globalData.epfTxns || []).filter(t => String(t.Account_Key || t.accountKey).trim() === String(accountKey).trim());
+            let txnRows = '';
+            if (txns.length > 0) {
+                txns.forEach(t => {
+                    let tid = t.Txn_ID || t.txnId;
+                    let tType = t.Type || t.type;
+                    let amt = parseFloat(t.Amount || t.amount || 0);
+                    let dateStr = String(t.Date || t.date || '').split('T')[0];
+                    let rem = t.remark || t.Remark || '无备注';
+
+                    txnRows += `
+                        <tr class="border-b border-slate-800 text-xs">
+                            <td class="py-2.5">${dateStr}</td>
+                            <td class="py-2.5">${tType}</td>
+                            <td class="py-2.5 font-semibold ${tType.toLowerCase().includes('deposit') ? 'text-emerald-400' : 'text-red-400'}">RM ${amt.toFixed(2)}</td>
+                            <td class="py-2.5 text-slate-400">${rem}</td>
+                            <td class="py-2.5 text-right">
+                                <button onclick="deleteEPFTxn('${tid}', '${accountKey}')" class="text-red-400 hover:text-red-300">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                txnRows = `<tr><td colspan="5" class="text-center text-slate-500 py-4">暂无明细</td></tr>`;
+            }
+
+            showModal(`
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-base text-slate-100">${fundName} - 交易明细</h3>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="max-h-80 overflow-y-auto">
+                    <table class="w-full text-left">
+                        <thead><tr class="border-b border-slate-800 text-xs text-slate-400"><th class="pb-2">日期</th><th class="pb-2">类型</th><th class="pb-2">金额</th><th class="pb-2">备注</th><th class="pb-2 text-right">操作</th></tr></thead>
+                        <tbody>${txnRows}</tbody>
+                    </table>
+                </div>
+            `);
+        }
+
+        function deleteEPFTxn(txnId, accountKey) {
+            if (!confirm('确定删除此条明细？系统将自动安全重算余额')) return;
+            sendApi({ action: 'deleteEPFTxn', txnId: txnId, accountKey: accountKey });
+        }
+
+        function openCashHistoryModal(accountId, nick) {
+            let txns = (globalData.cashTxns || []).filter(t => String(t.Account_ID || t.accountId).trim() === String(accountId).trim());
+            let txnRows = '';
+            if (txns.length > 0) {
+                txns.forEach(t => {
+                    let tid = t.Txn_ID || t.txnId;
+                    let tType = t.Type || t.type;
+                    let amt = parseFloat(t.Amount || t.amount || 0);
+                    let dateStr = String(t.Date || t.date || '').split('T')[0];
+                    let rem = t.remark || t.Remark || '无备注';
+
+                    txnRows += `
+                        <tr class="border-b border-slate-800 text-xs">
+                            <td class="py-2.5">${dateStr}</td>
+                            <td class="py-2.5">${tType}</td>
+                            <td class="py-2.5 font-semibold ${tType.toLowerCase().includes('deposit') || tType.toLowerCase().includes('in') ? 'text-emerald-400' : 'text-red-400'}">RM ${amt.toFixed(2)}</td>
+                            <td class="py-2.5 text-slate-400">${rem}</td>
+                            <td class="py-2.5 text-right">
+                                <button onclick="deleteCashTxn('${tid}', '${accountId}')" class="text-red-400 hover:text-red-300">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                txnRows = `<tr><td colspan="5" class="text-center text-slate-500 py-4">暂无明细</td></tr>`;
+            }
+
+            showModal(`
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-base text-slate-100">${nick} - 交易明细</h3>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="max-h-80 overflow-y-auto">
+                    <table class="w-full text-left">
+                        <thead><tr class="border-b border-slate-800 text-xs text-slate-400"><th class="pb-2">日期</th><th class="pb-2">类型</th><th class="pb-2">金额</th><th class="pb-2">备注</th><th class="pb-2 text-right">操作</th></tr></thead>
+                        <tbody>${txnRows}</tbody>
+                    </table>
+                </div>
+            `);
+        }
+
+        function deleteCashTxn(txnId, accountId) {
+            if (!confirm('确定删除此条明细？')) return;
+            sendApi({ action: 'deleteCashTxn', txnId: txnId, accountId: accountId });
+        }
+
+        function showModal(html) {
+            document.getElementById('modal-content').innerHTML = html;
+            document.getElementById('app-modal').classList.remove('hidden');
+            document.getElementById('app-modal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('app-modal').classList.remove('flex');
+            document.getElementById('app-modal').classList.add('hidden');
+        }
+
+        function sendApi(payload) {
+            fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    closeModal();
+                    globalData = res.data;
+                    renderDashboard(res.data);
+                    alert('操作成功！');
+                } else {
+                    alert('操作失败: ' + res.message);
+                    let btn = document.getElementById('submit-btn');
+                    if(btn) { btn.disabled = false; btn.innerText = '确认提交'; }
+                }
+            })
+            .catch(err => {
+                console.error("API 错误:", err);
+                alert('网络连接错误');
+                let btn = document.getElementById('submit-btn');
+                if(btn) { btn.disabled = false; btn.innerText = '确认提交'; }
+            });
+        }
+    </script>
 </body>
 </html>
