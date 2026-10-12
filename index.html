@@ -106,7 +106,7 @@
           </div>
         </section>
 
-        <!-- CASH (存款页面 - 独立按钮拆分) -->
+        <!-- CASH (存款页面) -->
         <section v-if="activeTab === 'cash'" class="space-y-4">
           <div class="forest-card p-4 rounded-2xl space-y-3">
             <div class="flex justify-between items-center">
@@ -153,7 +153,7 @@
           </div>
         </section>
 
-        <!-- GOLD (黄金页面 - 独立买卖按钮拆分) -->
+        <!-- GOLD (黄金页面) -->
         <section v-if="activeTab === 'gold'" class="space-y-4">
           <div class="forest-card p-4 rounded-2xl space-y-3">
             <div class="flex justify-between items-center">
@@ -162,7 +162,6 @@
                 <div class="font-serif-num text-2xl font-bold text-slate-100 mt-1">RM {{ formatNumber(totals.gold) }}</div>
               </div>
             </div>
-            <!-- 独立买卖按键 -->
             <div class="grid grid-cols-2 gap-2 pt-2 border-t border-[#1a2e22]">
               <button @click="openGoldTxnModal('buy')" class="bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 py-2 rounded-xl text-xs font-bold">➕ 买入黄金</button>
               <button @click="openGoldTxnModal('sell')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 py-2 rounded-xl text-xs font-bold">➖ 卖出黄金</button>
@@ -208,7 +207,7 @@
           </div>
         </section>
 
-        <!-- EPF (公积金页面 - 独立供款/提款按钮拆分) -->
+        <!-- EPF -->
         <section v-if="activeTab === 'epf'" class="space-y-4">
           <div class="forest-card p-4 rounded-2xl space-y-3">
             <div class="flex justify-between items-center">
@@ -218,7 +217,6 @@
               </div>
               <button @click="showAddEPFAccModal = true" class="btn-gold-border px-3 py-2 rounded-xl text-xs font-bold">+ 新增账户</button>
             </div>
-            <!-- 独立供款与提取按键 -->
             <div class="grid grid-cols-2 gap-2 pt-2 border-t border-[#1a2e22]">
               <button @click="openEPFTxnModalAction('Deposit')" class="bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 py-2 rounded-xl text-xs font-bold">➕ 账户供款</button>
               <button @click="openEPFTxnModalAction('Withdrawal')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 py-2 rounded-xl text-xs font-bold">➖ 账户提款</button>
@@ -581,7 +579,7 @@
             <label class="block text-[11px] text-slate-400 mb-1">资金联动账户</label>
             <select v-model="stockTxnForm.linkedAccountId" class="input-dark">
               <option value="">不联动资金户口</option>
-              <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name }} - {{ a.Account_Nickname }} (RM {{ a.Current_Balance }})</option>
+              <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name }} - {{ a.Account_Nickname }} (RM {{ formatNumber(a.Current_Balance) }})</option>
             </select>
           </div>
           <div class="flex gap-2 pt-2"><button @click="showAddStockTxnModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitAddStockTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存明细</button></div>
@@ -672,12 +670,12 @@
           <div><label class="block text-[11px] text-slate-400 mb-1">账户类型</label><select v-model="cashForm.type" class="input-dark"><option value="Bank">银行存款 (Bank)</option><option value="Cash">现金 (Cash)</option></select></div>
           <div v-if="cashForm.type === 'Bank'"><label class="block text-[11px] text-slate-400 mb-1">机构名字</label><input type="text" v-model="cashForm.bankName" placeholder="如 Maybank" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">户口小名</label><input type="text" v-model="cashForm.nickname" placeholder="如 钱包现金" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">初始余额 (RM) [自动写入首笔开户流水]</label><input type="number" v-model="cashForm.balance" placeholder="0.00" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">初始余额 (RM)</label><input type="number" step="0.01" v-model="cashForm.balance" placeholder="0.00" class="input-dark"></div>
           <div class="flex gap-2 pt-2"><button @click="showAddCashModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitAddCash" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存</button></div>
         </div>
       </div>
 
-      <!-- 独立存取/转账弹窗 -->
+      <!-- 独立存取/转账弹窗 (优化下拉菜单显示，带标准两位小数格式化) -->
       <div v-if="showCashTxnModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
           <h3 class="font-bold text-base text-white">
@@ -689,13 +687,13 @@
             <div>
               <label class="block text-[11px] text-slate-400 mb-1">选择账户</label>
               <select v-model="cashTxnForm.accountId" class="input-dark">
-                <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name }} - {{ a.Nickname || a.Account_Nickname }} (余额: RM {{ a.Current_Balance }})</option>
+                <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name ? (a.Bank_Name + ' - ') : '' }}{{ a.Account_Nickname || a.Nickname }} (余额: RM {{ formatNumber(a.Current_Balance) }})</option>
               </select>
             </div>
           </template>
           <template v-else>
-            <div><label class="block text-[11px] text-slate-400 mb-1">转出账户 (From)</label><select v-model="cashTxnForm.fromAccountId" class="input-dark"><option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name }} - {{ a.Nickname || a.Account_Nickname }}</option></select></div>
-            <div><label class="block text-[11px] text-slate-400 mb-1">转入账户 (To)</label><select v-model="cashTxnForm.toAccountId" class="input-dark"><option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name }} - {{ a.Nickname || a.Account_Nickname }}</option></select></div>
+            <div><label class="block text-[11px] text-slate-400 mb-1">转出账户 (From)</label><select v-model="cashTxnForm.fromAccountId" class="input-dark"><option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name ? (a.Bank_Name + ' - ') : '' }}{{ a.Account_Nickname || a.Nickname }} (RM {{ formatNumber(a.Current_Balance) }})</option></select></div>
+            <div><label class="block text-[11px] text-slate-400 mb-1">转入账户 (To)</label><select v-model="cashTxnForm.toAccountId" class="input-dark"><option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name ? (a.Bank_Name + ' - ') : '' }}{{ a.Account_Nickname || a.Nickname }} (RM {{ formatNumber(a.Current_Balance) }})</option></select></div>
           </template>
 
           <div><label class="block text-[11px] text-slate-400 mb-1">变动金额 (RM) [正数]</label><input type="number" step="0.01" v-model="cashTxnForm.amount" placeholder="0.00" class="input-dark"></div>
@@ -710,7 +708,7 @@
           <h3 class="font-bold text-base text-white">➕ 新增公积金账户</h3>
           <div><label class="block text-[11px] text-slate-400 mb-1">分类</label><select v-model="epfAccForm.category" class="input-dark"><option value="EPF">EPF 公积金</option><option value="PRS">PRS 私人退休金</option></select></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">账户名称</label><input type="text" v-model="epfAccForm.fundName" placeholder="如 Account 2" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">初始余额 (RM) [自动写入首笔开户流水]</label><input type="number" step="0.01" v-model="epfAccForm.balance" placeholder="0.00" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">初始余额 (RM)</label><input type="number" step="0.01" v-model="epfAccForm.balance" placeholder="0.00" class="input-dark"></div>
           <div class="flex gap-2 pt-2"><button @click="showAddEPFAccModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitAddEPFAccount" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存</button></div>
         </div>
       </div>
@@ -719,7 +717,7 @@
       <div v-if="showAddEPFModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
           <h3 class="font-bold text-base text-white">{{ epfForm.type === 'Deposit' ? '🛡️ ➕ 账户供款' : '🛡️ ➖ 账户提款' }}</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">选择账户</label><select v-model="epfForm.accountKey" class="input-dark"><option v-for="e in epfData" :key="e.Account_Key" :value="e.Account_Key">{{ e.Fund_Name }} (当前: RM {{ e.Current_Balance }})</option></select></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">选择账户</label><select v-model="epfForm.accountKey" class="input-dark"><option v-for="e in epfData" :key="e.Account_Key" :value="e.Account_Key">{{ e.Fund_Name }} (当前: RM {{ formatNumber(e.Current_Balance) }})</option></select></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="epfForm.date" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">金额 (RM) [正数]</label><input type="number" step="0.01" v-model="epfForm.amount" placeholder="0.00" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">备注 (remark)</label><input type="text" v-model="epfForm.remark" placeholder="备注说明" class="input-dark"></div>
@@ -742,7 +740,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbyeCpO7pNiR1xk8mdrrAs1SmSL3tlvnOOZBGHv8tNr2pBlCDCemV4rGrttqb2sGwD6P/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbwY9zYunZTaJkA9zGZ6ANP52PArDqWcaWU-ittRnGotljGj1mWvJ9rmH_b1sKw3U4yI/exec";
 
     const { createApp, ref, computed, onMounted } = Vue;
 
@@ -780,7 +778,6 @@
         const epfTxns = ref([]);
         const historyList = ref([]);
 
-        // 编辑相关弹窗及表单 (remark 字段统一小写)
         const showEditCashTxnModal = ref(false);
         const editCashTxnForm = ref({ txnId: '', accountId: '', date: '', amount: '', remark: '' });
         const openEditCashTxn = (t) => {
@@ -832,14 +829,13 @@
         const showAddCashModal = ref(false);
         const cashForm = ref({ type: 'Bank', bankName: '', nickname: '', balance: '' });
 
-        // 存款模块：独立动作按键逻辑 (Deposit / Withdrawal / Transfer)
         const showCashTxnModal = ref(false);
         const cashTxnForm = ref({ type: 'Deposit', accountId: '', fromAccountId: '', toAccountId: '', amount: '', remark: '', date: new Date().toISOString().split('T')[0] });
         
         const openCashTxnModal = (type) => {
           if (cashAccounts.value.length === 0) { alert('请先创建存款账户！'); return; }
           cashTxnForm.value = {
-            type: type, // 'Deposit', 'Withdrawal', 'Transfer'
+            type: type,
             accountId: cashAccounts.value[0].Account_ID,
             fromAccountId: cashAccounts.value[0].Account_ID,
             toAccountId: cashAccounts.value.length > 1 ? cashAccounts.value[1].Account_ID : cashAccounts.value[0].Account_ID,
@@ -858,7 +854,6 @@
         });
         const openTxnHistoryModal = (acc) => { selectedAccount.value = acc; showTxnHistoryModal.value = true; };
 
-        // GOLD (独立黄金买卖按键 buy / sell)
         const showAddGoldModal = ref(false);
         const goldForm = ref({ txnType: 'buy', goldType: 'Paper', date: new Date().toISOString().split('T')[0], grams: '', price: '' });
 
@@ -873,7 +868,6 @@
           const pAmt = parseFloat(goldForm.value.price);
           if (!gAmt || !pAmt || gAmt <= 0 || pAmt <= 0) return alert('请填入有效的重量与单价！');
           
-          // 防负数校验：如果是卖出，检查持有克数
           if (goldForm.value.txnType === 'sell') {
             const targetGold = goldList.value.find(item => item.Type === goldForm.value.goldType);
             const currentGrams = targetGold ? (parseFloat(targetGold.Grams) || 0) : 0;
@@ -906,7 +900,6 @@
           return goldTxns.value.filter(t => String(t.Gold_Type).trim() === String(type).trim()).slice().reverse();
         };
 
-        // EPF (独立供款/提款按键 Deposit / Withdrawal)
         const showAddEPFAccModal = ref(false);
         const epfAccForm = ref({ category: 'EPF', fundName: '', balance: '' });
         
@@ -917,7 +910,7 @@
           if (epfData.value.length === 0) { alert('请先创建公积金账户！'); return; }
           epfForm.value = {
             accountKey: epfData.value[0].Account_Key,
-            type: type, // 'Deposit' 或 'Withdrawal'
+            type: type,
             amount: '',
             remark: '',
             date: new Date().toISOString().split('T')[0]
@@ -1135,9 +1128,8 @@
           } catch (e) { console.error(e); } finally { loading.value = false; }
         };
 
-        // 核心请求发送与防抖
         const postAction = async (action, body) => {
-          if (loading.value) return; // 严格防止重复点击抖动
+          if (loading.value) return;
           loading.value = true;
           try {
             const payload = JSON.stringify({ action, ...body });
@@ -1269,22 +1261,20 @@
           if (confirm(`确认删除存款账户 [${acc.Bank_Name} - ${acc.Account_Nickname}] 吗？`)) await postAction('deleteCashAccount', { accountId: acc.Account_ID });
         };
 
-        // 提交存款独立动作（前端双重防负数阻断）
         const submitCashTxn = async () => {
           if (loading.value) return;
           const amt = parseFloat(cashTxnForm.value.amount);
           if (!amt || amt <= 0) return alert('请输入有效的变动金额（必须为正数）！');
 
-          // 如果是提现或转账，校验目标账户余额，绝对不能让余额变负数
           if (cashTxnForm.value.type === 'Withdrawal') {
             const targetAcc = cashAccounts.value.find(a => String(a.Account_ID) === String(cashTxnForm.value.accountId));
             const curBal = targetAcc ? (parseFloat(targetAcc.Current_Balance) || 0) : 0;
-            if (amt > curBal) return alert(`提取金额 (RM ${amt}) 不能大于当前可用余额 (RM ${curBal})！账户余额绝不能为负数。`);
+            if (amt > curBal) return alert(`提取金额 (RM ${amt}) 不能大于当前可用余额 (RM ${curBal})！`);
           } else if (cashTxnForm.value.type === 'Transfer') {
             if (cashTxnForm.value.fromAccountId === cashTxnForm.value.toAccountId) return alert('转出账户和转入账户不能是同一个！');
             const fromAcc = cashAccounts.value.find(a => String(a.Account_ID) === String(cashTxnForm.value.fromAccountId));
             const curBal = fromAcc ? (parseFloat(fromAcc.Current_Balance) || 0) : 0;
-            if (amt > curBal) return alert(`转出账户余额不足 (当前: RM ${curBal})，无法转账 RM ${amt}！`);
+            if (amt > curBal) return alert(`转出账户余额不足 (当前: RM ${curBal})！`);
           }
 
           showCashTxnModal.value = false;
@@ -1308,7 +1298,6 @@
           if (confirm(`确认删除公积金账户 [${fund.Fund_Name}] 吗？`)) await postAction('deleteEPFAccount', { accountKey: fund.Account_Key });
         };
 
-        // 提交公积金供款/提取（前端双重防负数阻断）
         const submitAddEPFTransaction = async () => {
           if (loading.value) return;
           const amt = parseFloat(epfForm.value.amount);
@@ -1317,7 +1306,7 @@
           if (epfForm.value.type === 'Withdrawal') {
             const targetEpf = epfData.value.find(e => String(e.Account_Key) === String(epfForm.value.accountKey));
             const curBal = targetEpf ? (parseFloat(targetEpf.Current_Balance) || 0) : 0;
-            if (amt > curBal) return alert(`提款金额 (RM ${amt}) 不能大于当前公积金余额 (RM ${curBal})！账户余额绝不能为负数。`);
+            if (amt > curBal) return alert(`提款金额 (RM ${amt}) 不能大于当前公积金余额 (RM ${curBal})！`);
           }
 
           showAddEPFModal.value = false;
