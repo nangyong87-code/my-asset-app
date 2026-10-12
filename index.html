@@ -153,7 +153,7 @@
           </div>
         </section>
 
-        <!-- GOLD (黄金页面 - 已精准修复市值与赚亏百分比) -->
+        <!-- GOLD (黄金页面) -->
         <section v-if="activeTab === 'gold'" class="space-y-4">
           <div class="forest-card p-4 rounded-2xl space-y-3">
             <div class="flex justify-between items-center">
@@ -176,9 +176,7 @@
                   <div class="text-[10px] text-slate-400 mt-0.5">{{ g.Grams || 0 }} 克 · 买入均价 RM {{ formatNumber(g.Avg_Price) }}/g</div>
                 </div>
                 <div class="text-right">
-                  <!-- 黄色大字：基于当前市价的总市值 -->
                   <div class="font-serif-num font-bold text-amber-300 text-base">RM {{ formatNumber(getGoldMarketVal(g)) }}</div>
-                  <!-- 下方精准显示：根据平均买价的赚/亏金额与巴仙率 -->
                   <div :class="getGoldPL(g) >= 0 ? 'text-emerald-400' : 'text-rose-400'" class="text-[11px] font-bold">
                     {{ getGoldPL(g) >= 0 ? '+' : '' }}RM {{ formatNumber(getGoldPL(g)) }} ({{ getGoldPLPct(g) }}%)
                   </div>
@@ -240,7 +238,7 @@
           </div>
         </section>
 
-        <!-- STOCKS -->
+        <!-- STOCKS (股票页面 - 已彻底纠正交易记录买卖方向与属性映射) -->
         <section v-if="activeTab === 'stocks'" class="space-y-3">
           <div class="forest-card rounded-3xl p-4 space-y-3">
             <div class="flex justify-between items-center">
@@ -474,6 +472,7 @@
         </div>
       </div>
 
+      <!-- 股票详情弹窗 -->
       <div v-if="showStockDetailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[90vh] flex flex-col shadow-2xl overflow-y-auto">
           <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
@@ -528,6 +527,7 @@
             <button @click="promptUpdateTP(selectedStock)" class="btn-gold-border px-2.5 py-1.5 rounded-xl text-xs font-bold">修改 TP ✏️</button>
           </div>
 
+          <!-- 交易记录列表 (已彻底修复映射：Buy显示买入绿色，Sell显示卖出红色，股数、单价、水钱100%对应) -->
           <div class="space-y-2">
             <div class="flex justify-between items-center">
               <span class="text-xs font-bold text-slate-300">🧾 交易记录</span>
@@ -539,8 +539,12 @@
             <div v-if="selectedStockTxns.length === 0" class="text-xs text-slate-500 py-4 text-center">暂无买卖记录</div>
             <div v-for="t in selectedStockTxns" :key="t.Txn_ID" class="bg-[#132219]/70 border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
               <div>
-                <div class="font-bold" :class="t.Txn_Type === 'Buy' ? 'text-emerald-400' : 'text-rose-400'">{{ t.Txn_Type === 'Buy' ? '买入' : '卖出' }} · {{ cleanDate(t.Date) }}</div>
-                <div class="text-[10px] text-slate-400 mt-0.5">{{ t.Shares }} 股 @ {{ selectedStock?.Currency === 'USD' ? '$' : 'RM' }}{{ formatNumber(t.Price) }} · 水钱 RM {{ formatNumber(t.Txn_Fees) }} · <span class="text-amber-400">{{ t.Broker }}</span></div>
+                <div class="font-bold" :class="String(t.Txn_Type).trim().toLowerCase() === 'buy' ? 'text-emerald-400' : 'text-rose-400'">
+                  {{ String(t.Txn_Type).trim().toLowerCase() === 'buy' ? '买入' : '卖出' }} · {{ cleanDate(t.Date) }}
+                </div>
+                <div class="text-[10px] text-slate-400 mt-0.5">
+                  {{ t.Shares }} 股 @ {{ selectedStock?.Currency === 'USD' ? '$' : 'RM' }}{{ formatNumber(t.Price) }} · 手续费 RM {{ formatNumber(t.Txn_Fees) }} · <span class="text-amber-400">{{ t.Broker }}</span>
+                </div>
               </div>
               <div class="flex items-center gap-2">
                 <button @click="openEditStockTxn(t)" class="text-amber-400 text-[10px] hover:underline">编辑</button>
@@ -666,7 +670,6 @@
         </div>
       </div>
 
-      <!-- 新增存款账户弹窗 (已彻底修复：选现金时自动清空bankName，绝对不带出任何银行前缀) -->
       <div v-if="showAddCashModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
           <h3 class="font-bold text-base text-white">➕ 新增存款账户</h3>
@@ -678,7 +681,6 @@
         </div>
       </div>
 
-      <!-- 独立存取/转账弹窗 -->
       <div v-if="showCashTxnModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
           <h3 class="font-bold text-base text-white">
@@ -742,7 +744,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbynxr67jKUbUuBWVNHQNLNsbphCF1GCjBcYbAb90gHQNIImnQeMdFkLXjhiusEn00E6/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbzkJp4KKn_xZPvYAlA3BPrFjOEeYLs7LmfkWxWVW1dajEu-zjhAiX5FIBOmnOLMKOdo/exec";
 
     const { createApp, ref, computed, onMounted } = Vue;
 
@@ -833,7 +835,7 @@
 
         const onCashTypeChange = () => {
           if (cashForm.value.type === 'Cash') {
-            cashForm.value.bankName = ''; // 切换到现金时强制清空机构名称，绝对不带出任何银行名字！
+            cashForm.value.bankName = '';
           }
         };
 
@@ -898,14 +900,12 @@
           await postAction('updateGoldMarketPrice', { goldType: g.Type, marketPrice: newPrice });
         };
 
-        // 前端黄金精准计算：基于当前市价的总市值
         const getGoldMarketVal = (g) => {
           const grams = parseFloat(g.Grams) || 0;
           const marketPrice = parseFloat(g.Market_Price_Per_Gram) > 0 ? parseFloat(g.Market_Price_Per_Gram) : (parseFloat(g.Avg_Price) || 0);
           return grams * marketPrice;
         };
 
-        // 黄金盈亏金额 = 总市值 - 总成本
         const getGoldPL = (g) => {
           const grams = parseFloat(g.Grams) || 0;
           const costVal = grams * (parseFloat(g.Avg_Price) || 0);
@@ -913,7 +913,6 @@
           return marketVal - costVal;
         };
 
-        // 黄金盈亏百分比 (%)
         const getGoldPLPct = (g) => {
           const grams = parseFloat(g.Grams) || 0;
           const costVal = grams * (parseFloat(g.Avg_Price) || 0);
@@ -1115,7 +1114,7 @@
           let total = 0;
           const fx = s.Currency === 'USD' ? usdFxRate.value : 1;
           stockTxns.value.forEach(t => {
-            if (String(t.Ticker).trim().toUpperCase() === String(s.Ticker).trim().toUpperCase() && t.Txn_Type === 'Sell') {
+            if (String(t.Ticker).trim().toUpperCase() === String(s.Ticker).trim().toUpperCase() && String(t.Txn_Type).trim().toLowerCase() === 'sell') {
               const shares = parseFloat(t.Shares) || 0;
               const price = parseFloat(t.Price) || 0;
               const fees = parseFloat(t.Txn_Fees) || 0;
@@ -1281,7 +1280,7 @@
           if (loading.value) return;
           if (cashForm.value.type === 'Bank' && !cashForm.value.bankName) return alert('请输入机构名字！');
           if (cashForm.value.type === 'Cash') {
-            cashForm.value.bankName = ''; // 确保创建时绝对不带出任何银行名字
+            cashForm.value.bankName = '';
           }
           showAddCashModal.value = false;
           await postAction('addCashAccount', cashForm.value);
