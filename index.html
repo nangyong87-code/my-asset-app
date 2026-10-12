@@ -2,127 +2,180 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>个人资产管理系统 (Net Worth Dashboard)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>个人资产管理系统 (Net Worth Mobile)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- FontAwesome 图标 -->
+    <!-- FontAwesome 图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 针对手机端竖屏优化的自适应与滚动体验 */
+        body {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased pb-20">
 
-    <!-- 顶部导航与总览栏 -->
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <div class="bg-emerald-500/10 text-emerald-400 p-2.5 rounded-xl border border-emerald-500/20">
-                    <i class="fa-solid fa-chart-pie text-xl"></i>
+    <!-- 顶部固定导航栏 (适合手机端置顶) -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-4 py-3 shadow-md">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2.5">
+                <div class="bg-emerald-500/10 text-emerald-400 p-2 rounded-lg border border-emerald-500/20">
+                    <i class="fa-solid fa-chart-pie text-lg"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold tracking-tight">个人净资产全景看板</h1>
-                    <p class="text-xs text-slate-400">独立按键防错架构 · 绝对防负数 · 防清零保护</p>
+                    <h1 class="text-base font-bold tracking-tight leading-tight">资产管理全景看板</h1>
+                    <p class="text-[10px] text-slate-400">Mobile-First 架构 · 防负数 · 股息追踪</p>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <button onclick="loadAppData()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg text-sm font-medium border border-slate-700 transition flex items-center gap-2">
-                    <i class="fa-solid fa-rotate-right" id="refresh-icon"></i> 刷新数据
-                </button>
-            </div>
+            <button onclick="loadAppData()" class="bg-slate-800 active:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-700 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-rotate-right" id="refresh-icon"></i> 刷新
+            </button>
         </div>
     </header>
 
-    <!-- 主容器 -->
-    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <!-- 手机端单栏主容器 -->
+    <main class="max-w-md mx-auto px-3 py-4 space-y-4">
 
-        <!-- 总资产概览卡片 -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-                <div class="text-xs text-slate-400 font-medium">总净资产 (Net Worth)</div>
-                <div id="summary-nw" class="text-2xl font-bold text-emerald-400 mt-1">RM 0.00</div>
+        <!-- 1. 总净资产卡片 (大字号聚焦) -->
+        <div class="bg-gradient-to-br from-slate-900 to-slate-900/90 border border-slate-800 p-4 rounded-2xl shadow-lg relative overflow-hidden">
+            <div class="absolute -right-4 -bottom-4 text-emerald-500/5 text-8xl pointer-events-none">
+                <i class="fa-solid fa-sack-dollar"></i>
             </div>
-            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-                <div class="text-xs text-slate-400 font-medium">现金存款 (Cash)</div>
-                <div id="summary-cash" class="text-xl font-semibold text-slate-100 mt-1">RM 0.00</div>
-            </div>
-            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-                <div class="text-xs text-slate-400 font-medium">黄金资产 (Gold)</div>
-                <div id="summary-gold" class="text-xl font-semibold text-slate-100 mt-1">RM 0.00</div>
-            </div>
-            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-                <div class="text-xs text-slate-400 font-medium">股票市值 (Stocks)</div>
-                <div id="summary-stocks" class="text-xl font-semibold text-slate-100 mt-1">RM 0.00</div>
-            </div>
-            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-                <div class="text-xs text-slate-400 font-medium">公积金 (EPF)</div>
-                <div id="summary-epf" class="text-xl font-semibold text-slate-100 mt-1">RM 0.00</div>
+            <div class="text-xs text-slate-400 font-medium">总净资产 (Net Worth)</div>
+            <div id="summary-nw" class="text-3xl font-extrabold text-emerald-400 mt-1 tracking-tight">RM 0.00</div>
+            
+            <!-- 四项子资产横向滚动/紧凑网格 -->
+            <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-800/80">
+                <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/50">
+                    <div class="text-[10px] text-slate-400">现金存款 (Cash)</div>
+                    <div id="summary-cash" class="text-sm font-bold text-slate-200 mt-0.5">RM 0.00</div>
+                </div>
+                <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/50">
+                    <div class="text-[10px] text-slate-400">公积金 (EPF)</div>
+                    <div id="summary-epf" class="text-sm font-bold text-slate-200 mt-0.5">RM 0.00</div>
+                </div>
+                <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/50">
+                    <div class="text-[10px] text-slate-400">股票市值 (Stocks)</div>
+                    <div id="summary-stocks" class="text-sm font-bold text-slate-200 mt-0.5">RM 0.00</div>
+                </div>
+                <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/50">
+                    <div class="text-[10px] text-slate-400">黄金资产 (Gold)</div>
+                    <div id="summary-gold" class="text-sm font-bold text-slate-200 mt-0.5">RM 0.00</div>
+                </div>
             </div>
         </div>
 
-        <!-- 资产明细模块标签区 -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-            <!-- 1. 公积金 (EPF) 模块 -->
-            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                    <h2 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-shield-halved text-amber-400"></i> 公积金资产 (EPF / KWSP)</h2>
-                    <button onclick="openAddEPFAccountModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition">
-                        <i class="fa-solid fa-plus"></i> 新增账户
-                    </button>
-                </div>
-                <div id="epf-accounts-container" class="space-y-3">
-                    <div class="text-slate-500 text-sm text-center py-4">加载中...</div>
-                </div>
-            </div>
-
-            <!-- 2. 现金存款 (Cash) 模块 -->
-            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                    <h2 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-wallet text-blue-400"></i> 现金与存款账户 (Cash)</h2>
-                    <button onclick="openAddCashAccountModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition">
-                        <i class="fa-solid fa-plus"></i> 新增账户
-                    </button>
-                </div>
-                <div id="cash-accounts-container" class="space-y-3">
-                    <div class="text-slate-500 text-sm text-center py-4">加载中...</div>
-                </div>
-            </div>
-
-            <!-- 3. 黄金 (Gold) 模块 -->
-            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                    <h2 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-coins text-yellow-400"></i> 黄金资产 (Gold)</h2>
-                </div>
-                <div id="gold-container" class="space-y-3">
-                    <div class="text-slate-500 text-sm text-center py-4">加载中...</div>
-                </div>
-            </div>
-
-            <!-- 4. 股票 (Stocks) 模块 -->
-            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                    <h2 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-arrow-trend-up text-emerald-400"></i> 股票持仓 (Stocks)</h2>
-                    <button onclick="openAddStockModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition">
-                        <i class="fa-solid fa-plus"></i> 新增股票
-                    </button>
-                </div>
-                <div id="stocks-container" class="space-y-3">
-                    <div class="text-slate-500 text-sm text-center py-4">加载中...</div>
-                </div>
-            </div>
-
+        <!-- 手机端 Tab 切换栏 (避免电脑端双列导致手机上排版太挤) -->
+        <div class="flex bg-slate-900 border border-slate-800 p-1 rounded-xl text-xs font-semibold no-scrollbar overflow-x-auto gap-1">
+            <button id="tab-btn-epf" onclick="switchTab('epf')" class="flex-1 min-w-[70px] py-2 text-center rounded-lg bg-emerald-600 text-white transition">EPF公积金</button>
+            <button id="tab-btn-cash" onclick="switchTab('cash')" class="flex-1 min-w-[70px] py-2 text-center rounded-lg text-slate-400 hover:text-slate-200 transition">现金存款</button>
+            <button id="tab-btn-stocks" onclick="switchTab('stocks')" class="flex-1 min-w-[70px] py-2 text-center rounded-lg text-slate-400 hover:text-slate-200 transition">股票资产</button>
+            <button id="tab-btn-dividends" onclick="switchTab('dividends')" class="flex-1 min-w-[70px] py-2 text-center rounded-lg text-slate-400 hover:text-slate-200 transition">股息追踪</button>
+            <button id="tab-btn-gold" onclick="switchTab('gold')" class="flex-1 min-w-[70px] py-2 text-center rounded-lg text-slate-400 hover:text-slate-200 transition">黄金资产</button>
         </div>
+
+        <!-- 2. EPF 公积金模块卡片 -->
+        <div id="tab-content-epf" class="tab-panel space-y-3">
+            <div class="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800">
+                <h2 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-shield-halved text-amber-400"></i> 公积金账户 (EPF / KWSP)</h2>
+                <button onclick="openAddEPFAccountModal()" class="bg-emerald-600 active:bg-emerald-500 text-white text-xs px-2.5 py-1 rounded-lg font-medium transition">
+                    <i class="fa-solid fa-plus"></i> 新增
+                </button>
+            </div>
+            <div id="epf-accounts-container" class="space-y-3">
+                <div class="text-slate-500 text-xs text-center py-6">数据加载中...</div>
+            </div>
+        </div>
+
+        <!-- 3. Cash 现金与存款模块卡片 -->
+        <div id="tab-content-cash" class="tab-panel hidden space-y-3">
+            <div class="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800">
+                <h2 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-wallet text-blue-400"></i> 现金与存款 (Cash)</h2>
+                <button onclick="openAddCashAccountModal()" class="bg-emerald-600 active:bg-emerald-500 text-white text-xs px-2.5 py-1 rounded-lg font-medium transition">
+                    <i class="fa-solid fa-plus"></i> 新增
+                </button>
+            </div>
+            <div id="cash-accounts-container" class="space-y-3">
+                <div class="text-slate-500 text-xs text-center py-6">数据加载中...</div>
+            </div>
+        </div>
+
+        <!-- 4. Stocks 股票资产模块卡片 -->
+        <div id="tab-content-stocks" class="tab-panel hidden space-y-3">
+            <div class="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800">
+                <h2 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-arrow-trend-up text-emerald-400"></i> 股票持仓 (Stocks)</h2>
+                <button onclick="openAddStockModal()" class="bg-emerald-600 active:bg-emerald-500 text-white text-xs px-2.5 py-1 rounded-lg font-medium transition">
+                    <i class="fa-solid fa-plus"></i> 新增
+                </button>
+            </div>
+            <div id="stocks-container" class="space-y-3">
+                <div class="text-slate-500 text-xs text-center py-6">数据加载中...</div>
+            </div>
+        </div>
+
+        <!-- 5. Dividend Tracking 股票分红/股息追踪模块 (原汁原味恢复) -->
+        <div id="tab-content-dividends" class="tab-panel hidden space-y-3">
+            <div class="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800">
+                <div>
+                    <h2 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-sack-dollar text-yellow-400"></i> 股息/分红追踪 (Dividends)</h2>
+                    <p class="text-[10px] text-slate-400">历史已入账股息汇总统计</p>
+                </div>
+                <button onclick="openAddStockDividendModal()" class="bg-yellow-600 active:bg-yellow-500 text-white text-xs px-2.5 py-1 rounded-lg font-medium transition">
+                    <i class="fa-solid fa-plus"></i> 登记股息
+                </button>
+            </div>
+
+            <!-- 股息统计总览小卡片 -->
+            <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl grid grid-cols-2 gap-3 text-center">
+                <div class="border-r border-slate-800 pr-2">
+                    <div class="text-[10px] text-slate-400">大马股市累计股息</div>
+                    <div id="div-total-myr" class="text-base font-bold text-yellow-400 mt-0.5">RM 0.00</div>
+                </div>
+                <div class="pl-2">
+                    <div class="text-[10px] text-slate-400">美股累计股息</div>
+                    <div id="div-total-usd" class="text-base font-bold text-emerald-400 mt-0.5">$ 0.00</div>
+                </div>
+            </div>
+
+            <!-- 股息历史明细列表 -->
+            <div id="dividends-list-container" class="space-y-2">
+                <div class="text-slate-500 text-xs text-center py-6">数据加载中...</div>
+            </div>
+        </div>
+
+        <!-- 6. Gold 黄金模块卡片 -->
+        <div id="tab-content-gold" class="tab-panel hidden space-y-3">
+            <div class="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800">
+                <h2 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-coins text-yellow-400"></i> 黄金资产 (Gold)</h2>
+            </div>
+            <div id="gold-container" class="space-y-3">
+                <div class="text-slate-500 text-xs text-center py-6">数据加载中...</div>
+            </div>
+        </div>
+
     </main>
 
-    <!-- 通用弹窗 -->
-    <div id="app-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div id="modal-content" class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <!-- 动态注入内容 -->
+    <!-- 底部全局弹窗 Modal (针对手机端底部抽屉优化) -->
+    <div id="app-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+        <div id="modal-content" class="bg-slate-900 border-t sm:border border-slate-800 w-full max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto">
+            <!-- 动态渲染内容 -->
         </div>
     </div>
 
-    <!-- 完整前端控制逻辑脚本 -->
+    <!-- 完整 JavaScript 业务逻辑逻辑控制链条 -->
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbyN6-GP-VIklUctbZ3963WRpCaiSeG70xEKGHHRBwceh2kRI6saLa5NPaWsMYX8N9T0/exec";
+        // 请在此处填入您的 Google Apps Script Web App 发布 URL
+        const API_URL = "https://script.google.com/macros/s/AKfycbzgTTzNuti7p4TMe43NA_vyh9cyCBzp5R-nYpRSYro3Gi0ADznn379S8D4Stsn2hcw9/exec";
 
         let globalData = {};
 
@@ -130,6 +183,25 @@
             loadAppData();
         };
 
+        // 手机端 Tab 选项卡切换函数
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-panel').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('[id^="tab-btn-"]').forEach(btn => {
+                btn.classList.remove('bg-emerald-600', 'text-white');
+                btn.classList.add('text-slate-400');
+            });
+
+            const activePanel = document.getElementById('tab-content-' + tabName);
+            const activeBtn = document.getElementById('tab-btn-' + tabName);
+
+            if (activePanel) activePanel.classList.remove('hidden');
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-400');
+                activeBtn.classList.add('bg-emerald-600', 'text-white');
+            }
+        }
+
+        // 重新加载并渲染完整数据
         function loadAppData() {
             const icon = document.getElementById('refresh-icon');
             if(icon) icon.classList.add('fa-spin');
@@ -142,88 +214,91 @@
                     if(icon) icon.classList.remove('fa-spin');
                 })
                 .catch(err => {
-                    console.error("加载失败:", err);
-                    alert("无法连接到后端，请检查 API URL。");
+                    console.error("加载数据错误:", err);
+                    alert("无法连接后端 API，请检查发布链接或网络。");
                     if(icon) icon.classList.remove('fa-spin');
                 });
         }
 
+        // 完整数据渲染引擎
         function renderDashboard(data) {
-            // 1. 渲染 EPF 公积金
+            // 1. 渲染 EPF 公积金 (包含独立拆分按键)
             let epfHtml = '';
             let totalEpfVal = 0;
             if (data.epfData && data.epfData.length > 0) {
                 data.epfData.forEach(acc => {
                     let key = acc.Account_Key || acc.accountKey;
-                    let cat = acc.Category || acc.category;
-                    let name = acc.Fund_Name || acc.fundName;
+                    let cat = acc.Category || acc.category || 'EPF';
+                    let name = acc.Fund_Name || acc.fundName || '公积金账户';
                     let bal = parseFloat(acc.Current_Balance || acc.balance || 0);
                     totalEpfVal += bal;
 
                     epfHtml += `
-                        <div class="bg-slate-950/50 border border-slate-800/80 p-4 rounded-xl flex flex-col gap-3">
+                        <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-xl space-y-3 shadow-sm">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <div class="text-xs text-amber-400 font-semibold">${cat || ''}</div>
-                                    <div class="font-bold text-base text-slate-100">${name || ''}</div>
+                                    <span class="text-[10px] text-amber-400 font-bold px-1.5 py-0.5 bg-amber-400/10 rounded border border-amber-400/20">${cat}</span>
+                                    <div class="font-bold text-base text-slate-100 mt-1">${name}</div>
                                 </div>
                                 <div class="text-right">
-                                    <div class="text-xs text-slate-400">当前余额</div>
-                                    <div class="text-lg font-bold text-emerald-400">RM ${bal.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                                    <div class="text-[10px] text-slate-400">当前余额</div>
+                                    <div class="text-base font-extrabold text-emerald-400">RM ${bal.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 pt-2 border-t border-slate-900">
-                                <button onclick="openEPFTxnModal('Deposit', '${key}', '${name}', ${bal})" class="flex-1 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white py-1.5 rounded-lg text-xs font-semibold transition border border-emerald-500/30">
+                            <!-- 独立拆分按钮组件 -->
+                            <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800/80">
+                                <button onclick="openEPFTxnModal('Deposit', '${key}', '${name}', ${bal})" class="bg-emerald-600/20 active:bg-emerald-600 text-emerald-300 active:text-white py-1.5 rounded-lg text-xs font-semibold transition border border-emerald-500/30 text-center">
                                     ➕ 账户供款
                                 </button>
-                                <button onclick="openEPFTxnModal('Withdrawal', '${key}', '${name}', ${bal})" class="flex-1 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white py-1.5 rounded-lg text-xs font-semibold transition border border-red-500/30">
+                                <button onclick="openEPFTxnModal('Withdrawal', '${key}', '${name}', ${bal})" class="bg-red-600/20 active:bg-red-600 text-red-300 active:text-white py-1.5 rounded-lg text-xs font-semibold transition border border-red-500/30 text-center">
                                     ➖ 账户提款
                                 </button>
-                                <button onclick="openEPFHistoryModal('${key}', '${name}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium transition">
-                                    明细
+                                <button onclick="openEPFHistoryModal('${key}', '${name}')" class="bg-slate-800 active:bg-slate-700 text-slate-300 py-1.5 rounded-lg text-xs font-medium transition text-center">
+                                    查看明细
                                 </button>
                             </div>
                         </div>
                     `;
                 });
             } else {
-                epfHtml = '<div class="text-slate-500 text-sm text-center py-4">暂无公积金账户</div>';
+                epfHtml = '<div class="text-slate-500 text-xs text-center py-6 bg-slate-900/50 rounded-xl border border-slate-800">暂无公积金账户</div>';
             }
             document.getElementById('epf-accounts-container').innerHTML = epfHtml;
             document.getElementById('summary-epf').innerText = 'RM ' + totalEpfVal.toLocaleString('en-US', {minimumFractionDigits: 2});
 
-            // 2. 渲染 Cash 存款
+            // 2. 渲染 Cash 存款账户 (包含独立存入/提取/转账按键)
             let cashHtml = '';
             let totalCashVal = 0;
             if (data.cashAccounts && data.cashAccounts.length > 0) {
                 data.cashAccounts.forEach(acc => {
                     let id = acc.Account_ID || acc.accountId;
-                    let type = acc.Type || acc.type;
-                    let bank = acc.Bank_Name || acc.bankName;
-                    let nick = acc.Nickname || acc.nickname;
+                    let type = acc.Type || acc.type || 'Savings';
+                    let bank = acc.Bank_Name || acc.bankName || '';
+                    let nick = acc.Nickname || acc.nickname || '存款卡';
                     let bal = parseFloat(acc.Balance || acc.balance || 0);
                     totalCashVal += bal;
 
                     cashHtml += `
-                        <div class="bg-slate-950/50 border border-slate-800/80 p-4 rounded-xl flex flex-col gap-3">
+                        <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-xl space-y-3 shadow-sm">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <div class="text-xs text-blue-400 font-semibold">${type || ''} - ${bank || ''}</div>
-                                    <div class="font-bold text-base text-slate-100">${nick || ''}</div>
+                                    <span class="text-[10px] text-blue-400 font-bold px-1.5 py-0.5 bg-blue-400/10 rounded border border-blue-400/20">${type} - ${bank}</span>
+                                    <div class="font-bold text-base text-slate-100 mt-1">${nick}</div>
                                 </div>
                                 <div class="text-right">
-                                    <div class="text-xs text-slate-400">可用余额</div>
-                                    <div class="text-lg font-bold text-emerald-400">RM ${bal.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                                    <div class="text-[10px] text-slate-400">可用余额</div>
+                                    <div class="text-base font-extrabold text-emerald-400">RM ${bal.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 pt-2 border-t border-slate-900">
-                                <button onclick="openCashTxnModal('Deposit', '${id}', '${nick}', ${bal})" class="flex-1 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white py-1.5 rounded-lg text-xs font-semibold transition border border-emerald-500/30">
+                            <!-- 独立拆分按钮组件 -->
+                            <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800/80">
+                                <button onclick="openCashTxnModal('Deposit', '${id}', '${nick}', ${bal})" class="bg-emerald-600/20 active:bg-emerald-600 text-emerald-300 active:text-white py-1.5 rounded-lg text-xs font-semibold transition border border-emerald-500/30 text-center">
                                     ➕ 存入
                                 </button>
-                                <button onclick="openCashTxnModal('Withdrawal', '${id}', '${nick}', ${bal})" class="flex-1 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white py-1.5 rounded-lg text-xs font-semibold transition border border-red-500/30">
+                                <button onclick="openCashTxnModal('Withdrawal', '${id}', '${nick}', ${bal})" class="bg-red-600/20 active:bg-red-600 text-red-300 active:text-white py-1.5 rounded-lg text-xs font-semibold transition border border-red-500/30 text-center">
                                     ➖ 提取支出
                                 </button>
-                                <button onclick="openCashHistoryModal('${id}', '${nick}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                                <button onclick="openCashHistoryModal('${id}', '${nick}')" class="bg-slate-800 active:bg-slate-700 text-slate-300 py-1.5 rounded-lg text-xs font-medium transition text-center">
                                     明细
                                 </button>
                             </div>
@@ -231,38 +306,112 @@
                     `;
                 });
             } else {
-                cashHtml = '<div class="text-slate-500 text-sm text-center py-4">暂无存款账户</div>';
+                cashHtml = '<div class="text-slate-500 text-xs text-center py-6 bg-slate-900/50 rounded-xl border border-slate-800">暂无存款账户</div>';
             }
             document.getElementById('cash-accounts-container').innerHTML = cashHtml;
             document.getElementById('summary-cash').innerText = 'RM ' + totalCashVal.toLocaleString('en-US', {minimumFractionDigits: 2});
 
-            // 3. 渲染 Gold 黄金
+            // 3. 渲染 Stocks 股票持仓
+            let stocksHtml = '';
+            let totalStockVal = 0;
+            if (data.stockData && data.stockData.length > 0) {
+                data.stockData.forEach(st => {
+                    let ticker = st.Ticker || st.ticker;
+                    let name = st.Stock_Name || st.stockName || '';
+                    let shares = parseFloat(st.Total_Shares || st.shares || 0);
+                    let curPrice = parseFloat(st.Current_Price || st.currentPrice || 0);
+                    let mVal = shares * curPrice;
+                    totalStockVal += mVal;
+
+                    stocksHtml += `
+                        <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-xl space-y-2 shadow-sm">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-[10px] text-emerald-400 font-bold px-1.5 py-0.5 bg-emerald-400/10 rounded border border-emerald-400/20">${ticker}</span>
+                                    <div class="font-bold text-sm text-slate-100 mt-1">${name}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-[10px] text-slate-400">持仓: ${shares} 股</div>
+                                    <div class="text-base font-bold text-emerald-400">RM ${mVal.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
+                                <button onclick="openStockTxnModal('Buy', '${ticker}')" class="bg-emerald-600/20 active:bg-emerald-600 text-emerald-300 active:text-white py-1.5 rounded-lg text-xs font-medium text-center">➕ 买入</button>
+                                <button onclick="openStockTxnModal('Sell', '${ticker}')" class="bg-red-600/20 active:bg-red-600 text-red-300 active:text-white py-1.5 rounded-lg text-xs font-medium text-center">➖ 卖出</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                stocksHtml = '<div class="text-slate-500 text-xs text-center py-6 bg-slate-900/50 rounded-xl border border-slate-800">暂无股票持仓</div>';
+            }
+            document.getElementById('stocks-container').innerHTML = stocksHtml;
+            document.getElementById('summary-stocks').innerText = 'RM ' + totalStockVal.toLocaleString('en-US', {minimumFractionDigits: 2});
+
+            // 4. 渲染 Dividend Tracking 股息追踪历史明细 (原汁原味恢复)
+            let divsHtml = '';
+            let totalDivMYR = 0, totalDivUSD = 0;
+            if (data.stockDividends && data.stockDividends.length > 0) {
+                data.stockDividends.forEach(d => {
+                    let divId = d.Dividend_ID || d.divId;
+                    let ticker = d.Ticker || d.ticker || '';
+                    let payDate = String(d.Pay_Date || d.payDate || '').split('T')[0];
+                    let totalAmt = parseFloat(d.Total_Amount || d.totalAmount || 0);
+
+                    if (ticker.endsWith('.KL') || !ticker.includes('.')) {
+                        totalDivMYR += totalAmt;
+                    } else {
+                        totalDivUSD += totalAmt;
+                    }
+
+                    divsHtml += `
+                        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex justify-between items-center text-xs">
+                            <div>
+                                <div class="font-bold text-slate-100">${ticker}</div>
+                                <div class="text-[10px] text-slate-400 mt-0.5">派息日: ${payDate}</div>
+                            </div>
+                            <div class="text-right flex items-center gap-2">
+                                <span class="font-bold text-yellow-400">+ RM ${totalAmt.toFixed(2)}</span>
+                                <button onclick="deleteDividend('${divId}')" class="text-red-400 active:text-red-300 p-1"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                divsHtml = '<div class="text-slate-500 text-xs text-center py-6 bg-slate-900/50 rounded-xl border border-slate-800">暂无股息派发记录</div>';
+            }
+            document.getElementById('dividends-list-container').innerHTML = divsHtml;
+            document.getElementById('div-total-myr').innerText = 'RM ' + totalDivMYR.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('div-total-usd').innerText = '$ ' + totalDivUSD.toLocaleString('en-US', {minimumFractionDigits: 2});
+
+            // 5. 渲染 Gold 黄金持仓
             let goldHtml = '';
             let totalGoldVal = 0;
             if (data.goldList && data.goldList.length > 0) {
                 data.goldList.forEach(g => {
-                    let gType = g.Gold_Type || g.goldType;
+                    let gType = g.Gold_Type || g.goldType || '实物黄金';
                     let grams = parseFloat(g.Total_Grams || g.grams || 0);
                     let mVal = parseFloat(g.Market_Value || g.marketValue || 0);
                     totalGoldVal += mVal;
 
                     goldHtml += `
-                        <div class="bg-slate-950/50 border border-slate-800/80 p-4 rounded-xl flex flex-col gap-3">
+                        <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-xl space-y-3 shadow-sm">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <div class="text-xs text-yellow-400 font-semibold">黄金类型</div>
-                                    <div class="font-bold text-base text-slate-100">${gType || ''}</div>
+                                    <span class="text-[10px] text-yellow-400 font-bold px-1.5 py-0.5 bg-yellow-400/10 rounded border border-yellow-400/20">黄金</span>
+                                    <div class="font-bold text-base text-slate-100 mt-1">${gType}</div>
                                 </div>
                                 <div class="text-right">
-                                    <div class="text-xs text-slate-400">克数: ${grams.toFixed(2)} g</div>
-                                    <div class="text-lg font-bold text-emerald-400">RM ${mVal.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                                    <div class="text-[10px] text-slate-400">持仓: ${grams.toFixed(2)} 克</div>
+                                    <div class="text-base font-extrabold text-emerald-400">RM ${mVal.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 pt-2 border-t border-slate-900">
-                                <button onclick="openGoldTxnModal('buy', '${gType}')" class="flex-1 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white py-1.5 rounded-lg text-xs font-semibold transition border border-emerald-500/30">
+                            <!-- 独立买卖按键组件 -->
+                            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
+                                <button onclick="openGoldTxnModal('buy', '${gType}')" class="bg-emerald-600/20 active:bg-emerald-600 text-emerald-300 active:text-white py-1.5 rounded-lg text-xs font-semibold text-center">
                                     ➕ 买入黄金
                                 </button>
-                                <button onclick="openGoldTxnModal('sell', '${gType}')" class="flex-1 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white py-1.5 rounded-lg text-xs font-semibold transition border border-red-500/30">
+                                <button onclick="openGoldTxnModal('sell', '${gType}')" class="bg-red-600/20 active:bg-red-600 text-red-300 active:text-white py-1.5 rounded-lg text-xs font-semibold text-center">
                                     ➖ 卖出黄金
                                 </button>
                             </div>
@@ -270,78 +419,43 @@
                     `;
                 });
             } else {
-                goldHtml = '<div class="text-slate-500 text-sm text-center py-4">暂无黄金持仓</div>';
+                goldHtml = '<div class="text-slate-500 text-xs text-center py-6 bg-slate-900/50 rounded-xl border border-slate-800">暂无黄金资产</div>';
             }
             document.getElementById('gold-container').innerHTML = goldHtml;
             document.getElementById('summary-gold').innerText = 'RM ' + totalGoldVal.toLocaleString('en-US', {minimumFractionDigits: 2});
 
-            // 4. 渲染 Stocks 股票
-            let stocksHtml = '';
-            let totalStockVal = 0;
-            if (data.stockData && data.stockData.length > 0) {
-                data.stockData.forEach(st => {
-                    let ticker = st.Ticker || st.ticker;
-                    let name = st.Stock_Name || st.stockName;
-                    let shares = parseFloat(st.Total_Shares || st.shares || 0);
-                    let curPrice = parseFloat(st.Current_Price || st.currentPrice || 0);
-                    let mVal = shares * curPrice;
-                    totalStockVal += mVal;
-
-                    stocksHtml += `
-                        <div class="bg-slate-950/50 border border-slate-800/80 p-4 rounded-xl flex flex-col gap-2">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <div class="text-xs text-emerald-400 font-semibold">${ticker || ''}</div>
-                                    <div class="font-bold text-sm text-slate-100">${name || ''}</div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-xs text-slate-400">持有: ${shares} 股</div>
-                                    <div class="text-base font-bold text-emerald-400">RM ${mVal.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2 pt-2 border-t border-slate-900">
-                                <button onclick="openStockTxnModal('Buy', '${ticker}')" class="flex-1 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white py-1 rounded text-xs">➕ 买入</button>
-                                <button onclick="openStockTxnModal('Sell', '${ticker}')" class="flex-1 bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white py-1 rounded text-xs">➖ 卖出</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            } else {
-                stocksHtml = '<div class="text-slate-500 text-sm text-center py-4">暂无股票持仓</div>';
-            }
-            document.getElementById('stocks-container').innerHTML = stocksHtml;
-            document.getElementById('summary-stocks').innerText = 'RM ' + totalStockVal.toLocaleString('en-US', {minimumFractionDigits: 2});
-
-            // 总净资产
-            let totalNw = totalEpfVal + totalCashVal + totalGoldVal + totalStockVal;
+            // 6. 计算并渲染总净资产
+            let totalNw = totalEpfVal + totalCashVal + totalStockVal + totalGoldVal;
             document.getElementById('summary-nw').innerText = 'RM ' + totalNw.toLocaleString('en-US', {minimumFractionDigits: 2});
         }
 
-        // ================= 弹窗与交互函数 =================
+        // ================= 各模块独立弹窗与防负数/防清零校验逻辑 =================
+
+        // EPF 独立弹窗
         function openEPFTxnModal(type, accountKey, fundName, currentBal) {
             let isDep = (type === 'Deposit');
             let title = isDep ? '账户供款 (Deposit)' : '账户提款 (Withdrawal)';
-            let btnClass = isDep ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-red-600 hover:bg-red-500';
+            let btnClass = isDep ? 'bg-emerald-600 active:bg-emerald-500' : 'bg-red-600 active:bg-red-500';
 
             showModal(`
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-bold text-base text-slate-100">${fundName} - ${title}</h3>
-                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <h3 class="font-bold text-sm text-slate-100">${fundName} - ${title}</h3>
+                    <button onclick="closeModal()" class="text-slate-400 p-1"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <div class="space-y-3">
+                <div class="space-y-3 pt-2">
                     <div>
                         <label class="text-xs text-slate-400">金额 (RM)</label>
-                        <input type="number" id="epf-amount" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0.00">
+                        <input type="number" id="epf-amount" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1 focus:border-emerald-500 outline-none" placeholder="0.00">
                     </div>
                     <div>
                         <label class="text-xs text-slate-400">日期</label>
-                        <input type="date" id="epf-date" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" value="${new Date().toISOString().split('T')[0]}">
+                        <input type="date" id="epf-date" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1 focus:border-emerald-500 outline-none" value="${new Date().toISOString().split('T')[0]}">
                     </div>
                     <div>
                         <label class="text-xs text-slate-400">备注 (Remark)</label>
-                        <input type="text" id="epf-remark" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="例如：每月正常供款">
+                        <input type="text" id="epf-remark" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1 focus:border-emerald-500 outline-none" placeholder="例如：每月雇主及个人供款">
                     </div>
-                    <button id="submit-btn" onclick="submitEPFTxn('${accountKey}', '${type}', ${currentBal})" class="w-full ${btnClass} text-white font-medium py-2.5 rounded-lg text-sm transition mt-2">
+                    <button id="submit-btn" onclick="submitEPFTxn('${accountKey}', '${type}', ${currentBal})" class="w-full ${btnClass} text-white font-semibold py-3 rounded-xl text-sm transition mt-2">
                         确认提交
                     </button>
                 </div>
@@ -354,7 +468,7 @@
             let remark = document.getElementById('epf-remark').value;
 
             if (!amt || amt <= 0) { alert('请输入有效金额！'); return; }
-            if (type === 'Withdrawal' && amt > currentBal) { alert('提取金额不能大于当前可用余额！'); return; }
+            if (type === 'Withdrawal' && amt > currentBal) { alert('提款金额不能大于当前可用余额！'); return; }
 
             let btn = document.getElementById('submit-btn');
             btn.disabled = true; btn.innerText = '提交中...';
@@ -362,30 +476,31 @@
             sendApi({ action: 'addEPFTransaction', accountKey: accountKey, type: type, amount: amt, date: date, remark: remark.trim() });
         }
 
+        // Cash 独立存取弹窗
         function openCashTxnModal(type, accountId, nick, currentBal) {
             let isDep = (type === 'Deposit');
             let title = isDep ? '存入现金 (Deposit)' : '提取支出 (Withdrawal)';
-            let btnClass = isDep ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-red-600 hover:bg-red-500';
+            let btnClass = isDep ? 'bg-emerald-600 active:bg-emerald-500' : 'bg-red-600 active:bg-red-500';
 
             showModal(`
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-bold text-base text-slate-100">${nick} - ${title}</h3>
-                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <h3 class="font-bold text-sm text-slate-100">${nick} - ${title}</h3>
+                    <button onclick="closeModal()" class="text-slate-400 p-1"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <div class="space-y-3">
+                <div class="space-y-3 pt-2">
                     <div>
                         <label class="text-xs text-slate-400">金额 (RM)</label>
-                        <input type="number" id="cash-amount" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0.00">
+                        <input type="number" id="cash-amount" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1 focus:border-emerald-500 outline-none" placeholder="0.00">
                     </div>
                     <div>
                         <label class="text-xs text-slate-400">日期</label>
-                        <input type="date" id="cash-date" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" value="${new Date().toISOString().split('T')[0]}">
+                        <input type="date" id="cash-date" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1 focus:border-emerald-500 outline-none" value="${new Date().toISOString().split('T')[0]}">
                     </div>
                     <div>
                         <label class="text-xs text-slate-400">备注 (Remark)</label>
-                        <input type="text" id="cash-remark" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="例如：薪水入账">
+                        <input type="text" id="cash-remark" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1 focus:border-emerald-500 outline-none" placeholder="例如：日常餐饮或工资">
                     </div>
-                    <button id="submit-btn" onclick="submitCashTxn('${accountId}', '${type}', ${currentBal})" class="w-full ${btnClass} text-white font-medium py-2.5 rounded-lg text-sm transition mt-2">
+                    <button id="submit-btn" onclick="submitCashTxn('${accountId}', '${type}', ${currentBal})" class="w-full ${btnClass} text-white font-semibold py-3 rounded-xl text-sm transition mt-2">
                         确认提交
                     </button>
                 </div>
@@ -398,7 +513,7 @@
             let remark = document.getElementById('cash-remark').value;
 
             if (!amt || amt <= 0) { alert('请输入有效金额！'); return; }
-            if (type === 'Withdrawal' && amt > currentBal) { alert('提取金额不能大于当前可用余额！'); return; }
+            if (type === 'Withdrawal' && amt > currentBal) { alert('提取金额大于可用余额！'); return; }
 
             let btn = document.getElementById('submit-btn');
             btn.disabled = true; btn.innerText = '提交中...';
@@ -406,30 +521,31 @@
             sendApi({ action: 'updateCashBalance', accountId: accountId, type: type === 'Deposit' ? 'in' : 'out', amount: amt, date: date, remark: remark.trim() });
         }
 
+        // Gold 独立买卖弹窗
         function openGoldTxnModal(txnType, goldType) {
             let isBuy = (txnType === 'buy');
             let title = isBuy ? '买入黄金 (Buy)' : '卖出黄金 (Sell)';
-            let btnClass = isBuy ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-red-600 hover:bg-red-500';
+            let btnClass = isBuy ? 'bg-emerald-600 active:bg-emerald-500' : 'bg-red-600 active:bg-red-500';
 
             showModal(`
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-bold text-base text-slate-100">${goldType} - ${title}</h3>
-                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <h3 class="font-bold text-sm text-slate-100">${goldType} - ${title}</h3>
+                    <button onclick="closeModal()" class="text-slate-400 p-1"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <div class="space-y-3">
+                <div class="space-y-3 pt-2">
                     <div>
                         <label class="text-xs text-slate-400">克数 (Grams)</label>
-                        <input type="number" id="gold-grams" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0.00">
+                        <input type="number" id="gold-grams" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1 focus:border-emerald-500 outline-none" placeholder="0.00">
                     </div>
                     <div>
                         <label class="text-xs text-slate-400">单价 (RM per gram)</label>
-                        <input type="number" id="gold-price" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0.00">
+                        <input type="number" id="gold-price" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1 focus:border-emerald-500 outline-none" placeholder="0.00">
                     </div>
                     <div>
                         <label class="text-xs text-slate-400">日期</label>
-                        <input type="date" id="gold-date" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" value="${new Date().toISOString().split('T')[0]}">
+                        <input type="date" id="gold-date" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1 focus:border-emerald-500 outline-none" value="${new Date().toISOString().split('T')[0]}">
                     </div>
-                    <button id="submit-btn" onclick="submitGoldTxn('${goldType}', '${txnType}')" class="w-full ${btnClass} text-white font-medium py-2.5 rounded-lg text-sm transition mt-2">
+                    <button id="submit-btn" onclick="submitGoldTxn('${goldType}', '${txnType}')" class="w-full ${btnClass} text-white font-semibold py-3 rounded-xl text-sm transition mt-2">
                         确认提交
                     </button>
                 </div>
@@ -449,28 +565,74 @@
             sendApi({ action: 'addGoldTransaction', goldType: goldType, txnType: txnType, grams: grams, price: price, date: date });
         }
 
+        // 新增股息派发记录弹窗 (原汁原味恢复)
+        function openAddStockDividendModal() {
+            showModal(`
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <h3 class="font-bold text-sm text-slate-100">登记已到账股息 (Dividend)</h3>
+                    <button onclick="closeModal()" class="text-slate-400 p-1"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="space-y-3 pt-2">
+                    <div>
+                        <label class="text-xs text-slate-400">股票代码 (Ticker)</label>
+                        <input type="text" id="div-ticker" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1 focus:border-emerald-500 outline-none" placeholder="如: 7277.KL 或 AAPL">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400">持有股数 (Units)</label>
+                        <input type="number" id="div-units" step="1" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1 focus:border-emerald-500 outline-none" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400">每股派息 (Per Share Amount)</label>
+                        <input type="number" id="div-pershare" step="0.0001" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1 focus:border-emerald-500 outline-none" placeholder="0.0000">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400">派息日期 (Pay Date)</label>
+                        <input type="date" id="div-date" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1 focus:border-emerald-500 outline-none" value="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                    <button id="submit-btn" onclick="submitAddStockDividend()" class="w-full bg-yellow-600 active:bg-yellow-500 text-white font-semibold py-3 rounded-xl text-sm transition mt-2">
+                        保存股息记录
+                    </button>
+                </div>
+            `);
+        }
+
+        function submitAddStockDividend() {
+            let ticker = document.getElementById('div-ticker').value;
+            let units = parseFloat(document.getElementById('div-units').value);
+            let perShare = parseFloat(document.getElementById('div-pershare').value);
+            let payDate = document.getElementById('div-date').value;
+
+            if (!ticker || !units || !perShare) { alert('请填写完整信息！'); return; }
+
+            let btn = document.getElementById('submit-btn');
+            btn.disabled = true; btn.innerText = '提交中...';
+
+            sendApi({
+                action: 'addStockDividend',
+                ticker: ticker.trim().toUpperCase(),
+                units: units,
+                perShareAmount: perShare,
+                payDate: payDate
+            });
+        }
+
+        function deleteDividend(divId) {
+            if (!confirm('确定删除此条股息记录？')) return;
+            sendApi({ action: 'deleteStockDividend', divId: divId });
+        }
+
+        // 新增 EPF 账户
         function openAddEPFAccountModal() {
             showModal(`
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-bold text-base text-slate-100">新增公积金账户</h3>
-                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <h3 class="font-bold text-sm text-slate-100">新增 EPF 公积金账户</h3>
+                    <button onclick="closeModal()" class="text-slate-400 p-1"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <div class="space-y-3">
-                    <div>
-                        <label class="text-xs text-slate-400">账户类别 (Category)</label>
-                        <input type="text" id="epf-cat" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="例如：KWSP">
-                    </div>
-                    <div>
-                        <label class="text-xs text-slate-400">基金名称 (Fund Name)</label>
-                        <input type="text" id="epf-name" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="例如：Account 1">
-                    </div>
-                    <div>
-                        <label class="text-xs text-slate-400">初始本金 (RM)</label>
-                        <input type="number" id="epf-bal" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0.00">
-                    </div>
-                    <button id="submit-btn" onclick="submitAddEPFAccount()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition mt-2">
-                        创建账户
-                    </button>
+                <div class="space-y-3 pt-2">
+                    <div><label class="text-xs text-slate-400">类别 (Category)</label><input type="text" id="epf-cat" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="KWSP / PRS"></div>
+                    <div><label class="text-xs text-slate-400">基金名称</label><input type="text" id="epf-name" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="Account 1"></div>
+                    <div><label class="text-xs text-slate-400">初始余额 (RM)</label><input type="number" id="epf-bal" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0.00"></div>
+                    <button id="submit-btn" onclick="submitAddEPFAccount()" class="w-full bg-emerald-600 active:bg-emerald-500 text-white font-semibold py-3 rounded-xl text-sm transition mt-2">创建账户</button>
                 </div>
             `);
         }
@@ -483,18 +645,19 @@
             sendApi({ action: 'addEPFAccount', category: cat, fundName: name, balance: bal });
         }
 
+        // 新增 Cash 账户
         function openAddCashAccountModal() {
             showModal(`
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-bold text-base text-slate-100">新增存款账户</h3>
-                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <h3 class="font-bold text-sm text-slate-100">新增存款账户</h3>
+                    <button onclick="closeModal()" class="text-slate-400 p-1"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <div class="space-y-3">
+                <div class="space-y-3 pt-2">
                     <div><label class="text-xs text-slate-400">类型</label><input type="text" id="cash-type" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="Savings"></div>
                     <div><label class="text-xs text-slate-400">银行</label><input type="text" id="cash-bank" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="Maybank"></div>
-                    <div><label class="text-xs text-slate-400">昵称</label><input type="text" id="cash-nick" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="工资账户"></div>
+                    <div><label class="text-xs text-slate-400">昵称</label><input type="text" id="cash-nick" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="日常卡"></div>
                     <div><label class="text-xs text-slate-400">初始余额</label><input type="number" id="cash-bal" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0.00"></div>
-                    <button id="submit-btn" onclick="submitAddCashAccount()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition mt-2">创建</button>
+                    <button id="submit-btn" onclick="submitAddCashAccount()" class="w-full bg-emerald-600 active:bg-emerald-500 text-white font-semibold py-3 rounded-xl text-sm transition mt-2">创建</button>
                 </div>
             `);
         }
@@ -504,21 +667,22 @@
             let bank = document.getElementById('cash-bank').value;
             let nick = document.getElementById('cash-nick').value;
             let bal = parseFloat(document.getElementById('cash-bal').value) || 0;
-            if (!type || !bank || !nick) { alert('请完整填写！'); return; }
+            if (!type || !bank || !nick) { alert('请填写完整！'); return; }
             sendApi({ action: 'addCashAccount', type: type, bankName: bank, nickname: nick, balance: bal });
         }
 
+        // 新增股票
         function openAddStockModal() {
             showModal(`
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-bold text-base text-slate-100">新增股票</h3>
-                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <h3 class="font-bold text-sm text-slate-100">新增股票持仓</h3>
+                    <button onclick="closeModal()" class="text-slate-400 p-1"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <div class="space-y-3">
-                    <div><label class="text-xs text-slate-400">代码 (Ticker)</label><input type="text" id="st-ticker" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="7277.KL"></div>
+                <div class="space-y-3 pt-2">
+                    <div><label class="text-xs text-slate-400">股票代码 (Ticker)</label><input type="text" id="st-ticker" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="7277.KL"></div>
                     <div><label class="text-xs text-slate-400">名称</label><input type="text" id="st-name" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="Dialog Group"></div>
                     <div><label class="text-xs text-slate-400">市场</label><input type="text" id="st-market" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="大马股市"></div>
-                    <button id="submit-btn" onclick="submitAddStock()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition mt-2">添加</button>
+                    <button id="submit-btn" onclick="submitAddStock()" class="w-full bg-emerald-600 active:bg-emerald-500 text-white font-semibold py-3 rounded-xl text-sm transition mt-2">添加</button>
                 </div>
             `);
         }
@@ -533,16 +697,16 @@
 
         function openStockTxnModal(txnType, ticker) {
             showModal(`
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-bold text-base text-slate-100">${ticker} - ${txnType} 股票</h3>
-                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <h3 class="font-bold text-sm text-slate-100">${ticker} - ${txnType} 股票</h3>
+                    <button onclick="closeModal()" class="text-slate-400 p-1"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <div class="space-y-3">
+                <div class="space-y-3 pt-2">
                     <div><label class="text-xs text-slate-400">股数 (Shares)</label><input type="number" id="st-shares" step="1" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0"></div>
                     <div><label class="text-xs text-slate-400">单价 (Price)</label><input type="number" id="st-price" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="0.00"></div>
                     <div><label class="text-xs text-slate-400">手续费 (Fees)</label><input type="number" id="st-fees" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" value="0.00"></div>
                     <div><label class="text-xs text-slate-400">券商 (Broker)</label><input type="text" id="st-broker" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm mt-1" placeholder="Mplus"></div>
-                    <button id="submit-btn" onclick="submitStockTxn('${ticker}', '${txnType}')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition mt-2">提交</button>
+                    <button id="submit-btn" onclick="submitStockTxn('${ticker}', '${txnType}')" class="w-full bg-emerald-600 active:bg-emerald-500 text-white font-semibold py-3 rounded-xl text-sm transition mt-2">提交</button>
                 </div>
             `);
         }
@@ -557,6 +721,7 @@
             sendApi({ action: 'addStockTxn', ticker: ticker, txnType: txnType, shares: shares, price: price, fees: fees, broker: broker });
         }
 
+        // EPF 查看交易明细
         function openEPFHistoryModal(accountKey, fundName) {
             let txns = (globalData.epfTxns || []).filter(t => String(t.Account_Key || t.accountKey).trim() === String(accountKey).trim());
             let txnRows = '';
@@ -569,29 +734,29 @@
                     let rem = t.remark || t.Remark || '无备注';
 
                     txnRows += `
-                        <tr class="border-b border-slate-800 text-xs">
-                            <td class="py-2.5">${dateStr}</td>
-                            <td class="py-2.5">${tType}</td>
-                            <td class="py-2.5 font-semibold ${tType.toLowerCase().includes('deposit') ? 'text-emerald-400' : 'text-red-400'}">RM ${amt.toFixed(2)}</td>
-                            <td class="py-2.5 text-slate-400">${rem}</td>
-                            <td class="py-2.5 text-right">
-                                <button onclick="deleteEPFTxn('${tid}', '${accountKey}')" class="text-red-400 hover:text-red-300">删除</button>
+                        <tr class="border-b border-slate-800 text-[11px]">
+                            <td class="py-2">${dateStr}</td>
+                            <td class="py-2">${tType}</td>
+                            <td class="py-2 font-bold ${tType.toLowerCase().includes('deposit') ? 'text-emerald-400' : 'text-red-400'}">RM ${amt.toFixed(2)}</td>
+                            <td class="py-2 text-slate-400">${rem}</td>
+                            <td class="py-2 text-right">
+                                <button onclick="deleteEPFTxn('${tid}', '${accountKey}')" class="text-red-400 active:text-red-300">删除</button>
                             </td>
                         </tr>
                     `;
                 });
             } else {
-                txnRows = `<tr><td colspan="5" class="text-center text-slate-500 py-4">暂无明细</td></tr>`;
+                txnRows = `<tr><td colspan="5" class="text-center text-slate-500 py-4 text-xs">暂无交易明细</td></tr>`;
             }
 
             showModal(`
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="font-bold text-base text-slate-100">${fundName} - 交易明细</h3>
-                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <h3 class="font-bold text-sm text-slate-100">${fundName} - 交易明细</h3>
+                    <button onclick="closeModal()" class="text-slate-400 p-1"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <div class="max-h-80 overflow-y-auto">
+                <div class="max-h-64 overflow-y-auto">
                     <table class="w-full text-left">
-                        <thead><tr class="border-b border-slate-800 text-xs text-slate-400"><th class="pb-2">日期</th><th class="pb-2">类型</th><th class="pb-2">金额</th><th class="pb-2">备注</th><th class="pb-2 text-right">操作</th></tr></thead>
+                        <thead><tr class="border-b border-slate-800 text-[10px] text-slate-400"><th class="pb-1">日期</th><th class="pb-1">类型</th><th class="pb-1">金额</th><th class="pb-1">备注</th><th class="pb-1 text-right">操作</th></tr></thead>
                         <tbody>${txnRows}</tbody>
                     </table>
                 </div>
@@ -599,10 +764,11 @@
         }
 
         function deleteEPFTxn(txnId, accountKey) {
-            if (!confirm('确定删除此条明细？系统将自动安全重算余额')) return;
+            if (!confirm('确定要删除此条记录吗？系统将自动安全重算余额，初始大额本金决不丢失！')) return;
             sendApi({ action: 'deleteEPFTxn', txnId: txnId, accountKey: accountKey });
         }
 
+        // Cash 查看交易明细
         function openCashHistoryModal(accountId, nick) {
             let txns = (globalData.cashTxns || []).filter(t => String(t.Account_ID || t.accountId).trim() === String(accountId).trim());
             let txnRows = '';
@@ -615,29 +781,29 @@
                     let rem = t.remark || t.Remark || '无备注';
 
                     txnRows += `
-                        <tr class="border-b border-slate-800 text-xs">
-                            <td class="py-2.5">${dateStr}</td>
-                            <td class="py-2.5">${tType}</td>
-                            <td class="py-2.5 font-semibold ${tType.toLowerCase().includes('deposit') || tType.toLowerCase().includes('in') ? 'text-emerald-400' : 'text-red-400'}">RM ${amt.toFixed(2)}</td>
-                            <td class="py-2.5 text-slate-400">${rem}</td>
-                            <td class="py-2.5 text-right">
-                                <button onclick="deleteCashTxn('${tid}', '${accountId}')" class="text-red-400 hover:text-red-300">删除</button>
+                        <tr class="border-b border-slate-800 text-[11px]">
+                            <td class="py-2">${dateStr}</td>
+                            <td class="py-2">${tType}</td>
+                            <td class="py-2 font-bold ${tType.toLowerCase().includes('deposit') || tType.toLowerCase().includes('in') ? 'text-emerald-400' : 'text-red-400'}">RM ${amt.toFixed(2)}</td>
+                            <td class="py-2 text-slate-400">${rem}</td>
+                            <td class="py-2 text-right">
+                                <button onclick="deleteCashTxn('${tid}', '${accountId}')" class="text-red-400 active:text-red-300">删除</button>
                             </td>
                         </tr>
                     `;
                 });
             } else {
-                txnRows = `<tr><td colspan="5" class="text-center text-slate-500 py-4">暂无明细</td></tr>`;
+                txnRows = `<tr><td colspan="5" class="text-center text-slate-500 py-4 text-xs">暂无交易明细</td></tr>`;
             }
 
             showModal(`
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="font-bold text-base text-slate-100">${nick} - 交易明细</h3>
-                    <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <h3 class="font-bold text-sm text-slate-100">${nick} - 交易明细</h3>
+                    <button onclick="closeModal()" class="text-slate-400 p-1"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <div class="max-h-80 overflow-y-auto">
+                <div class="max-h-64 overflow-y-auto">
                     <table class="w-full text-left">
-                        <thead><tr class="border-b border-slate-800 text-xs text-slate-400"><th class="pb-2">日期</th><th class="pb-2">类型</th><th class="pb-2">金额</th><th class="pb-2">备注</th><th class="pb-2 text-right">操作</th></tr></thead>
+                        <thead><tr class="border-b border-slate-800 text-[10px] text-slate-400"><th class="pb-1">日期</th><th class="pb-1">类型</th><th class="pb-1">金额</th><th class="pb-1">备注</th><th class="pb-1 text-right">操作</th></tr></thead>
                         <tbody>${txnRows}</tbody>
                     </table>
                 </div>
@@ -645,10 +811,11 @@
         }
 
         function deleteCashTxn(txnId, accountId) {
-            if (!confirm('确定删除此条明细？')) return;
+            if (!confirm('确定要删除此条记录吗？')) return;
             sendApi({ action: 'deleteCashTxn', txnId: txnId, accountId: accountId });
         }
 
+        // 弹窗通用控制
         function showModal(html) {
             document.getElementById('modal-content').innerHTML = html;
             document.getElementById('app-modal').classList.remove('hidden');
@@ -660,6 +827,7 @@
             document.getElementById('app-modal').classList.add('hidden');
         }
 
+        // 发送 API 请求底层函数
         function sendApi(payload) {
             fetch(API_URL, {
                 method: 'POST',
@@ -679,8 +847,8 @@
                 }
             })
             .catch(err => {
-                console.error("API 错误:", err);
-                alert('网络连接错误');
+                console.error("API 通信错误:", err);
+                alert('网络连接失败，请重试。');
                 let btn = document.getElementById('submit-btn');
                 if(btn) { btn.disabled = false; btn.innerText = '确认提交'; }
             });
