@@ -105,7 +105,7 @@
           </div>
         </section>
 
-        <!-- CASH (存款页面) -->
+        <!-- CASH -->
         <section v-if="activeTab === 'cash'" class="space-y-4">
           <div class="forest-card p-4 rounded-2xl space-y-3">
             <div class="flex justify-between items-center">
@@ -153,7 +153,7 @@
           </div>
         </section>
 
-        <!-- GOLD (黄金页面) -->
+        <!-- GOLD -->
         <section v-if="activeTab === 'gold'" class="space-y-4">
           <div class="forest-card p-4 rounded-2xl space-y-3">
             <div class="flex justify-between items-center">
@@ -238,7 +238,7 @@
           </div>
         </section>
 
-        <!-- STOCKS (股票页面 - 已彻底纠正交易记录买卖方向与属性映射) -->
+        <!-- STOCKS -->
         <section v-if="activeTab === 'stocks'" class="space-y-3">
           <div class="forest-card rounded-3xl p-4 space-y-3">
             <div class="flex justify-between items-center">
@@ -351,22 +351,36 @@
       </footer>
 
       <!-- Modals -->
+      <!-- 股息年度总览与个别股票同比分析弹窗 (已增强支持个别股票派息明细) -->
       <div v-if="showDividendSummaryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[85vh] flex flex-col">
           <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
-            <h3 class="font-extrabold text-base text-white">💰 股息年度总览与同比分析</h3>
+            <h3 class="font-extrabold text-base text-white">💰 股息年度总览与股票明细</h3>
             <button @click="showDividendSummaryModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
           </div>
-          <div class="text-xs text-slate-400">注：仅统计派息日（Pay Date）已到账的实际股息。</div>
-          <div class="space-y-2.5 overflow-y-auto flex-1">
-            <div v-for="stat in dividendYearlyStats" :key="stat.year" class="bg-[#132219] border border-[#1f3329] rounded-2xl p-4 flex justify-between items-center">
-              <div>
-                <div class="font-extrabold text-base text-white font-mono">{{ stat.year }} 年</div>
-                <div class="text-[10px] text-slate-400 mt-0.5" v-if="stat.diffPct !== null">
-                  对比去年: <span :class="stat.diffAmt >= 0 ? 'text-emerald-400' : 'text-rose-400'">{{ stat.diffAmt >= 0 ? '+' : '' }}RM {{ formatNumber(stat.diffAmt) }} ({{ stat.diffPct >= 0 ? '+' : '' }}{{ stat.diffPct }}%)</span>
+          <div class="text-xs text-slate-400">注：展示每年总派息及个别股票的派息金额（派息日已到账）。</div>
+          <div class="space-y-3 overflow-y-auto flex-1">
+            <div v-for="stat in dividendYearlyStats" :key="stat.year" class="bg-[#132219] border border-[#1f3329] rounded-2xl p-4 space-y-2.5">
+              <div class="flex justify-between items-center">
+                <div>
+                  <div class="font-extrabold text-base text-white font-mono">{{ stat.year }} 年总计</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5" v-if="stat.diffPct !== null">
+                    对比去年: <span :class="stat.diffAmt >= 0 ? 'text-emerald-400' : 'text-rose-400'">{{ stat.diffAmt >= 0 ? '+' : '' }}RM {{ formatNumber(stat.diffAmt) }} ({{ stat.diffPct >= 0 ? '+' : '' }}{{ stat.diffPct }}%)</span>
+                  </div>
+                </div>
+                <div class="font-serif-num font-bold text-amber-300 text-lg">RM {{ formatNumber(stat.total) }}</div>
+              </div>
+              
+              <!-- 个别股票明细列表 -->
+              <div class="pt-2 border-t border-[#1f3329] space-y-1.5">
+                <div v-for="stk in stat.stocks" :key="stk.ticker" class="flex justify-between items-center text-xs bg-[#0d1711] p-2 rounded-xl border border-[#1f3329]/50">
+                  <div>
+                    <span class="font-bold text-slate-200">{{ stk.stockName }}</span>
+                    <span class="text-[10px] text-slate-400 font-mono ml-1.5">({{ stk.ticker }})</span>
+                  </div>
+                  <span class="font-serif-num font-bold text-amber-400">RM {{ formatNumber(stk.total) }}</span>
                 </div>
               </div>
-              <div class="font-serif-num font-bold text-amber-300 text-base">RM {{ formatNumber(stat.total) }}</div>
             </div>
           </div>
         </div>
@@ -527,7 +541,7 @@
             <button @click="promptUpdateTP(selectedStock)" class="btn-gold-border px-2.5 py-1.5 rounded-xl text-xs font-bold">修改 TP ✏️</button>
           </div>
 
-          <!-- 交易记录列表 (已彻底修复映射：Buy显示买入绿色，Sell显示卖出红色，股数、单价、水钱100%对应) -->
+          <!-- 交易记录列表 -->
           <div class="space-y-2">
             <div class="flex justify-between items-center">
               <span class="text-xs font-bold text-slate-300">🧾 交易记录</span>
@@ -553,6 +567,7 @@
             </div>
           </div>
 
+          <!-- 股息记录列表 (派息额支持 4 位小数显示) -->
           <div class="space-y-2 pt-2 border-t border-[#1f3329]">
             <div class="flex justify-between items-center">
               <span class="text-xs font-bold text-slate-300">💰 股息记录</span>
@@ -562,7 +577,7 @@
             <div v-for="d in selectedStockDivs" :key="d.Div_ID" class="bg-[#132219]/70 border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
               <div>
                 <div class="font-bold text-slate-200">Ex-Date: {{ cleanDate(d.Ex_Date) }} (派息: {{ cleanDate(d.Pay_Date) }})</div>
-                <div class="text-[10px] text-slate-400 mt-0.5">{{ d.Units }} 股 × RM {{ formatNumber(d.Per_Share_Amount) }}</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">{{ d.Units }} 股 × RM {{ formatPerShare(d.Per_Share_Amount) }}</div>
               </div>
               <div class="text-right">
                 <div class="font-serif-num font-bold text-amber-300 text-sm">RM {{ formatNumber(d.Total_Dividend_MYR) }}</div>
@@ -592,6 +607,7 @@
         </div>
       </div>
 
+      <!-- 记录股息弹窗 (每股派息额 step 设为 0.0001 支持 4 位小数) -->
       <div v-if="showAddDivModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3 max-h-[85vh] overflow-y-auto">
           <h3 class="font-bold text-base text-white">💰 记录股息 - {{ divForm.ticker }}</h3>
@@ -599,7 +615,7 @@
           <div><label class="block text-[11px] text-slate-400 mb-1">除权日 (Ex-Date)</label><input type="date" v-model="divForm.exDate" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">派息日 (Pay Date - 决定到账)</label><input type="date" v-model="divForm.payDate" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">持股数 (Units)</label><input type="number" v-model="divForm.units" placeholder="如 1000" class="input-dark"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">每股派息额 (Per Share RM)</label><input type="number" step="0.001" v-model="divForm.perShareAmount" placeholder="0.00" class="input-dark"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">每股派息额 (Per Share RM - 支持4位小数)</label><input type="number" step="0.0001" v-model="divForm.perShareAmount" placeholder="0.0000" class="input-dark"></div>
           <div class="bg-[#132219] p-2.5 rounded-xl border border-[#1f3329] text-xs"><span class="text-slate-400">自动计算总股息:</span> <span class="font-serif-num font-bold text-amber-300 ml-1">RM {{ formatNumber((parseFloat(divForm.units)||0) * (parseFloat(divForm.perShareAmount)||0)) }}</span></div>
           <div>
             <label class="block text-[11px] text-slate-400 mb-1">存入现金户口 (派息日生效)</label>
@@ -744,7 +760,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbzkJp4KKn_xZPvYAlA3BPrFjOEeYLs7LmfkWxWVW1dajEu-zjhAiX5FIBOmnOLMKOdo/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbyv9Pmc3qDqDUHklGK6XHpeXcKLzoAcHjiKBVYixIG5_Mb3xRWu_9cob-RDNaJ2w3ed/exec";
 
     const { createApp, ref, computed, onMounted } = Vue;
 
@@ -966,15 +982,22 @@
         const showDividendSummaryModal = ref(false);
         const openDividendSummaryModal = () => { showDividendSummaryModal.value = true; };
 
+        // 增强版股息年度总览：包含总额、YoY对比以及“个别股票派息明细”
         const dividendYearlyStats = computed(() => {
           const todayStr = new Date().toISOString().split('T')[0];
-          const map = {};
+          const map = {}; // year -> { total: 0, stocksMap: { ticker: amount } }
+          
           stockDividends.value.forEach(d => {
             const payDate = cleanDate(d.Pay_Date);
             if (payDate && payDate <= todayStr) {
               const year = payDate.split('-')[0];
-              if (!map[year]) map[year] = 0;
-              map[year] += parseFloat(d.Total_Dividend_MYR) || 0;
+              if (!map[year]) map[year] = { total: 0, stocksMap: {} };
+              const amt = parseFloat(d.Total_Dividend_MYR) || 0;
+              map[year].total += amt;
+              
+              const tk = String(d.Ticker).trim().toUpperCase();
+              if (!map[year].stocksMap[tk]) map[year].stocksMap[tk] = 0;
+              map[year].stocksMap[tk] += amt;
             }
           });
 
@@ -982,16 +1005,26 @@
           const result = [];
           for (let i = 0; i < years.length; i++) {
             const y = years[i];
-            const total = map[y];
+            const data = map[y];
             let diffAmt = null;
             let diffPct = null;
             const prevYearStr = String(parseInt(y) - 1);
             if (map[prevYearStr] !== undefined) {
-              const prevTotal = map[prevYearStr];
-              diffAmt = total - prevTotal;
+              const prevTotal = map[prevYearStr].total;
+              diffAmt = data.total - prevTotal;
               diffPct = prevTotal > 0 ? ((diffAmt / prevTotal) * 100).toFixed(1) : '0.0';
             }
-            result.push({ year: y, total, diffAmt, diffPct });
+
+            const stocksArr = Object.keys(data.stocksMap).map(tk => {
+              const foundStk = stockData.value.find(s => String(s.Ticker).trim().toUpperCase() === tk);
+              return {
+                ticker: tk,
+                stockName: foundStk ? foundStk.Stock_Name : tk,
+                total: data.stocksMap[tk]
+              };
+            });
+
+            result.push({ year: y, total: data.total, diffAmt, diffPct, stocks: stocksArr });
           }
           return result;
         });
@@ -1241,16 +1274,28 @@
           await postAction('addStockTxn', stockTxnForm.value);
         };
 
+        // 修复 3：修改现价后，立即原地刷新本地 selectedStock 和列表，无需重新开窗
         const promptUpdatePrice = async (s) => {
           const newPrice = prompt(`更新 ${s.Ticker} 的现价 (${s.Currency}):`, s.Current_Price);
           if (newPrice === null) return;
-          await postAction('updateStockPrice', { ticker: s.Ticker, currentPrice: newPrice });
+          const p = parseFloat(newPrice) || 0;
+          s.Current_Price = p;
+          if (selectedStock.value && String(selectedStock.value.Ticker) === String(s.Ticker)) {
+            selectedStock.value.Current_Price = p;
+          }
+          await postAction('updateStockPrice', { ticker: s.Ticker, currentPrice: p });
         };
 
+        // 修复 3：修改 TP 后，立即原地刷新本地 selectedStock 和列表，无需重新开窗
         const promptUpdateTP = async (s) => {
           const newTP = prompt(`更新 ${s.Ticker} 的目标价 TP (${s.Currency}):`, s.Target_Price_TP || s.Current_Price);
           if (newTP === null) return;
-          await postAction('updateStockTP', { ticker: s.Ticker, targetPrice: newTP });
+          const tp = parseFloat(newTP) || 0;
+          s.Target_Price_TP = tp;
+          if (selectedStock.value && String(selectedStock.value.Ticker) === String(s.Ticker)) {
+            selectedStock.value.Target_Price_TP = tp;
+          }
+          await postAction('updateStockTP', { ticker: s.Ticker, targetPrice: tp });
         };
 
         const deleteStockTxn = async (t) => {
@@ -1374,6 +1419,12 @@
           return isNaN(num) ? '0.00' : num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         };
 
+        // 修复 2：支持每股派息额显示最多 4 位小数 (如 0.1965)
+        const formatPerShare = (val) => {
+          const num = parseFloat(String(val).replace(/,/g, ''));
+          return isNaN(num) ? '0.0000' : num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+        };
+
         onMounted(() => { fetchData(); });
 
         return {
@@ -1390,7 +1441,7 @@
           showAddStockTxnModal, stockTxnForm, openAddTxnForStock, submitAddStockTxn, deleteStockTxn,
           showAddDivModal, divForm, openAddDivForStock, submitAddDiv, deleteStockDividend,
           getStockMarketValMYR, getStockUnrealizedPL, getStockUnrealizedPLPct, getStockRealizedPL,
-          showSnapshotModal, snapshotForm, fetchData, submitAddCash, submitCashTxn, openSnapshotModal, submitSnapshot, formatNumber,
+          showSnapshotModal, snapshotForm, fetchData, submitAddCash, submitCashTxn, openSnapshotModal, submitSnapshot, formatNumber, formatPerShare,
           showEditCashTxnModal, editCashTxnForm, openEditCashTxn, submitEditCashTxn,
           showEditGoldTxnModal, editGoldTxnForm, openEditGoldTxn, submitEditGoldTxn,
           showEditStockTxnModal, editStockTxnForm, openEditStockTxn, submitEditStockTxn,
