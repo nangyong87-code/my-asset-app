@@ -262,7 +262,7 @@
                 </div>
               </div>
               <div @click="openDividendSummaryModal" class="bg-[#0d1711] p-2.5 rounded-xl border border-[#1f3329] cursor-pointer active:scale-98 transition">
-                <div class="text-[10px] text-amber-400 flex justify-between items-center"><span>💰 累计到账股息</span><span class="text-[9px]">点击看年度对比 ➔</span></div>
+                <div class="text-[10px] text-amber-400 flex justify-between items-center"><span>💰 累计到账股息</span><span class="text-[9px]">点击看年度明细 ➔</span></div>
                 <div class="font-serif-num font-bold text-amber-300 text-sm mt-0.5">
                   RM {{ formatNumber(totalDividendsSum) }}
                 </div>
@@ -351,14 +351,14 @@
       </footer>
 
       <!-- Modals -->
-      <!-- 股息年度总览与个别股票同比分析弹窗 -->
+      <!-- 股息年度总览与个别股票同比明细弹窗 -->
       <div v-if="showDividendSummaryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[85vh] flex flex-col">
           <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
-            <h3 class="font-extrabold text-base text-white">💰 股息年度总览与股票明细</h3>
+            <h3 class="font-extrabold text-base text-white">💰 股息年度总览与个别股票明细</h3>
             <button @click="showDividendSummaryModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
           </div>
-          <div class="text-xs text-slate-400">注：展示每年总派息及个别股票的派息金额（派息日已到账）。</div>
+          <div class="text-xs text-slate-400">注：展示每年总派息及个别股票派息金额（派息日已到账）。</div>
           <div class="space-y-3 overflow-y-auto flex-1">
             <div v-for="stat in dividendYearlyStats" :key="stat.year" class="bg-[#132219] border border-[#1f3329] rounded-2xl p-4 space-y-2.5">
               <div class="flex justify-between items-center">
@@ -371,7 +371,7 @@
                 <div class="font-serif-num font-bold text-amber-300 text-lg">RM {{ formatNumber(stat.total) }}</div>
               </div>
               
-              <!-- 个别股票明细列表 -->
+              <!-- 各个股票明细 -->
               <div class="pt-2 border-t border-[#1f3329] space-y-1.5">
                 <div v-for="stk in stat.stocks" :key="stk.ticker" class="flex justify-between items-center text-xs bg-[#0d1711] p-2 rounded-xl border border-[#1f3329]/50">
                   <div>
@@ -567,7 +567,6 @@
             </div>
           </div>
 
-          <!-- 股息记录列表 -->
           <div class="space-y-2 pt-2 border-t border-[#1f3329]">
             <div class="flex justify-between items-center">
               <span class="text-xs font-bold text-slate-300">💰 股息记录</span>
@@ -607,7 +606,6 @@
         </div>
       </div>
 
-      <!-- 记录股息弹窗 -->
       <div v-if="showAddDivModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3 max-h-[85vh] overflow-y-auto">
           <h3 class="font-bold text-base text-white">💰 记录股息 - {{ divForm.ticker }}</h3>
@@ -615,6 +613,7 @@
           <div><label class="block text-[11px] text-slate-400 mb-1">除权日 (Ex-Date)</label><input type="date" v-model="divForm.exDate" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">派息日 (Pay Date - 决定到账)</label><input type="date" v-model="divForm.payDate" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">持股数 (Units)</label><input type="number" v-model="divForm.units" placeholder="如 1000" class="input-dark"></div>
+          <!-- 支持 4 位小数派息输入 -->
           <div><label class="block text-[11px] text-slate-400 mb-1">每股派息额 (Per Share RM - 支持4位小数)</label><input type="number" step="0.0001" v-model="divForm.perShareAmount" placeholder="0.0000" class="input-dark"></div>
           <div class="bg-[#132219] p-2.5 rounded-xl border border-[#1f3329] text-xs"><span class="text-slate-400">自动计算总股息:</span> <span class="font-serif-num font-bold text-amber-300 ml-1">RM {{ formatNumber((parseFloat(divForm.units)||0) * (parseFloat(divForm.perShareAmount)||0)) }}</span></div>
           <div>
@@ -760,7 +759,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbxBlxy6bozzUfVZGCEdkCP9NzI_UAc1JapepNsywd_zBUxLUwcY_XSSzrxmpXSZ8eUK/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbwOQI54_bfGVop_EJTAFeQ47jU-Iim-aDSLpXL3oJqnTqhFQECrS9opd7QA5VIM5wf3/exec";
 
     const { createApp, ref, computed, onMounted } = Vue;
 
@@ -982,6 +981,7 @@
         const showDividendSummaryModal = ref(false);
         const openDividendSummaryModal = () => { showDividendSummaryModal.value = true; };
 
+        // 升级版年度股息明细统计：支持个别股票派息明细与跨年同比
         const dividendYearlyStats = computed(() => {
           const todayStr = new Date().toISOString().split('T')[0];
           const map = {};
@@ -1273,6 +1273,7 @@
           await postAction('addStockTxn', stockTxnForm.value);
         };
 
+        // 现价修改：前端本地立刻原地刷新，实现秒级响应
         const promptUpdatePrice = async (s) => {
           const newPrice = prompt(`更新 ${s.Ticker} 的现价 (${s.Currency}):`, s.Current_Price);
           if (newPrice === null) return;
@@ -1284,6 +1285,7 @@
           await postAction('updateStockPrice', { ticker: s.Ticker, currentPrice: p });
         };
 
+        // 目标价 TP 修改：前端本地立刻原地刷新，实现秒级响应
         const promptUpdateTP = async (s) => {
           const newTP = prompt(`更新 ${s.Ticker} 的目标价 TP (${s.Currency}):`, s.Target_Price_TP || s.Current_Price);
           if (newTP === null) return;
@@ -1416,6 +1418,7 @@
           return isNaN(num) ? '0.00' : num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         };
 
+        // 每股派息额支持 4 位小数格式化函数
         const formatPerShare = (val) => {
           const num = parseFloat(String(val).replace(/,/g, ''));
           return isNaN(num) ? '0.0000' : num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
