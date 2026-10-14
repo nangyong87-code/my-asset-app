@@ -351,7 +351,7 @@
       </footer>
 
       <!-- Modals -->
-      <!-- 股息年度总览与个别股票同比分析弹窗 (已增强支持个别股票派息明细) -->
+      <!-- 股息年度总览与个别股票同比分析弹窗 -->
       <div v-if="showDividendSummaryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[85vh] flex flex-col">
           <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
@@ -567,7 +567,7 @@
             </div>
           </div>
 
-          <!-- 股息记录列表 (派息额支持 4 位小数显示) -->
+          <!-- 股息记录列表 -->
           <div class="space-y-2 pt-2 border-t border-[#1f3329]">
             <div class="flex justify-between items-center">
               <span class="text-xs font-bold text-slate-300">💰 股息记录</span>
@@ -607,7 +607,7 @@
         </div>
       </div>
 
-      <!-- 记录股息弹窗 (每股派息额 step 设为 0.0001 支持 4 位小数) -->
+      <!-- 记录股息弹窗 -->
       <div v-if="showAddDivModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3 max-h-[85vh] overflow-y-auto">
           <h3 class="font-bold text-base text-white">💰 记录股息 - {{ divForm.ticker }}</h3>
@@ -760,7 +760,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbyv9Pmc3qDqDUHklGK6XHpeXcKLzoAcHjiKBVYixIG5_Mb3xRWu_9cob-RDNaJ2w3ed/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycby-SkU3kLsebwHaLZNOKaC9M2Mx_485ublxRRJI-hXvTydyVM_k0kiMNsqqX-Yek_-S/exec";
 
     const { createApp, ref, computed, onMounted } = Vue;
 
@@ -982,10 +982,9 @@
         const showDividendSummaryModal = ref(false);
         const openDividendSummaryModal = () => { showDividendSummaryModal.value = true; };
 
-        // 增强版股息年度总览：包含总额、YoY对比以及“个别股票派息明细”
         const dividendYearlyStats = computed(() => {
           const todayStr = new Date().toISOString().split('T')[0];
-          const map = {}; // year -> { total: 0, stocksMap: { ticker: amount } }
+          const map = {};
           
           stockDividends.value.forEach(d => {
             const payDate = cleanDate(d.Pay_Date);
@@ -1274,7 +1273,6 @@
           await postAction('addStockTxn', stockTxnForm.value);
         };
 
-        // 修复 3：修改现价后，立即原地刷新本地 selectedStock 和列表，无需重新开窗
         const promptUpdatePrice = async (s) => {
           const newPrice = prompt(`更新 ${s.Ticker} 的现价 (${s.Currency}):`, s.Current_Price);
           if (newPrice === null) return;
@@ -1286,7 +1284,6 @@
           await postAction('updateStockPrice', { ticker: s.Ticker, currentPrice: p });
         };
 
-        // 修复 3：修改 TP 后，立即原地刷新本地 selectedStock 和列表，无需重新开窗
         const promptUpdateTP = async (s) => {
           const newTP = prompt(`更新 ${s.Ticker} 的目标价 TP (${s.Currency}):`, s.Target_Price_TP || s.Current_Price);
           if (newTP === null) return;
@@ -1419,7 +1416,6 @@
           return isNaN(num) ? '0.00' : num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         };
 
-        // 修复 2：支持每股派息额显示最多 4 位小数 (如 0.1965)
         const formatPerShare = (val) => {
           const num = parseFloat(String(val).replace(/,/g, ''));
           return isNaN(num) ? '0.0000' : num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
