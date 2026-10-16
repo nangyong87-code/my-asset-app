@@ -361,7 +361,7 @@
         </button>
       </footer>
 
-      <!-- Modals -->
+      <!-- Modals (弹窗集合) -->
       <div v-if="showDividendSummaryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[85vh] flex flex-col">
           <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
@@ -503,7 +503,7 @@
         </div>
       </div>
 
-      <!-- 股票详情弹窗 (精准 6 格结构) -->
+      <!-- 股票详情弹窗 -->
       <div v-if="showStockDetailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[90vh] flex flex-col shadow-2xl overflow-y-auto">
           <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
@@ -514,7 +514,6 @@
             <button @click="showStockDetailModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
           </div>
 
-          <!-- 6 格面板 -->
           <div class="grid grid-cols-2 gap-2 bg-[#132219] p-3 rounded-2xl border border-[#1f3329] text-center text-xs">
             <div>
               <div class="text-[10px] text-slate-400">持股数</div>
@@ -769,7 +768,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbyW4evEvlQR1J-nBmG0-ullRT3Vf3TFf37dMzrfXZZSbme9jG3ietMnMdu0AgIThyfd/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbxWWqUU-Y4ypGV-ZTKHaDUYnKphQkKcPTuZAh0WdCk6zHcOvH52RA1JPugvRqE3pHHe/exec";
 
     const { createApp, ref, computed, onMounted } = Vue;
 
@@ -1259,13 +1258,19 @@
           await postAction('updateKlseUrl', { klseUrl: klseUrlInput.value });
         };
 
+        // 一键爬虫更新股价 (触发后端爬虫并立即刷新界面)
         const syncUsdStockPrices = async () => {
           if (loading.value) return;
           updatingPrices.value = true;
           try {
             await postAction('manualSyncMalaysianStocks', {});
-            alert('马股股价更新已完成！');
-          } finally { updatingPrices.value = false; }
+            await fetchData(); // 抓取完毕后瞬间拉取最新数据刷新前端
+            alert('马股股价一键爬虫更新成功！');
+          } catch (e) {
+            alert('股价更新失败，请检查网络或爬虫模板！');
+          } finally { 
+            updatingPrices.value = false; 
+          }
         };
 
         const submitNewStock = async () => {
