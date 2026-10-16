@@ -768,7 +768,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbxWWqUU-Y4ypGV-ZTKHaDUYnKphQkKcPTuZAh0WdCk6zHcOvH52RA1JPugvRqE3pHHe/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbwWudRswFQx2kc40CJRIZUhLOLkh7IrhlO_Hn83Yvtbg70i8v4ncO8Vm7Pjuhy1N7Fv/exec";
 
     const { createApp, ref, computed, onMounted } = Vue;
 
@@ -1064,14 +1064,14 @@
           selectedHistory.value = h;
           showHistoryDetailModal.value = true;
         };
-
-        const pressPin = (num) => {
+const pressPin = (num) => {
           if (pinInput.value.length < 6) {
             pinInput.value += num;
             if (pinInput.value.length === 6) {
               if (pinInput.value === correctPin.value) {
                 isLocked.value = false;
-                fetchData(); // 解锁瞬间无缝加载所有数据
+                // 解锁瞬间：不仅拉取数据，还自动静默触发一次马股爬虫更新，实现无缝满血加载！
+                syncUsdStockPricesSilence();
               } else {
                 alert('PIN 码错误！');
                 pinInput.value = '';
@@ -1079,6 +1079,17 @@
             }
           }
         };
+
+        // 后台静默更新股价（解锁时调用，不弹烦人的 alert）
+        const syncUsdStockPricesSilence = async () => {
+          try {
+            await postAction('manualSyncMalaysianStocks', {});
+            await fetchData();
+          } catch (e) {
+            await fetchData(); // 即使爬虫网络波动，也保证基础数据瞬间呈现
+          }
+        };
+       
 
         const lockApp = () => {
           isLocked.value = true;
