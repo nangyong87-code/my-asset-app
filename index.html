@@ -503,7 +503,7 @@
         </div>
       </div>
 
-      <!-- 股票详情弹窗 (全新精简两行结构，移除冗余TP框，新增顶部修改TP按键) -->
+      <!-- 股票详情弹窗 -->
       <div v-if="showStockDetailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[90vh] flex flex-col shadow-2xl overflow-y-auto">
           
@@ -522,7 +522,6 @@
 
           <!-- 精简为2行、每行3个Indicator -->
           <div class="grid grid-cols-3 gap-2 bg-[#132219] p-3 rounded-2xl border border-[#1f3329] text-center text-xs">
-            <!-- Row 1 -->
             <div>
               <div class="text-[10px] text-slate-400">持股数</div>
               <div class="font-serif-num font-bold text-slate-100 text-sm mt-0.5">{{ selectedStock?.Total_Shares || 0 }}</div>
@@ -536,7 +535,6 @@
               <div class="font-serif-num font-bold text-slate-100 text-sm mt-0.5">RM {{ formatNumber(getStockMarketValMYR(selectedStock)) }}</div>
             </div>
 
-            <!-- Row 2 -->
             <div class="pt-2.5 border-t border-[#1f3329]">
               <div class="text-[10px] text-slate-400">现价 (Yahoo)</div>
               <div class="font-serif-num font-bold text-amber-300 text-sm mt-0.5">{{ selectedStock?.Currency === 'USD' ? '$' : 'RM' }} {{ formatNumber(selectedStock?.Current_Price) }}</div>
@@ -768,8 +766,9 @@
     </template>
 
   </div>
+
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbzosGn4cLm2ZKgFIe6odxyU6iIdqnHgD8Th9THho1nk8prodxC5DgjM6wIMlfvsm8vI/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbyvRRUcOECtrogFWNa7Li1YKEZkUUpxrFeV3nrW9Te2KpGLiJmHu0e935CJPPJcNy4b/exec";
 
     const { createApp, ref, computed, onMounted } = Vue;
 
@@ -1066,19 +1065,23 @@
           showHistoryDetailModal.value = true;
         };
 
+        // 彻底清除无用的数字编号（如 8200、10688）
         const cleanRemarks = (remarks) => {
-          if (!remarks || String(remarks).trim() === '10688') return '月度结账';
-          return String(remarks).replace('10688', '').trim() || '月度结账';
+          if (!remarks) return '月度结账';
+          let rem = String(remarks).trim();
+          if (/^\d+$/.test(rem)) return '月度结账';
+          return rem.replace('10688', '').replace('8200', '').trim() || '月度结账';
         };
 
+        // 强力兼容各种大小写字段，彻底解决历史详情全显示 0.00 的 Bug
         const getHistoryVal = (h, type) => {
           if (!h) return 0;
-          if (type === 'Cash') return parseFloat(h.Cash_Val) || 0;
-          if (type === 'Bank') return parseFloat(h.Bank_Val) || 0;
-          if (type === 'PaperGold') return parseFloat(h.Paper_Gold_Val) || 0;
-          if (type === 'PhysicalGold') return parseFloat(h.Physical_Gold_Val) || 0;
-          if (type === 'Stock') return parseFloat(h.Stock_Val) || 0;
-          if (type === 'EPF') return parseFloat(h.EPF_Val) || 0;
+          if (type === 'Cash') return parseFloat(h.Cash_Val || h.cash_val || h.Cash || 0) || 0;
+          if (type === 'Bank') return parseFloat(h.Bank_Val || h.bank_val || h.Bank || 0) || 0;
+          if (type === 'PaperGold') return parseFloat(h.Paper_Gold_Val || h.paper_gold_val || h.PaperGold || 0) || 0;
+          if (type === 'PhysicalGold') return parseFloat(h.Physical_Gold_Val || h.physical_gold_val || h.PhysicalGold || 0) || 0;
+          if (type === 'Stock') return parseFloat(h.Stock_Val || h.stock_val || h.Stock || h.Stock_Val_MYR || 0) || 0;
+          if (type === 'EPF') return parseFloat(h.EPF_Val || h.epf_val || h.EPF || 0) || 0;
           return 0;
         };
 
@@ -1472,6 +1475,8 @@
         };
 
         return {
+          isLocked, pinInput, correctPin, newPinInput, klseUrlInput, press
+          return {
           isLocked, pinInput, correctPin, newPinInput, klseUrlInput, pressPin, saveNewPin, saveFxRate, saveKlseUrl, loading, updatingPrices, activeTab, tabs, useTP, usdFxRate, stockSortMode, currentTabTitle,
           cashAccounts, cashTxns, goldList, goldTxns, stockData, sortedStockData, stockTxns, stockDividends, epfData, epfTxns, historyList, totals, displayedNetWorth,
           monthlyDiff, totalUnrealizedPL, totalDividendsSum, syncUsdStockPrices, cleanDate, cleanRemarks, getHistoryVal,
