@@ -817,7 +817,6 @@
         const currentYear = new Date().getFullYear();
         const minAllowedYear = currentYear - 1; // 2025年
 
-        // 💡 强力日期解析函数：兼容 DD/MM/YYYY, YYYY-MM-DD, ISO 等所有格式，返回纯时间戳
         const parseTimestamp = (dateVal) => {
           if (!dateVal) return 0;
           let s = String(dateVal).trim();
@@ -849,7 +848,6 @@
           return new Date(ts).getFullYear();
         };
 
-        // 💡 降序排序：最新时间排在最前面
         const sortByDateDesc = (list, dateField = 'Date') => {
           return [...list].sort((a, b) => {
             const tsa = parseTimestamp(a[dateField] || a.Record_Date || a.Pay_Date);
@@ -858,7 +856,6 @@
           });
         };
 
-        // 💡 严格过滤近两年（2026 和 2025）
         const filterRecentTwoYears = (list, dateField = 'Date') => {
           return list.filter(item => {
             const yr = parseYearNum(item[dateField] || item.Record_Date || item.Pay_Date);
@@ -1200,12 +1197,21 @@
             if (pinInput.value.length === 6) {
               if (pinInput.value === correctPin.value) {
                 isLocked.value = false;
-                fetchData(); // 💡 登录成功直接加载数据，安全稳定绝不报错
+                syncUsdStockPricesSilence(); // 💡 登录成功自动静默更新并渲染所有 info
               } else {
                 alert('PIN 码错误！');
                 pinInput.value = '';
               }
             }
+          }
+        };
+
+        const syncUsdStockPricesSilence = async () => {
+          try {
+            await postAction('manualSyncMalaysianStocks', {}, true);
+            await fetchData();
+          } catch (e) {
+            await fetchData();
           }
         };
 
@@ -1374,10 +1380,13 @@
               recomputeLocalPortfolio();
               if (!silent) alert('操作成功！');
             } else {
-              if (json.message) alert(json.message);
+              if (json.message && !silent) alert(json.message);
               await fetchData();
             }
-          } catch (e) { alert('网络开小差了，请重试'); } finally { loading.value = false; }
+          } catch (e) { 
+            if (!silent) alert('网络开小差了，请重试');
+            else await fetchData();
+          } finally { loading.value = false; }
         };
 
         const saveNewPin = async () => {
