@@ -767,7 +767,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbzqMYxULdZsBr-RMrFpJt1bGq3SwJ-I2ZlAXiW_fEE5WeIgmJAuuiEl99bd87Xtsky9/execc";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbzqMYxULdZsBr-RMrFpJt1bGq3SwJ-I2ZlAXiW_fEE5WeIgmJAuuiEl99bd87Xtsky9/exec";
 
     const { createApp, ref, computed } = Vue;
 
@@ -824,24 +824,18 @@
           if (s.includes('T')) s = s.split('T')[0];
           if (s.includes(' ')) s = s.split(' ')[0];
 
-          // 处理 DD/MM/YYYY 或 DD-MM-YYYY
           if (s.includes('/')) {
             const parts = s.split('/');
-            if (parts.length === 3) {
-              if (parts[2].length === 4) {
-                // DD/MM/YYYY ➔ YYYY-MM-DD
-                return new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`).getTime() || 0;
-              }
+            if (parts.length === 3 && parts[2].length === 4) {
+              return new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`).getTime() || 0;
             }
           }
           if (s.includes('-')) {
             const parts = s.split('-');
             if (parts.length === 3) {
               if (parts[0].length === 4) {
-                // YYYY-MM-DD
                 return new Date(s).getTime() || 0;
               } else if (parts[2].length === 4) {
-                // DD-MM-YYYY
                 return new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`).getTime() || 0;
               }
             }
@@ -849,19 +843,18 @@
           return new Date(s).getTime() || 0;
         };
 
-        // 💡 提取年份 (用于近两年过滤)
         const parseYearNum = (dateVal) => {
           const ts = parseTimestamp(dateVal);
           if (!ts) return 0;
           return new Date(ts).getFullYear();
         };
 
-        // 💡 降序排序：最新时间（时间戳大）排在最前面
+        // 💡 降序排序：最新时间排在最前面
         const sortByDateDesc = (list, dateField = 'Date') => {
           return [...list].sort((a, b) => {
             const tsa = parseTimestamp(a[dateField] || a.Record_Date || a.Pay_Date);
             const tsb = parseTimestamp(b[dateField] || b.Record_Date || b.Pay_Date);
-            return tsb - tsa; // 降序：大到小
+            return tsb - tsa;
           });
         };
 
@@ -869,7 +862,7 @@
         const filterRecentTwoYears = (list, dateField = 'Date') => {
           return list.filter(item => {
             const yr = parseYearNum(item[dateField] || item.Record_Date || item.Pay_Date);
-            if (!yr) return true; // 无法解析日期的默认保留
+            if (!yr) return true;
             return yr >= minAllowedYear;
           });
         };
@@ -995,7 +988,6 @@
           showCashTxnModal.value = true;
         };
 
-        // 💡 存款明细：过滤近两年 + 准确降序
         const showTxnHistoryModal = ref(false);
         const selectedAccount = ref(null);
         const accountTxns = computed(() => {
@@ -1062,7 +1054,6 @@
           return ((pl / costVal) * 100).toFixed(1);
         };
 
-        // 💡 黄金历史：过滤近两年 + 降序
         const getGoldTxnsByType = (type) => {
           const list = goldTxns.value.filter(t => String(t.Gold_Type).trim() === String(type).trim());
           return sortByDateDesc(filterRecentTwoYears(list, 'Date'), 'Date');
@@ -1090,7 +1081,6 @@
           showAddEPFModal.value = true;
         };
 
-        // 💡 公积金明细：过滤近两年 + 降序
         const showEPFTxnModal = ref(false);
         const selectedEPFAccount = ref(null);
         const epfAccountTxns = computed(() => {
@@ -1210,21 +1200,12 @@
             if (pinInput.value.length === 6) {
               if (pinInput.value === correctPin.value) {
                 isLocked.value = false;
-                syncUsdStockPricesSilence();
+                fetchData(); // 💡 登录成功直接加载数据，安全稳定绝不报错
               } else {
                 alert('PIN 码错误！');
                 pinInput.value = '';
               }
             }
-          }
-        };
-
-        const syncUsdStockPricesSilence = async () => {
-          try {
-            await postAction('manualSyncMalaysianStocks', {}, true);
-            await fetchData();
-          } catch (e) {
-            await fetchData();
           }
         };
 
@@ -1297,14 +1278,13 @@
           return list;
         });
 
-        // 💡 股票买卖记录：保留全部历史 + 严格时间戳降序 (10月 ➔ 7月15日 ➔ 7月1日)
+        // 💡 股票买卖记录：保留全部历史 + 严格降序
         const selectedStockTxns = computed(() => {
           if (!selectedStock.value) return [];
           const list = stockTxns.value.filter(t => formatTickerDisplay(t.Ticker) === formatTickerDisplay(selectedStock.value.Ticker));
           return sortByDateDesc(list, 'Date');
         });
 
-        // 💡 股票股息记录：降序排列
         const selectedStockDivs = computed(() => {
           if (!selectedStock.value) return [];
           const list = stockDividends.value.filter(d => formatTickerDisplay(d.Ticker) === formatTickerDisplay(selectedStock.value.Ticker));
