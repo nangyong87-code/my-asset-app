@@ -6,7 +6,7 @@
   <title>TrackEzy Asset Tracker</title>
   
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
@@ -62,10 +62,8 @@
 
         <!-- OVERVIEW -->
         <section v-if="activeTab === 'overview'" class="space-y-4">
-          <!-- 历史结账标题放前面，让总资产卡片在划过它之后才开始 sticky 浮动 -->
-          <div class="text-xs text-slate-400 font-bold px-1 pt-1">📜 历史结账与快照列表 (点击查看分类详情)</div>
-
-          <div class="sticky top-14 z-30 forest-card rounded-3xl p-5 relative overflow-hidden space-y-3 backdrop-blur-md bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98">
+          <!-- 1. 总资产卡片置顶并 sticky 浮动 -->
+          <div class="sticky top-14 z-30 forest-card rounded-3xl p-5 relative overflow-hidden space-y-3 backdrop-blur-md bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98 shadow-2xl">
             <div class="text-xs text-slate-400 font-medium">净资产总额</div>
             <div class="text-2xl font-bold tracking-tight text-white flex items-baseline gap-1.5">
               <span class="text-lg font-bold text-slate-200">RM</span>
@@ -96,18 +94,24 @@
             <button @click="openSnapshotModal" class="w-full btn-gold-border font-bold py-2.5 rounded-2xl text-xs flex items-center justify-center gap-2"><i class="fa-solid fa-camera"></i> 手动记录快照 (双重模式)</button>
           </div>
 
+          <!-- 2. 历史结账标题放在浮动卡片下方，随页面向下滚动露出 -->
           <div class="space-y-2 pt-2">
-            <div v-for="h in filteredHistoryList" :key="h.Record_Date" @click="openHistoryDetail(h)" class="forest-card rounded-2xl p-3.5 flex justify-between items-center cursor-pointer active:scale-98 transition text-xs">
+            <div class="text-xs text-slate-400 font-bold px-1">📜 历史结账与快照列表 (点击查看分类详情)</div>
+            
+            <div v-for="h in groupedHistoryList" :key="h.date + h.remarkBase" @click="openHistoryDetail(h)" class="forest-card rounded-2xl p-3.5 flex justify-between items-center cursor-pointer active:scale-98 transition text-xs">
               <div>
-                <div class="font-bold text-slate-200 font-mono">{{ cleanDate(h.Record_Date) }}</div>
-                <div class="text-[10px] text-amber-400/80 mt-0.5">{{ cleanRemarks(h.Remarks) }} ➔ 点击看分类详情</div>
+                <div class="font-bold text-slate-200 font-mono">{{ cleanDate(h.date) }}</div>
+                <div class="text-[10px] text-amber-400/80 mt-0.5">{{ h.remarkBase }} ➔ 点击看分类详情</div>
               </div>
-              <div class="font-serif-num font-bold text-slate-100 text-sm">RM {{ formatNumber(h.Total_Net_Worth) }}</div>
+              <div class="text-right">
+                <div class="font-serif-num font-bold text-slate-100 text-sm">RM {{ formatNumber(h.marketVal) }}</div>
+                <div class="font-serif-num text-[10px] text-amber-300 mt-0.5">TP目标价: RM {{ formatNumber(h.tpVal) }}</div>
+              </div>
             </div>
           </div>
         </section>
 
-        <!-- CASH (保留 float) -->
+        <!-- CASH -->
         <section v-if="activeTab === 'cash'" class="space-y-4">
           <div class="sticky top-14 z-30 forest-card p-4 rounded-2xl space-y-3 backdrop-blur-md bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98">
             <div class="flex justify-between items-center">
@@ -155,7 +159,7 @@
           </div>
         </section>
 
-        <!-- GOLD (去掉 float) -->
+        <!-- GOLD -->
         <section v-if="activeTab === 'gold'" class="space-y-4">
           <div class="forest-card p-4 rounded-2xl space-y-3 bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98">
             <div class="flex justify-between items-center">
@@ -209,7 +213,7 @@
           </div>
         </section>
 
-        <!-- EPF (去掉 float) -->
+        <!-- EPF -->
         <section v-if="activeTab === 'epf'" class="space-y-4">
           <div class="forest-card p-4 rounded-2xl space-y-3 bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98">
             <div class="flex justify-between items-center">
@@ -240,7 +244,7 @@
           </div>
         </section>
 
-        <!-- STOCKS (总市值 + 排序栏同步 fixed 吸顶) -->
+        <!-- STOCKS -->
         <section v-if="activeTab === 'stocks'" class="space-y-3">
           <div class="sticky top-14 z-30 forest-card rounded-3xl p-4 space-y-3 backdrop-blur-md bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98 border border-[#2e4e3b] shadow-xl">
             <div class="flex justify-between items-center">
@@ -271,7 +275,6 @@
               </div>
             </div>
 
-            <!-- 排序栏跟随吸顶 -->
             <div class="flex justify-between items-center pt-2 border-t border-[#1a2e22] text-xs">
               <div class="flex items-center gap-2">
                 <span class="text-slate-400">排序:</span>
@@ -399,27 +402,38 @@
         </div>
       </div>
 
+      <!-- 历史结账详情弹窗 (支持市值大字 + TP小字双行，股票分类支持市值大字 + TP小字) -->
       <div v-if="showHistoryDetailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-sm rounded-3xl p-5 space-y-4">
           <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
             <div>
               <h3 class="font-extrabold text-base text-white">📊 资产结账详情</h3>
-              <p class="text-xs text-amber-400 font-mono">{{ cleanDate(selectedHistory?.Record_Date) }}</p>
+              <p class="text-xs text-amber-400 font-mono">{{ cleanDate(selectedHistoryGroup?.date) }}</p>
             </div>
             <button @click="showHistoryDetailModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
           </div>
           <div class="text-center bg-[#132219] p-3 rounded-2xl border border-[#1f3329]">
             <div class="text-[10px] text-slate-400">净资产总额</div>
-            <div class="font-serif-num text-2xl font-bold text-white mt-0.5">RM {{ formatNumber(selectedHistory?.Total_Net_Worth) }}</div>
-            <div v-if="cleanRemarks(selectedHistory?.Remarks) !== '月度结账'" class="text-[10px] text-slate-400 mt-1">{{ cleanRemarks(selectedHistory?.Remarks) }}</div>
+            <div class="font-serif-num text-2xl font-bold text-white mt-0.5">RM {{ formatNumber(selectedHistoryGroup?.marketVal) }}</div>
+            <div class="font-serif-num text-xs text-amber-300 mt-0.5">TP目标价: RM {{ formatNumber(selectedHistoryGroup?.tpVal) }}</div>
+            <div class="text-[10px] text-slate-400 mt-1">{{ selectedHistoryGroup?.remarkBase }}</div>
           </div>
           <div class="space-y-2 text-xs">
-            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-blue-400">● 存款</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistory, 'Cash')) }}</span></div>
-            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-blue-300">● 银行存款</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistory, 'Bank')) }}</span></div>
-            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-amber-400">● 纸黄金</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistory, 'PaperGold')) }}</span></div>
-            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-amber-300">● 实体金条</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistory, 'PhysicalGold')) }}</span></div>
-            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-rose-400">● 股票市值</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistory, 'Stock')) }}</span></div>
-            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-purple-400">● 公积金</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistory, 'EPF')) }}</span></div>
+            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-blue-400">● 存款</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.marketItem, 'Cash')) }}</span></div>
+            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-blue-300">● 银行存款</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.marketItem, 'Bank')) }}</span></div>
+            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-amber-400">● 纸黄金</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.marketItem, 'PaperGold')) }}</span></div>
+            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-amber-300">● 实体金条</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.marketItem, 'PhysicalGold')) }}</span></div>
+            
+            <!-- 股票市值 / TP 双行显示 -->
+            <div class="flex justify-between items-center bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]">
+              <span class="text-rose-400">● 股票市值</span>
+              <div class="text-right">
+                <div class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.marketItem, 'Stock')) }}</div>
+                <div class="font-serif-num text-[10px] text-amber-300">TP: RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.tpItem, 'Stock')) }}</div>
+              </div>
+            </div>
+
+            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-purple-400">● 公积金</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.marketItem, 'EPF')) }}</span></div>
           </div>
         </div>
       </div>
@@ -874,8 +888,53 @@
           });
         };
 
-        const filteredHistoryList = computed(() => {
-          return sortByDateDesc(historyList.value, 'Record_Date');
+        // 💡 智能合并历史结账记录：把同一天（或同一批次）的 [按市值] 和 [按TP] 组合成一行优雅展示
+        const groupedHistoryList = computed(() => {
+          const map = {};
+          historyList.value.forEach(h => {
+            const dateStr = cleanDate(h.Record_Date);
+            const rawRem = String(h.Remarks || '').trim();
+            const isTP = rawRem.includes('[按TP]');
+            const isMarket = rawRem.includes('[按市值]');
+            
+            // 清理备注基础名
+            let remarkBase = rawRem.replace(/\[按市值\]|\[按TP\]/g, '').trim();
+            if (!remarkBase || /^\d+$/.test(remarkBase)) remarkBase = '月度结账';
+
+            // 以日期 + 基础备注作为组合 Key
+            const groupKey = `${dateStr}_${remarkBase}`;
+            if (!map[groupKey]) {
+              map[groupKey] = {
+                date: dateStr,
+                remarkBase: remarkBase,
+                marketVal: 0,
+                tpVal: 0,
+                marketItem: null,
+                tpItem: null,
+                latestTimestamp: parseTimestamp(h.Record_Date)
+              };
+            }
+
+            const val = parseFloat(h.Total_Net_Worth) || 0;
+            if (isTP) {
+              map[groupKey].tpVal = val;
+              map[groupKey].tpItem = h;
+            } else if (isMarket || (!isTP && !isMarket)) {
+              // 默认旧数据或按市值归为市值
+              map[groupKey].marketVal = val;
+              map[groupKey].marketItem = h;
+            }
+          });
+
+          // 如果只有其中一个，互相补齐避免显示 0
+          Object.values(map).forEach(g => {
+            if (g.marketVal === 0 && g.tpVal > 0) g.marketVal = g.tpVal;
+            if (g.tpVal === 0 && g.marketVal > 0) g.tpVal = g.marketVal;
+            if (!g.marketItem && g.tpItem) g.marketItem = g.tpItem;
+            if (!g.tpItem && g.marketItem) g.tpItem = g.marketItem;
+          });
+
+          return Object.values(map).sort((a, b) => b.latestTimestamp - a.latestTimestamp);
         });
 
         const recomputeLocalPortfolio = () => {
@@ -1177,17 +1236,10 @@
         const snapshotForm = ref({ date: '', remarks: '' });
 
         const showHistoryDetailModal = ref(false);
-        const selectedHistory = ref(null);
-        const openHistoryDetail = (h) => {
-          selectedHistory.value = h;
+        const selectedHistoryGroup = ref(null);
+        const openHistoryDetail = (hGroup) => {
+          selectedHistoryGroup.value = hGroup;
           showHistoryDetailModal.value = true;
-        };
-
-        const cleanRemarks = (remarks) => {
-          if (!remarks) return '月度结账';
-          let rem = String(remarks).trim();
-          if (/^\d+$/.test(rem)) return '月度结账';
-          return rem.replace('10688', '').replace('8200', '').trim().replace(/\[按市值\]|\[按TP\]/g, '').trim() || '月度结账';
         };
 
         const getHistoryVal = (h, type) => {
@@ -1582,7 +1634,6 @@
           showSnapshotModal.value = true;
         };
 
-        // 💡 一键提交双重快照（按市值 & 按TP目标价）
         const submitDualSnapshots = async () => {
           if (loading.value) return;
           if (!snapshotForm.value.remarks) return alert('请填写备注基础名！');
@@ -1593,7 +1644,6 @@
 
           loading.value = true;
           try {
-            // 1. 发送按市值快照
             await fetch(GAS_API_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1611,7 +1661,6 @@
               })
             });
 
-            // 2. 发送按TP目标价快照
             const res2 = await fetch(GAS_API_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1664,9 +1713,9 @@
 
         return {
           isLocked, pinInput, correctPin, newPinInput, pressPin, saveNewPin, saveFxRate, loading, updatingPrices, activeTab, tabs, useTP, usdFxRate, stockSortMode, currentTabTitle,
-          cashAccounts, cashTxns, goldList, goldTxns, stockData, sortedStockData, stockTxns, stockDividends, epfData, epfTxns, historyList, filteredHistoryList, totals, displayedNetWorth,
-          monthlyDiff, totalUnrealizedPL, currentYearDividendsSum, syncUsdStockPrices, cleanDate, cleanRemarks, getHistoryVal,
-          showHistoryDetailModal, selectedHistory, openHistoryDetail,
+          cashAccounts, cashTxns, goldList, goldTxns, stockData, sortedStockData, stockTxns, stockDividends, epfData, epfTxns, historyList, groupedHistoryList, totals, displayedNetWorth,
+          monthlyDiff, totalUnrealizedPL, currentYearDividendsSum, syncUsdStockPrices, cleanDate, getHistoryVal,
+          showHistoryDetailModal, selectedHistoryGroup, openHistoryDetail,
           showDividendSummaryModal, openDividendSummaryModal, dividendComparisonTable, dividendTableTotals, formatTickerDisplay,
           showAddCashModal, cashForm, openAddCashModal, onCashTypeChange, deleteCashAccount, showCashTxnModal, cashTxnForm, openCashTxnModal, showTxnHistoryModal, selectedAccount, accountTxns, openTxnHistoryModal, deleteCashTxn,
           showAddGoldModal, goldForm, openGoldTxnModal, submitAddGold, deleteGoldTxn, promptUpdateGoldPrice, getGoldMarketVal, getGoldPL, getGoldPLPct, getGoldTxnsByType,
