@@ -189,7 +189,7 @@
               </div>
 
               <div class="pt-2 border-t border-[#1a2e22] space-y-2">
-                <div class="text-[11px] font-bold text-slate-300">📜 {{ g.Type === 'Paper' ? '纸黄金' : '实体金条' }} 交易历史 (保留全部)</div>
+                <div class="text-[11px] font-bold text-slate-300">📜 {{ g.Type === 'Paper' ? '纸黄金' : '实体金条' }} 交易历史 (近两年)</div>
                 <div v-if="getGoldTxnsByType(g.Type).length === 0" class="text-[10px] text-slate-500 py-2">暂无交易记录</div>
                 <div v-for="t in getGoldTxnsByType(g.Type)" :key="t.Txn_ID" class="bg-[#0d1711] border border-[#1f3329] rounded-xl p-2.5 flex justify-between items-center text-xs">
                   <div>
@@ -228,7 +228,7 @@
               <div @click="openEPFHistoryModal(fund)" class="cursor-pointer flex-1">
                 <span class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full font-bold">{{ fund.Category }}</span>
                 <div class="font-bold text-slate-100 text-base mt-1.5">{{ fund.Fund_Name }}</div>
-                <div class="text-[10px] text-purple-300/80 mt-0.5">点击查看明细 (保留全部) ➔</div>
+                <div class="text-[10px] text-purple-300/80 mt-0.5">点击查看明细 (近两年) ➔</div>
               </div>
               <div class="flex items-center gap-3">
                 <div class="font-serif-num font-bold text-slate-100 text-base">RM {{ formatNumber(fund.Current_Balance) }}</div>
@@ -262,7 +262,6 @@
                 </div>
               </div>
               <div @click="openDividendSummaryModal" class="bg-[#0d1711] p-2.5 rounded-xl border border-[#1f3329] cursor-pointer active:scale-98 transition">
-                <!-- 💡 1) 去掉“到账”二字，显示“今年累计股息” -->
                 <div class="text-[10px] text-amber-400 flex justify-between items-center"><span>💰 今年累计股息</span><span class="text-[9px]">点击看年度对比 ➔</span></div>
                 <div class="font-serif-num font-bold text-amber-300 text-sm mt-0.5">
                   RM {{ formatNumber(currentYearDividendsSum) }}
@@ -646,7 +645,7 @@
             <button @click="showTxnHistoryModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
           </div>
           <div class="space-y-2 overflow-y-auto flex-1">
-            <div class="text-xs font-bold text-slate-300">📜 账户资金变动明细 (保留全部)</div>
+            <div class="text-xs font-bold text-slate-300">📜 账户资金变动明细 (近两年)</div>
             <div v-if="accountTxns.length === 0" class="text-xs text-slate-500 py-6 text-center">暂无历史明细</div>
             <div v-for="t in accountTxns" :key="t.Txn_ID" class="bg-[#132219] border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
               <div>
@@ -675,7 +674,7 @@
             <button @click="showEPFTxnModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
           </div>
           <div class="space-y-2 overflow-y-auto flex-1">
-            <div class="text-xs font-bold text-slate-300">📜 供款与提取明细 (保留全部)</div>
+            <div class="text-xs font-bold text-slate-300">📜 供款与提取明细 (近两年)</div>
             <div v-if="epfAccountTxns.length === 0" class="text-xs text-slate-500 py-6 text-center">暂无历史明细</div>
             <div v-for="t in epfAccountTxns" :key="t.Txn_ID" class="bg-[#132219] border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
               <div>
@@ -816,12 +815,24 @@
         };
 
         const currentYear = new Date().getFullYear();
+        const minAllowedYear = currentYear - 1; // 2025年
 
+        // 💡 日期降序排序：确保永远是最新日期（如10月）在最上面，旧日期（如1月）在下面
         const sortByDateDesc = (list, dateField = 'Date') => {
           return [...list].sort((a, b) => {
             const da = new Date(cleanDate(a[dateField] || a.Record_Date)).getTime();
             const db = new Date(cleanDate(b[dateField] || b.Record_Date)).getTime();
-            return db - da;
+            return db - da; // 降序：大时间戳（最新）减去小时间戳（较旧）
+          });
+        };
+
+        // 💡 过滤近两年（今年及去年，即2026和2025）
+        const filterRecentTwoYears = (list, dateField = 'Date') => {
+          return list.filter(item => {
+            const dStr = cleanDate(item[dateField] || item.Record_Date);
+            if (!dStr) return true;
+            const yr = parseInt(dStr.split('-')[0]);
+            return yr >= minAllowedYear;
           });
         };
 
@@ -916,7 +927,6 @@
           await postAction('editEPFTxn', editEPFTxnForm.value);
         };
 
-        // 💡 2) 新增时自动清空表单
         const showAddCashModal = ref(false);
         const cashForm = ref({ type: 'Bank', bankName: '', nickname: '', balance: '' });
         const openAddCashModal = () => {
@@ -947,12 +957,13 @@
           showCashTxnModal.value = true;
         };
 
+        // 💡 存款明细：保留最近两年，降序排列
         const showTxnHistoryModal = ref(false);
         const selectedAccount = ref(null);
         const accountTxns = computed(() => {
           if (!selectedAccount.value) return [];
           const list = cashTxns.value.filter(t => String(t.Account_ID).trim() === String(selectedAccount.value.Account_ID).trim());
-          return sortByDateDesc(list, 'Date');
+          return sortByDateDesc(filterRecentTwoYears(list, 'Date'), 'Date');
         });
         const openTxnHistoryModal = (acc) => { selectedAccount.value = acc; showTxnHistoryModal.value = true; };
 
@@ -1013,9 +1024,10 @@
           return ((pl / costVal) * 100).toFixed(1);
         };
 
+        // 💡 黄金交易历史：保留最近两年，降序排列
         const getGoldTxnsByType = (type) => {
           const list = goldTxns.value.filter(t => String(t.Gold_Type).trim() === String(type).trim());
-          return sortByDateDesc(list, 'Date');
+          return sortByDateDesc(filterRecentTwoYears(list, 'Date'), 'Date');
         };
 
         const showAddEPFAccModal = ref(false);
@@ -1040,12 +1052,13 @@
           showAddEPFModal.value = true;
         };
 
+        // 💡 公积金明细：保留最近两年，降序排列
         const showEPFTxnModal = ref(false);
         const selectedEPFAccount = ref(null);
         const epfAccountTxns = computed(() => {
           if (!selectedEPFAccount.value) return [];
           const list = epfTxns.value.filter(t => String(t.Account_Key).trim() === String(selectedEPFAccount.value.Account_Key).trim());
-          return sortByDateDesc(list, 'Date');
+          return sortByDateDesc(filterRecentTwoYears(list, 'Date'), 'Date');
         });
         const openEPFHistoryModal = (fund) => { selectedEPFAccount.value = fund; showEPFTxnModal.value = true; };
 
@@ -1246,12 +1259,14 @@
           return list;
         });
 
+        // 💡 股票买卖记录：保留全部历史，且严格按最新到最旧降序排列
         const selectedStockTxns = computed(() => {
           if (!selectedStock.value) return [];
           const list = stockTxns.value.filter(t => formatTickerDisplay(t.Ticker) === formatTickerDisplay(selectedStock.value.Ticker));
           return sortByDateDesc(list, 'Date');
         });
 
+        // 💡 股票股息记录：降序排列
         const selectedStockDivs = computed(() => {
           if (!selectedStock.value) return [];
           const list = stockDividends.value.filter(d => formatTickerDisplay(d.Ticker) === formatTickerDisplay(selectedStock.value.Ticker));
@@ -1281,7 +1296,6 @@
           return (((cur - cost) / cost) * 100).toFixed(1);
         };
 
-        // 💡 3) 全局日期格式清洗：只保留 YYYY-MM-DD，去除时间
         const cleanDate = (dateStr) => {
           if (!dateStr) return '';
           let s = String(dateStr).trim();
