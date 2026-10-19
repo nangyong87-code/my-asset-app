@@ -8,13 +8,11 @@
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- 💡 5) 引入与你截图（4,237,600）完全一致的 Inter 现代平整无衬线数字字体 -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
     [v-cloak] { display: none !important; }
     body { background-color: #0b120e; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-    /* 💡 5) 换掉艺术花体！使用现代极简、对齐整齐的 Inter 粗体数字 */
     .font-serif-num { font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; font-weight: 700; }
     .forest-card { background: linear-gradient(145deg, #132219 0%, #0d1711 100%); border: 1px solid rgba(46, 78, 59, 0.4); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5); }
     .btn-gold-border { background: rgba(19, 34, 25, 0.8); border: 1px solid #9a7b38; color: #d4af37; }
@@ -50,8 +48,8 @@
     <!-- MAIN UI -->
     <template v-else>
 
-      <header class="px-5 pt-6 pb-3 flex justify-between items-center bg-[#090f0b]/80 backdrop-blur-md sticky top-0 z-30 border-b border-[#1a2e22]">
-        <h1 class="text-2xl font-black text-slate-100 tracking-tight">{{ currentTabTitle }}</h1>
+      <header class="px-5 pt-5 pb-3 flex justify-between items-center bg-[#090f0b]/90 backdrop-blur-md sticky top-0 z-40 border-b border-[#1a2e22]">
+        <h1 class="text-xl font-black text-slate-100 tracking-tight">{{ currentTabTitle }}</h1>
         <div class="flex items-center gap-2">
           <button @click="fetchData" class="w-8 h-8 rounded-full bg-[#132219] border border-[#2e4e3b] flex items-center justify-center text-slate-300">
             <i class="fa-solid fa-rotate" :class="{'fa-spin': loading}"></i>
@@ -64,14 +62,16 @@
 
         <!-- OVERVIEW -->
         <section v-if="activeTab === 'overview'" class="space-y-4">
-          <div class="forest-card rounded-3xl p-5 relative overflow-hidden space-y-4">
+          <!-- 💡 1) 总览卡片吸顶固定悬浮 -->
+          <div class="sticky top-14 z-30 forest-card rounded-3xl p-5 relative overflow-hidden space-y-3 backdrop-blur-md bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98">
             <div class="text-xs text-slate-400 font-medium">净资产总额</div>
-            <div class="text-3xl font-bold tracking-tight text-white flex items-baseline gap-1.5">
-              <span class="text-xl font-bold text-slate-200">RM</span>
-              <span class="font-serif-num text-3xl sm:text-4xl text-slate-100 truncate">{{ formatNumber(displayedNetWorth) }}</span>
+            <div class="text-2xl font-bold tracking-tight text-white flex items-baseline gap-1.5">
+              <span class="text-lg font-bold text-slate-200">RM</span>
+              <!-- 💡 1) 字体缩小10% -->
+              <span class="font-serif-num text-2xl sm:text-3xl text-slate-100 truncate">{{ formatNumber(displayedNetWorth) }}</span>
             </div>
 
-            <div v-if="monthlyDiff" class="text-xs flex items-center gap-2 bg-[#0d1711] p-2.5 rounded-xl border border-[#1f3329]">
+            <div v-if="monthlyDiff" class="text-xs flex items-center gap-2 bg-[#0d1711] p-2 rounded-xl border border-[#1f3329]">
               <span class="text-slate-400">相比上月:</span>
               <span class="font-serif-num font-bold" :class="monthlyDiff.amount >= 0 ? 'text-emerald-400' : 'text-rose-400'">
                 {{ monthlyDiff.amount >= 0 ? '+' : '' }}RM {{ formatNumber(monthlyDiff.amount) }} ({{ monthlyDiff.pct >= 0 ? '+' : '' }}{{ monthlyDiff.pct }}%)
@@ -79,11 +79,11 @@
             </div>
 
             <div class="grid grid-cols-2 gap-2 pt-1">
-              <button @click="useTP = false" :class="!useTP ? 'bg-[#1d3326] text-amber-300 border-[#2e4e3b]' : 'bg-[#132219]/60 text-slate-400 border-[#1f3329]'" class="py-2 rounded-xl text-xs font-bold border">按市值</button>
-              <button @click="useTP = true" :class="useTP ? 'bg-[#1d3326] text-amber-300 border-[#2e4e3b]' : 'bg-[#132219]/60 text-slate-400 border-[#1f3329]'" class="py-2 rounded-xl text-xs font-bold border">按目标价 TP</button>
+              <button @click="useTP = false" :class="!useTP ? 'bg-[#1d3326] text-amber-300 border-[#2e4e3b]' : 'bg-[#132219]/60 text-slate-400 border-[#1f3329]'" class="py-1.5 rounded-xl text-xs font-bold border">按市值</button>
+              <button @click="useTP = true" :class="useTP ? 'bg-[#1d3326] text-amber-300 border-[#2e4e3b]' : 'bg-[#132219]/60 text-slate-400 border-[#1f3329]'" class="py-1.5 rounded-xl text-xs font-bold border">按目标价 TP</button>
             </div>
 
-            <div class="grid grid-cols-2 gap-y-2.5 gap-x-3 pt-3 border-t border-[#1a2e22] text-xs">
+            <div class="grid grid-cols-2 gap-y-2 gap-x-3 pt-2 border-t border-[#1a2e22] text-xs">
               <div class="flex justify-between items-center"><span class="text-blue-400">● 存款</span><span class="font-serif-num font-bold">RM {{ formatNumber(totals.cash) }}</span></div>
               <div class="flex justify-between items-center"><span class="text-blue-300">● 银行存款</span><span class="font-serif-num font-bold">RM {{ formatNumber(totals.bank) }}</span></div>
               <div class="flex justify-between items-center"><span class="text-amber-400">● 纸黄金</span><span class="font-serif-num font-bold">RM {{ formatNumber(totals.paperGold) }}</span></div>
@@ -92,10 +92,10 @@
               <div class="flex justify-between items-center"><span class="text-purple-400">● 公积金</span><span class="font-serif-num font-bold">RM {{ formatNumber(totals.epf) }}</span></div>
             </div>
 
-            <button @click="openSnapshotModal" class="w-full btn-gold-border font-bold py-3 rounded-2xl text-xs flex items-center justify-center gap-2"><i class="fa-solid fa-camera"></i> 手动记录快照</button>
+            <button @click="openSnapshotModal" class="w-full btn-gold-border font-bold py-2.5 rounded-2xl text-xs flex items-center justify-center gap-2"><i class="fa-solid fa-camera"></i> 手动记录快照</button>
           </div>
 
-          <div class="space-y-2">
+          <div class="space-y-2 pt-2">
             <div class="text-xs text-slate-400 font-bold px-1">📜 历史结账与快照列表 (点击查看分类详情)</div>
             <div v-for="h in filteredHistoryList" :key="h.Record_Date" @click="openHistoryDetail(h)" class="forest-card rounded-2xl p-3.5 flex justify-between items-center cursor-pointer active:scale-98 transition text-xs">
               <div>
@@ -109,7 +109,8 @@
 
         <!-- CASH -->
         <section v-if="activeTab === 'cash'" class="space-y-4">
-          <div class="forest-card p-4 rounded-2xl space-y-3">
+          <!-- 💡 5) 存款页面吸顶悬浮 -->
+          <div class="sticky top-14 z-30 forest-card p-4 rounded-2xl space-y-3 backdrop-blur-md bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98">
             <div class="flex justify-between items-center">
               <div>
                 <div class="text-xs text-slate-400">存款与现金总计</div>
@@ -157,7 +158,8 @@
 
         <!-- GOLD -->
         <section v-if="activeTab === 'gold'" class="space-y-4">
-          <div class="forest-card p-4 rounded-2xl space-y-3">
+          <!-- 💡 5) 黄金页面吸顶悬浮 -->
+          <div class="sticky top-14 z-30 forest-card p-4 rounded-2xl space-y-3 backdrop-blur-md bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98">
             <div class="flex justify-between items-center">
               <div>
                 <div class="text-xs text-amber-400 font-medium">黄金总市值</div>
@@ -211,7 +213,8 @@
 
         <!-- EPF -->
         <section v-if="activeTab === 'epf'" class="space-y-4">
-          <div class="forest-card p-4 rounded-2xl space-y-3">
+          <!-- 💡 5) 公积金页面吸顶悬浮 -->
+          <div class="sticky top-14 z-30 forest-card p-4 rounded-2xl space-y-3 backdrop-blur-md bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98">
             <div class="flex justify-between items-center">
               <div>
                 <div class="text-xs text-purple-400">公积金总额</div>
@@ -242,7 +245,8 @@
 
         <!-- STOCKS -->
         <section v-if="activeTab === 'stocks'" class="space-y-3">
-          <div class="forest-card rounded-3xl p-4 space-y-3 sticky top-16 z-20 backdrop-blur-md bg-gradient-to-br from-[#132219]/95 to-[#0d1711]/95 border border-[#2e4e3b]">
+          <!-- 💡 股票页面吸顶悬浮 -->
+          <div class="sticky top-14 z-30 forest-card rounded-3xl p-4 space-y-3 backdrop-blur-md bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98 border border-[#2e4e3b]">
             <div class="flex justify-between items-center">
               <div>
                 <div class="text-xs text-emerald-400 font-medium">📈 股票持仓总市值</div>
@@ -264,9 +268,10 @@
                 </div>
               </div>
               <div @click="openDividendSummaryModal" class="bg-[#0d1711] p-2.5 rounded-xl border border-[#1f3329] cursor-pointer active:scale-98 transition">
-                <div class="text-[10px] text-amber-400 flex justify-between items-center"><span>💰 累计到账股息</span><span class="text-[9px]">点击看年度明细 ➔</span></div>
+                <!-- 💡 3) 明确标注今年累计到账 -->
+                <div class="text-[10px] text-amber-400 flex justify-between items-center"><span>💰 今年累计到账股息</span><span class="text-[9px]">点击看年度对比 ➔</span></div>
                 <div class="font-serif-num font-bold text-amber-300 text-sm mt-0.5">
-                  RM {{ formatNumber(totalDividendsSum) }}
+                  RM {{ formatNumber(currentYearDividendsSum) }}
                 </div>
               </div>
             </div>
@@ -298,7 +303,6 @@
                     {{ s.Stock_Name }}
                   </div>
                   <div class="text-xs text-slate-400 mt-0.5 font-serif-num">
-                    <!-- 💡 1) 前端处理：显示 Ticker，若为大马纯数字股票不足4位自动补齐前导0，保证显示为 0117 -->
                     {{ formatTickerDisplay(s.Ticker) }} · <span class="text-amber-400">{{ s.Market || '大马股' }}</span>
                   </div>
                 </div>
@@ -354,11 +358,11 @@
       </footer>
 
       <!-- Modals -->
-      <!-- 💡 4) 股息年度对比表：左边股票名 | 中间 2025 | 右边 2026 | 最右边增幅% -->
+      <!-- 💡 4) 股息年度对比表：2026 在左，2025 在右，且最下方加 Total 行 -->
       <div v-if="showDividendSummaryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[85vh] flex flex-col">
           <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
-            <h3 class="font-extrabold text-base text-white">💰 股息年度对比表 (2025 vs 2026)</h3>
+            <h3 class="font-extrabold text-base text-white">💰 股息年度对比表 (2026 vs 2025)</h3>
             <button @click="showDividendSummaryModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
           </div>
           
@@ -367,8 +371,8 @@
               <thead>
                 <tr class="text-slate-400 border-b border-[#1f3329] bg-[#132219]">
                   <th class="p-2.5 font-bold">股票名字</th>
-                  <th class="p-2.5 text-right font-serif-num font-bold">2025</th>
                   <th class="p-2.5 text-right font-serif-num font-bold">2026</th>
+                  <th class="p-2.5 text-right font-serif-num font-bold">2025</th>
                   <th class="p-2.5 text-right font-serif-num font-bold">增幅%</th>
                 </tr>
               </thead>
@@ -378,13 +382,24 @@
                     <div>{{ item.stockName }}</div>
                     <div class="text-[9px] text-slate-400 font-serif-num">{{ item.ticker }}</div>
                   </td>
+                  <td class="p-2.5 text-right font-serif-num text-amber-300 font-bold">RM {{ formatNumber(item.val2026) }}</td>
                   <td class="p-2.5 text-right font-serif-num text-slate-300">RM {{ formatNumber(item.val2025) }}</td>
-                  <td class="p-2.5 text-right font-serif-num font-amber-300 font-bold">RM {{ formatNumber(item.val2026) }}</td>
                   <td class="p-2.5 text-right font-serif-num font-bold" :class="item.pct >= 0 ? 'text-emerald-400' : 'text-rose-400'">
                     {{ item.pct >= 0 ? '+' : '' }}{{ item.pct }}%
                   </td>
                 </tr>
               </tbody>
+              <!-- 💡 4) 表格底部增加 Total 总计行 -->
+              <tfoot>
+                <tr class="border-t-2 border-[#2e4e3b] bg-[#132219]/80 font-bold">
+                  <td class="p-2.5 text-white">TOTAL 总计</td>
+                  <td class="p-2.5 text-right font-serif-num text-amber-300">RM {{ formatNumber(dividendTableTotals.val2026) }}</td>
+                  <td class="p-2.5 text-right font-serif-num text-slate-200">RM {{ formatNumber(dividendTableTotals.val2025) }}</td>
+                  <td class="p-2.5 text-right font-serif-num" :class="dividendTableTotals.pct >= 0 ? 'text-emerald-400' : 'text-rose-400'">
+                    {{ dividendTableTotals.pct >= 0 ? '+' : '' }}{{ dividendTableTotals.pct }}%
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>
@@ -546,7 +561,7 @@
 
           <div class="space-y-2">
             <div class="flex justify-between items-center">
-              <span class="text-xs font-bold text-slate-300">🧾 交易记录 (最新在前)</span>
+              <span class="text-xs font-bold text-slate-300">🧾 交易记录 (保留全部历史)</span>
               <div class="flex gap-1.5">
                 <button @click="openAddTxnForStock('Buy')" class="btn-gold-border px-2.5 py-1 rounded-lg text-[10px] font-bold">+ 买入</button>
                 <button @click="openAddTxnForStock('Sell')" class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-1 rounded-lg text-[10px] font-bold">+ 卖出</button>
@@ -799,7 +814,6 @@
         const epfTxns = ref([]);
         const historyList = ref([]);
 
-        // 💡 1) 辅助函数：强行把纯数字 Ticker 补齐成 4 位前导零（比如 117 -> 0117）
         const formatTickerDisplay = (tk) => {
           if (!tk) return '';
           let s = String(tk).trim();
@@ -809,7 +823,6 @@
           return s;
         };
 
-        // 💡 6) 过滤逻辑：只展示最近两年
         const currentYear = new Date().getFullYear();
         const minAllowedYear = currentYear - 1;
 
@@ -822,12 +835,11 @@
           });
         };
 
-        // 💡 3) 按照日期精确对比排序：保证最新的在最上面
         const sortByDateDesc = (list, dateField = 'Date') => {
           return [...list].sort((a, b) => {
             const da = new Date(cleanDate(a[dateField] || a.Record_Date)).getTime();
             const db = new Date(cleanDate(b[dateField] || b.Record_Date)).getTime();
-            return db - da; // 降序：最新的排最前
+            return db - da;
           });
         };
 
@@ -835,7 +847,6 @@
           return sortByDateDesc(filterRecentTwoYears(historyList.value, 'Record_Date'), 'Record_Date');
         });
 
-        // 本地前端即时重算逻辑
         const recomputeLocalPortfolio = () => {
           stockData.value.forEach(s => {
             let totalShares = 0, totalCost = 0;
@@ -951,7 +962,6 @@
 
         const showTxnHistoryModal = ref(false);
         const selectedAccount = ref(null);
-        // 💡 3) 最新在最上面
         const accountTxns = computed(() => {
           if (!selectedAccount.value) return [];
           const list = cashTxns.value.filter(t => String(t.Account_ID).trim() === String(selectedAccount.value.Account_ID).trim());
@@ -1016,7 +1026,6 @@
           return ((pl / costVal) * 100).toFixed(1);
         };
 
-        // 💡 3) 最新在最上面
         const getGoldTxnsByType = (type) => {
           const list = goldTxns.value.filter(t => String(t.Gold_Type).trim() === String(type).trim());
           return sortByDateDesc(filterRecentTwoYears(list, 'Date'), 'Date');
@@ -1042,7 +1051,6 @@
 
         const showEPFTxnModal = ref(false);
         const selectedEPFAccount = ref(null);
-        // 💡 3) 最新在最上面
         const epfAccountTxns = computed(() => {
           if (!selectedEPFAccount.value) return [];
           const list = epfTxns.value.filter(t => String(t.Account_Key).trim() === String(selectedEPFAccount.value.Account_Key).trim());
@@ -1065,9 +1073,9 @@
         const showDividendSummaryModal = ref(false);
         const openDividendSummaryModal = () => { showDividendSummaryModal.value = true; };
 
-        // 💡 4) 要求的表格结构：左边股票名 | 中间 2025 | 右边 2026 | 最右边增幅巴仙 (%)
+        // 💡 4) 股息年度对比表：2026 在前，2025 在后
         const dividendComparisonTable = computed(() => {
-          const map = {}; // { ticker: { stockName, val2025: 0, val2026: 0 } }
+          const map = {}; 
           const todayStr = new Date().toISOString().split('T')[0];
 
           stockDividends.value.forEach(d => {
@@ -1105,6 +1113,23 @@
               pct: parseFloat(pct)
             };
           }).sort((a, b) => (b.val2026 + b.val2025) - (a.val2026 + a.val2025));
+        });
+
+        // 💡 4) 计算对比表的 Total 总计行
+        const dividendTableTotals = computed(() => {
+          let val2026 = 0;
+          let val2025 = 0;
+          dividendComparisonTable.value.forEach(item => {
+            val2026 += item.val2026;
+            val2025 += item.val2025;
+          });
+          let pct = 0;
+          if (val2025 > 0) {
+            pct = (((val2026 - val2025) / val2025) * 100).toFixed(1);
+          } else if (val2026 > 0) {
+            pct = 100.0;
+          }
+          return { val2026, val2025, pct: parseFloat(pct) };
         });
 
         const showSnapshotModal = ref(false);
@@ -1204,14 +1229,15 @@
           return total;
         });
 
-        const totalDividendsSum = computed(() => {
+        // 💡 3) 累计到账股息：精确限定为“今年”（2026年）
+        const currentYearDividendsSum = computed(() => {
           let total = 0;
           const todayStr = new Date().toISOString().split('T')[0];
           stockDividends.value.forEach(d => {
             const pDate = cleanDate(d.Pay_Date);
             if (pDate <= todayStr) {
-              const yr = parseInt(pDate.split('-')[0]);
-              if (yr >= minAllowedYear) {
+              const yr = pDate.split('-')[0];
+              if (yr === String(currentYear)) {
                 total += parseFloat(d.Total_Dividend_MYR) || 0;
               }
             }
@@ -1228,14 +1254,13 @@
           return list;
         });
 
-        // 💡 3) 最新在最上面
+        // 💡 2) 股票交易记录：保留全部历史（不加 filterRecentTwoYears 限制）
         const selectedStockTxns = computed(() => {
           if (!selectedStock.value) return [];
           const list = stockTxns.value.filter(t => formatTickerDisplay(t.Ticker) === formatTickerDisplay(selectedStock.value.Ticker));
-          return sortByDateDesc(filterRecentTwoYears(list, 'Date'), 'Date');
+          return sortByDateDesc(list, 'Date');
         });
 
-        // 💡 3) 最新在最上面
         const selectedStockDivs = computed(() => {
           if (!selectedStock.value) return [];
           const list = stockDividends.value.filter(d => formatTickerDisplay(d.Ticker) === formatTickerDisplay(selectedStock.value.Ticker));
@@ -1347,7 +1372,7 @@
             await postAction('manualSyncMalaysianStocks', {}, true);
             await fetchData();
           } catch (e) {
-            // 静默处理
+            // 静默
           } finally { 
             updatingPrices.value = false; 
           }
@@ -1540,9 +1565,9 @@
         return {
           isLocked, pinInput, correctPin, newPinInput, pressPin, saveNewPin, saveFxRate, loading, updatingPrices, activeTab, tabs, useTP, usdFxRate, stockSortMode, currentTabTitle,
           cashAccounts, cashTxns, goldList, goldTxns, stockData, sortedStockData, stockTxns, stockDividends, epfData, epfTxns, historyList, filteredHistoryList, totals, displayedNetWorth,
-          monthlyDiff, totalUnrealizedPL, totalDividendsSum, syncUsdStockPrices, cleanDate, cleanRemarks, getHistoryVal,
+          monthlyDiff, totalUnrealizedPL, currentYearDividendsSum, syncUsdStockPrices, cleanDate, cleanRemarks, getHistoryVal,
           showHistoryDetailModal, selectedHistory, openHistoryDetail,
-          showDividendSummaryModal, openDividendSummaryModal, dividendComparisonTable, formatTickerDisplay,
+          showDividendSummaryModal, openDividendSummaryModal, dividendComparisonTable, dividendTableTotals, formatTickerDisplay,
           showAddCashModal, cashForm, onCashTypeChange, deleteCashAccount, showCashTxnModal, cashTxnForm, openCashTxnModal, showTxnHistoryModal, selectedAccount, accountTxns, openTxnHistoryModal, deleteCashTxn,
           showAddGoldModal, goldForm, openGoldTxnModal, submitAddGold, deleteGoldTxn, promptUpdateGoldPrice, getGoldMarketVal, getGoldPL, getGoldPLPct, getGoldTxnsByType,
           showAddEPFAccModal, epfAccForm, deleteEPFAccount, showAddEPFModal, epfForm, openEPFTxnModalAction, showEPFTxnModal, selectedEPFAccount, epfAccountTxns, openEPFHistoryModal, submitAddEPFAccount, submitAddEPFTransaction, deleteEPFTxn,
