@@ -62,12 +62,10 @@
 
         <!-- OVERVIEW -->
         <section v-if="activeTab === 'overview'" class="space-y-4">
-          <!-- 💡 1) 总览卡片吸顶固定悬浮 -->
           <div class="sticky top-14 z-30 forest-card rounded-3xl p-5 relative overflow-hidden space-y-3 backdrop-blur-md bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98">
             <div class="text-xs text-slate-400 font-medium">净资产总额</div>
             <div class="text-2xl font-bold tracking-tight text-white flex items-baseline gap-1.5">
               <span class="text-lg font-bold text-slate-200">RM</span>
-              <!-- 💡 1) 字体缩小10% -->
               <span class="font-serif-num text-2xl sm:text-3xl text-slate-100 truncate">{{ formatNumber(displayedNetWorth) }}</span>
             </div>
 
@@ -109,14 +107,13 @@
 
         <!-- CASH -->
         <section v-if="activeTab === 'cash'" class="space-y-4">
-          <!-- 💡 5) 存款页面吸顶悬浮 -->
           <div class="sticky top-14 z-30 forest-card p-4 rounded-2xl space-y-3 backdrop-blur-md bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98">
             <div class="flex justify-between items-center">
               <div>
                 <div class="text-xs text-slate-400">存款与现金总计</div>
                 <div class="font-serif-num text-2xl font-bold text-slate-100 mt-1">RM {{ formatNumber(totals.cash + totals.bank) }}</div>
               </div>
-              <button @click="showAddCashModal = true" class="btn-gold-border px-3 py-2 rounded-xl text-xs font-bold">+ 新增账户</button>
+              <button @click="openAddCashModal" class="btn-gold-border px-3 py-2 rounded-xl text-xs font-bold">+ 新增账户</button>
             </div>
             <div class="grid grid-cols-3 gap-2 pt-2 border-t border-[#1a2e22]">
               <button @click="openCashTxnModal('Deposit')" class="bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 py-2 rounded-xl text-xs font-bold">➕ 存入</button>
@@ -158,7 +155,6 @@
 
         <!-- GOLD -->
         <section v-if="activeTab === 'gold'" class="space-y-4">
-          <!-- 💡 5) 黄金页面吸顶悬浮 -->
           <div class="sticky top-14 z-30 forest-card p-4 rounded-2xl space-y-3 backdrop-blur-md bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98">
             <div class="flex justify-between items-center">
               <div>
@@ -193,7 +189,7 @@
               </div>
 
               <div class="pt-2 border-t border-[#1a2e22] space-y-2">
-                <div class="text-[11px] font-bold text-slate-300">📜 {{ g.Type === 'Paper' ? '纸黄金' : '实体金条' }} 交易历史 (近两年)</div>
+                <div class="text-[11px] font-bold text-slate-300">📜 {{ g.Type === 'Paper' ? '纸黄金' : '实体金条' }} 交易历史 (保留全部)</div>
                 <div v-if="getGoldTxnsByType(g.Type).length === 0" class="text-[10px] text-slate-500 py-2">暂无交易记录</div>
                 <div v-for="t in getGoldTxnsByType(g.Type)" :key="t.Txn_ID" class="bg-[#0d1711] border border-[#1f3329] rounded-xl p-2.5 flex justify-between items-center text-xs">
                   <div>
@@ -213,14 +209,13 @@
 
         <!-- EPF -->
         <section v-if="activeTab === 'epf'" class="space-y-4">
-          <!-- 💡 5) 公积金页面吸顶悬浮 -->
           <div class="sticky top-14 z-30 forest-card p-4 rounded-2xl space-y-3 backdrop-blur-md bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98">
             <div class="flex justify-between items-center">
               <div>
                 <div class="text-xs text-purple-400">公积金总额</div>
                 <div class="font-serif-num text-2xl font-bold text-slate-100 mt-1">RM {{ formatNumber(totals.epf) }}</div>
               </div>
-              <button @click="showAddEPFAccModal = true" class="btn-gold-border px-3 py-2 rounded-xl text-xs font-bold">+ 新增账户</button>
+              <button @click="openAddEPFAccModal" class="btn-gold-border px-3 py-2 rounded-xl text-xs font-bold">+ 新增账户</button>
             </div>
             <div class="grid grid-cols-2 gap-2 pt-2 border-t border-[#1a2e22]">
               <button @click="openEPFTxnModalAction('Deposit')" class="bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 py-2 rounded-xl text-xs font-bold">➕ 账户供款</button>
@@ -233,7 +228,7 @@
               <div @click="openEPFHistoryModal(fund)" class="cursor-pointer flex-1">
                 <span class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full font-bold">{{ fund.Category }}</span>
                 <div class="font-bold text-slate-100 text-base mt-1.5">{{ fund.Fund_Name }}</div>
-                <div class="text-[10px] text-purple-300/80 mt-0.5">点击查看明细 (近两年) ➔</div>
+                <div class="text-[10px] text-purple-300/80 mt-0.5">点击查看明细 (保留全部) ➔</div>
               </div>
               <div class="flex items-center gap-3">
                 <div class="font-serif-num font-bold text-slate-100 text-base">RM {{ formatNumber(fund.Current_Balance) }}</div>
@@ -245,7 +240,6 @@
 
         <!-- STOCKS -->
         <section v-if="activeTab === 'stocks'" class="space-y-3">
-          <!-- 💡 股票页面吸顶悬浮 -->
           <div class="sticky top-14 z-30 forest-card rounded-3xl p-4 space-y-3 backdrop-blur-md bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98 border border-[#2e4e3b]">
             <div class="flex justify-between items-center">
               <div>
@@ -256,7 +250,7 @@
                 <button @click="syncUsdStockPrices" class="btn-gold-border px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5" :disabled="loading">
                   <i class="fa-solid fa-rotate" :class="{'fa-spin': updatingPrices}"></i> 更新股价
                 </button>
-                <button @click="showNewStockModal = true" class="btn-gold-border px-3 py-2 rounded-xl text-xs font-bold">+ 新增</button>
+                <button @click="openNewStockModal" class="btn-gold-border px-3 py-2 rounded-xl text-xs font-bold">+ 新增</button>
               </div>
             </div>
 
@@ -268,8 +262,8 @@
                 </div>
               </div>
               <div @click="openDividendSummaryModal" class="bg-[#0d1711] p-2.5 rounded-xl border border-[#1f3329] cursor-pointer active:scale-98 transition">
-                <!-- 💡 3) 明确标注今年累计到账 -->
-                <div class="text-[10px] text-amber-400 flex justify-between items-center"><span>💰 今年累计到账股息</span><span class="text-[9px]">点击看年度对比 ➔</span></div>
+                <!-- 💡 1) 去掉“到账”二字，显示“今年累计股息” -->
+                <div class="text-[10px] text-amber-400 flex justify-between items-center"><span>💰 今年累计股息</span><span class="text-[9px]">点击看年度对比 ➔</span></div>
                 <div class="font-serif-num font-bold text-amber-300 text-sm mt-0.5">
                   RM {{ formatNumber(currentYearDividendsSum) }}
                 </div>
@@ -358,7 +352,6 @@
       </footer>
 
       <!-- Modals -->
-      <!-- 💡 4) 股息年度对比表：2026 在左，2025 在右，且最下方加 Total 行 -->
       <div v-if="showDividendSummaryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[85vh] flex flex-col">
           <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
@@ -389,7 +382,6 @@
                   </td>
                 </tr>
               </tbody>
-              <!-- 💡 4) 表格底部增加 Total 总计行 -->
               <tfoot>
                 <tr class="border-t-2 border-[#2e4e3b] bg-[#132219]/80 font-bold">
                   <td class="p-2.5 text-white">TOTAL 总计</td>
@@ -654,7 +646,7 @@
             <button @click="showTxnHistoryModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
           </div>
           <div class="space-y-2 overflow-y-auto flex-1">
-            <div class="text-xs font-bold text-slate-300">📜 账户资金变动明细 (最新在前)</div>
+            <div class="text-xs font-bold text-slate-300">📜 账户资金变动明细 (保留全部)</div>
             <div v-if="accountTxns.length === 0" class="text-xs text-slate-500 py-6 text-center">暂无历史明细</div>
             <div v-for="t in accountTxns" :key="t.Txn_ID" class="bg-[#132219] border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
               <div>
@@ -683,7 +675,7 @@
             <button @click="showEPFTxnModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
           </div>
           <div class="space-y-2 overflow-y-auto flex-1">
-            <div class="text-xs font-bold text-slate-300">📜 供款与提取明细 (最新在前)</div>
+            <div class="text-xs font-bold text-slate-300">📜 供款与提取明细 (保留全部)</div>
             <div v-if="epfAccountTxns.length === 0" class="text-xs text-slate-500 py-6 text-center">暂无历史明细</div>
             <div v-for="t in epfAccountTxns" :key="t.Txn_ID" class="bg-[#132219] border border-[#1f3329] rounded-2xl p-3 flex justify-between items-center text-xs">
               <div>
@@ -824,16 +816,6 @@
         };
 
         const currentYear = new Date().getFullYear();
-        const minAllowedYear = currentYear - 1;
-
-        const filterRecentTwoYears = (list, dateField = 'Date') => {
-          return list.filter(item => {
-            const dStr = cleanDate(item[dateField] || item.Record_Date);
-            if (!dStr) return true;
-            const yr = parseInt(dStr.split('-')[0]);
-            return yr >= minAllowedYear;
-          });
-        };
 
         const sortByDateDesc = (list, dateField = 'Date') => {
           return [...list].sort((a, b) => {
@@ -844,7 +826,7 @@
         };
 
         const filteredHistoryList = computed(() => {
-          return sortByDateDesc(filterRecentTwoYears(historyList.value, 'Record_Date'), 'Record_Date');
+          return sortByDateDesc(historyList.value, 'Record_Date');
         });
 
         const recomputeLocalPortfolio = () => {
@@ -934,8 +916,13 @@
           await postAction('editEPFTxn', editEPFTxnForm.value);
         };
 
+        // 💡 2) 新增时自动清空表单
         const showAddCashModal = ref(false);
         const cashForm = ref({ type: 'Bank', bankName: '', nickname: '', balance: '' });
+        const openAddCashModal = () => {
+          cashForm.value = { type: 'Bank', bankName: '', nickname: '', balance: '' };
+          showAddCashModal.value = true;
+        };
 
         const onCashTypeChange = () => {
           if (cashForm.value.type === 'Cash') {
@@ -965,7 +952,7 @@
         const accountTxns = computed(() => {
           if (!selectedAccount.value) return [];
           const list = cashTxns.value.filter(t => String(t.Account_ID).trim() === String(selectedAccount.value.Account_ID).trim());
-          return sortByDateDesc(filterRecentTwoYears(list, 'Date'), 'Date');
+          return sortByDateDesc(list, 'Date');
         });
         const openTxnHistoryModal = (acc) => { selectedAccount.value = acc; showTxnHistoryModal.value = true; };
 
@@ -1028,11 +1015,15 @@
 
         const getGoldTxnsByType = (type) => {
           const list = goldTxns.value.filter(t => String(t.Gold_Type).trim() === String(type).trim());
-          return sortByDateDesc(filterRecentTwoYears(list, 'Date'), 'Date');
+          return sortByDateDesc(list, 'Date');
         };
 
         const showAddEPFAccModal = ref(false);
         const epfAccForm = ref({ category: 'EPF', fundName: '', balance: '' });
+        const openAddEPFAccModal = () => {
+          epfAccForm.value = { category: 'EPF', fundName: '', balance: '' };
+          showAddEPFAccModal.value = true;
+        };
         
         const showAddEPFModal = ref(false);
         const epfForm = ref({ accountKey: '', type: 'Deposit', amount: '', remark: '', date: new Date().toISOString().split('T')[0] });
@@ -1054,12 +1045,16 @@
         const epfAccountTxns = computed(() => {
           if (!selectedEPFAccount.value) return [];
           const list = epfTxns.value.filter(t => String(t.Account_Key).trim() === String(selectedEPFAccount.value.Account_Key).trim());
-          return sortByDateDesc(filterRecentTwoYears(list, 'Date'), 'Date');
+          return sortByDateDesc(list, 'Date');
         });
         const openEPFHistoryModal = (fund) => { selectedEPFAccount.value = fund; showEPFTxnModal.value = true; };
 
         const showNewStockModal = ref(false);
         const newStockForm = ref({ stockName: '', ticker: '', market: '大马股' });
+        const openNewStockModal = () => {
+          newStockForm.value = { stockName: '', ticker: '', market: '大马股' };
+          showNewStockModal.value = true;
+        };
 
         const showStockDetailModal = ref(false);
         const selectedStock = ref(null);
@@ -1073,7 +1068,6 @@
         const showDividendSummaryModal = ref(false);
         const openDividendSummaryModal = () => { showDividendSummaryModal.value = true; };
 
-        // 💡 4) 股息年度对比表：2026 在前，2025 在后
         const dividendComparisonTable = computed(() => {
           const map = {}; 
           const todayStr = new Date().toISOString().split('T')[0];
@@ -1115,7 +1109,6 @@
           }).sort((a, b) => (b.val2026 + b.val2025) - (a.val2026 + a.val2025));
         });
 
-        // 💡 4) 计算对比表的 Total 总计行
         const dividendTableTotals = computed(() => {
           let val2026 = 0;
           let val2025 = 0;
@@ -1229,7 +1222,6 @@
           return total;
         });
 
-        // 💡 3) 累计到账股息：精确限定为“今年”（2026年）
         const currentYearDividendsSum = computed(() => {
           let total = 0;
           const todayStr = new Date().toISOString().split('T')[0];
@@ -1254,7 +1246,6 @@
           return list;
         });
 
-        // 💡 2) 股票交易记录：保留全部历史（不加 filterRecentTwoYears 限制）
         const selectedStockTxns = computed(() => {
           if (!selectedStock.value) return [];
           const list = stockTxns.value.filter(t => formatTickerDisplay(t.Ticker) === formatTickerDisplay(selectedStock.value.Ticker));
@@ -1264,7 +1255,7 @@
         const selectedStockDivs = computed(() => {
           if (!selectedStock.value) return [];
           const list = stockDividends.value.filter(d => formatTickerDisplay(d.Ticker) === formatTickerDisplay(selectedStock.value.Ticker));
-          return sortByDateDesc(filterRecentTwoYears(list, 'Pay_Date'), 'Pay_Date');
+          return sortByDateDesc(list, 'Pay_Date');
         });
 
         const getStockMarketValMYR = (s) => {
@@ -1290,9 +1281,20 @@
           return (((cur - cost) / cost) * 100).toFixed(1);
         };
 
+        // 💡 3) 全局日期格式清洗：只保留 YYYY-MM-DD，去除时间
         const cleanDate = (dateStr) => {
           if (!dateStr) return '';
-          return String(dateStr).split('T')[0];
+          let s = String(dateStr).trim();
+          if (s.includes('T')) {
+            return s.split('T')[0];
+          }
+          if (s.includes(' ')) {
+            return s.split(' ')[0];
+          }
+          if (s.length >= 10) {
+            return s.substring(0, 10);
+          }
+          return s;
         };
 
         const fetchData = async () => {
@@ -1568,10 +1570,10 @@
           monthlyDiff, totalUnrealizedPL, currentYearDividendsSum, syncUsdStockPrices, cleanDate, cleanRemarks, getHistoryVal,
           showHistoryDetailModal, selectedHistory, openHistoryDetail,
           showDividendSummaryModal, openDividendSummaryModal, dividendComparisonTable, dividendTableTotals, formatTickerDisplay,
-          showAddCashModal, cashForm, onCashTypeChange, deleteCashAccount, showCashTxnModal, cashTxnForm, openCashTxnModal, showTxnHistoryModal, selectedAccount, accountTxns, openTxnHistoryModal, deleteCashTxn,
+          showAddCashModal, cashForm, openAddCashModal, onCashTypeChange, deleteCashAccount, showCashTxnModal, cashTxnForm, openCashTxnModal, showTxnHistoryModal, selectedAccount, accountTxns, openTxnHistoryModal, deleteCashTxn,
           showAddGoldModal, goldForm, openGoldTxnModal, submitAddGold, deleteGoldTxn, promptUpdateGoldPrice, getGoldMarketVal, getGoldPL, getGoldPLPct, getGoldTxnsByType,
-          showAddEPFAccModal, epfAccForm, deleteEPFAccount, showAddEPFModal, epfForm, openEPFTxnModalAction, showEPFTxnModal, selectedEPFAccount, epfAccountTxns, openEPFHistoryModal, submitAddEPFAccount, submitAddEPFTransaction, deleteEPFTxn,
-          showNewStockModal, newStockForm, submitNewStock, deleteStockCard,
+          showAddEPFAccModal, epfAccForm, openAddEPFAccModal, deleteEPFAccount, showAddEPFModal, epfForm, openEPFTxnModalAction, showEPFTxnModal, selectedEPFAccount, epfAccountTxns, openEPFHistoryModal, submitAddEPFAccount, submitAddEPFTransaction, deleteEPFTxn,
+          showNewStockModal, newStockForm, openNewStockModal, submitNewStock, deleteStockCard,
           showStockDetailModal, selectedStock, selectedStockTxns, selectedStockDivs, openStockDetail, promptUpdateTP,
           showAddStockTxnModal, stockTxnForm, openAddTxnForStock, submitAddStockTxn, deleteStockTxn,
           showAddDivModal, divForm, openAddDivForStock, submitAddDiv, deleteStockDividend,
