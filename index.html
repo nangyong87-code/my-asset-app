@@ -86,7 +86,7 @@
               <div class="flex justify-between items-center"><span class="text-blue-400">● 现金</span><span class="font-serif-num font-bold">RM {{ formatNumber(totals.cash) }}</span></div>
               <div class="flex justify-between items-center"><span class="text-blue-300">● 银行存款</span><span class="font-serif-num font-bold">RM {{ formatNumber(totals.bank) }}</span></div>
               <div class="flex justify-between items-center"><span class="text-amber-400">● 虚拟黄金</span><span class="font-serif-num font-bold">RM {{ formatNumber(totals.paperGold) }}</span></div>
-              <div class="flex justify-between items-center"><span class="text-amber-300">● 实体金条</span><span class="font-serif-num font-bold">RM {{ formatNumber(totals.physicalGold) }}</span></div>
+              <div class="flex justify-between items-center"><span class="text-amber-300">● 实体黄金</span><span class="font-serif-num font-bold">RM {{ formatNumber(totals.physicalGold) }}</span></div>
               <div class="flex justify-between items-center"><span class="text-rose-400">● 股票</span><span class="font-serif-num font-bold">RM {{ formatNumber(useTP ? totals.stockTP : totals.stockMarket) }}</span></div>
               <div class="flex justify-between items-center"><span class="text-purple-400">● 公积金</span><span class="font-serif-num font-bold">RM {{ formatNumber(totals.epf) }}</span></div>
             </div>
@@ -122,14 +122,14 @@
           <div class="sticky top-14 z-30 forest-card p-4 rounded-2xl space-y-3 backdrop-blur-md bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98">
             <div class="flex justify-between items-center">
               <div>
-                <div class="text-xs text-slate-400">存款与现金总计</div>
+                <div class="text-xs text-slate-400">现金与存款总计</div>
                 <div class="font-serif-num text-2xl font-bold text-slate-100 mt-1">RM {{ formatNumber(totals.cash + totals.bank) }}</div>
               </div>
               <button @click="openAddCashModal" class="btn-gold-border px-3 py-2 rounded-xl text-xs font-bold">+ 新增账户</button>
             </div>
             <div class="grid grid-cols-3 gap-2 pt-2 border-t border-[#1a2e22]">
-              <button @click="openCashTxnModal('Deposit')" class="bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 py-2 rounded-xl text-xs font-bold">➕ 存入</button>
-              <button @click="openCashTxnModal('Withdrawal')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 py-2 rounded-xl text-xs font-bold">➖ 提取/支出</button>
+              <button @click="openCashTxnModal('Deposit')" class="bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 py-2 rounded-xl text-xs font-bold">➕ 存款</button>
+              <button @click="openCashTxnModal('Withdrawal')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 py-2 rounded-xl text-xs font-bold">➖ 提款</button>
               <button @click="openCashTxnModal('Transfer')" class="bg-blue-600/20 text-blue-300 border border-blue-500/30 py-2 rounded-xl text-xs font-bold">🔄 转账</button>
             </div>
           </div>
@@ -184,7 +184,7 @@
             <div v-for="g in goldList" :key="g.Type" class="forest-card rounded-2xl p-4 space-y-3">
               <div class="flex justify-between items-center">
                 <div>
-                  <div class="font-bold text-sm text-slate-100">{{ g.Type === 'Paper' ? '🪙 虚拟黄金 (Paper Gold)' : '🥇 实体金条 (Gold Bar)' }}</div>
+                  <div class="font-bold text-sm text-slate-100">{{ g.Type === 'Paper' ? '🪙 虚拟黄金 (Paper Gold)' : '🥇 实体黄金 (Gold Bar)' }}</div>
                   <div class="text-[10px] text-slate-400 mt-0.5 font-serif-num">{{ g.Grams || 0 }} 克 · 买入均价 RM {{ formatNumber(g.Avg_Price) }}/g</div>
                 </div>
                 <div class="text-right">
@@ -201,7 +201,7 @@
               </div>
 
               <div class="pt-2 border-t border-[#1a2e22] space-y-2">
-                <div class="text-[11px] font-bold text-slate-300">📜 {{ g.Type === 'Paper' ? '虚拟黄金' : '实体金条' }} 交易历史 (近两年)</div>
+                <div class="text-[11px] font-bold text-slate-300">📜 {{ g.Type === 'Paper' ? '虚拟黄金' : '实体黄金' }} 交易历史 (近两年)</div>
                 <div v-if="getGoldTxnsByType(g.Type).length === 0" class="text-[10px] text-slate-500 py-2">暂无交易记录</div>
                 <div v-for="t in getGoldTxnsByType(g.Type)" :key="t.Txn_ID" class="bg-[#0d1711] border border-[#1f3329] rounded-xl p-2.5 flex justify-between items-center text-xs">
                   <div>
@@ -230,8 +230,8 @@
               <button @click="openAddEPFAccModal" class="btn-gold-border px-3 py-2 rounded-xl text-xs font-bold">+ 新增账户</button>
             </div>
             <div class="grid grid-cols-2 gap-2 pt-2 border-t border-[#1a2e22]">
-              <button @click="openEPFTxnModalAction('Deposit')" class="bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 py-2 rounded-xl text-xs font-bold">➕ 账户供款</button>
-              <button @click="openEPFTxnModalAction('Withdrawal')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 py-2 rounded-xl text-xs font-bold">➖ 账户提款</button>
+              <button @click="openEPFTxnModalAction('Deposit')" class="bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 py-2 rounded-xl text-xs font-bold">➕ 供款/利息</button>
+              <button @click="openEPFTxnModalAction('Withdrawal')" class="bg-rose-600/20 text-rose-300 border border-rose-500/30 py-2 rounded-xl text-xs font-bold">➖ 提款</button>
             </div>
           </div>
 
@@ -255,7 +255,7 @@
           <div class="sticky top-14 z-30 forest-card rounded-3xl p-4 space-y-3 backdrop-blur-md bg-gradient-to-br from-[#132219]/98 to-[#0d1711]/98 border border-[#2e4e3b] shadow-xl">
             <div class="flex justify-between items-center">
               <div>
-                <div class="text-xs text-emerald-400 font-medium">📈 股票持仓总市值</div>
+                <div class="text-xs text-emerald-400 font-medium">📈 股票总市值</div>
                 <div class="font-serif-num text-2xl font-bold text-white mt-0.5">RM {{ formatNumber(totals.stockMarket) }}</div>
               </div>
               <div class="flex gap-2">
@@ -431,7 +431,7 @@
             <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-blue-400">● 现金</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.marketItem, 'Cash')) }}</span></div>
             <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-blue-300">● 银行存款</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.marketItem, 'Bank')) }}</span></div>
             <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-amber-400">● 虚拟黄金</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.marketItem, 'PaperGold')) }}</span></div>
-            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-amber-300">● 实体金条</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.marketItem, 'PhysicalGold')) }}</span></div>
+            <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-amber-300">● 实体黄金</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.marketItem, 'PhysicalGold')) }}</span></div>
             
             <!-- 中间股票项：大字市值，小字 TP -->
             <div class="flex justify-between items-center bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]">
@@ -504,7 +504,7 @@
       <div v-if="showAddGoldModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
           <h3 class="font-bold text-base text-white">{{ goldForm.txnType === 'buy' ? '🪙 ➕ 买入黄金' : '🪙 ➖ 卖出黄金' }}</h3>
-          <div><label class="block text-[11px] text-slate-400 mb-1">黄金类型</label><select v-model="goldForm.goldType" class="input-dark"><option value="Paper">虚拟黄金 (Paper Gold)</option><option value="Physical">实体金条 (Gold Bar)</option></select></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">黄金类型</label><select v-model="goldForm.goldType" class="input-dark"><option value="Paper">虚拟黄金 (Paper Gold)</option><option value="Physical">实体黄金 (Gold Bar)</option></select></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="goldForm.date" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">重量 (克 Grams)</label><input type="number" step="0.01" v-model="goldForm.grams" placeholder="0.00" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">单价 (RM / 克)</label><input type="number" step="0.01" v-model="goldForm.price" placeholder="0.00" class="input-dark font-serif-num"></div>
@@ -558,7 +558,7 @@
               <div class="font-serif-num font-bold text-white text-sm mt-0.5">{{ selectedStock?.Currency === 'USD' ? '$' : 'RM' }} {{ formatNumber(selectedStock?.Avg_Cost_Per_Share) }}</div>
             </div>
             <div>
-              <div class="text-[10px] text-slate-400">持仓市值</div>
+              <div class="text-[10px] text-slate-400">股票总市值</div>
               <div class="font-serif-num font-bold text-slate-100 text-sm mt-0.5">RM {{ formatNumber(getStockMarketValMYR(selectedStock)) }}</div>
             </div>
 
@@ -578,7 +578,7 @@
 
           <div class="space-y-2">
             <div class="flex justify-between items-center">
-              <span class="text-xs font-bold text-slate-300">🧾 交易记录 (保留全部历史)</span>
+              <span class="text-xs font-bold text-slate-300">🧾 交易记录 </span>
               <div class="flex gap-1.5">
                 <button @click="openAddTxnForStock('Buy')" class="btn-gold-border px-2.5 py-1 rounded-lg text-[10px] font-bold">+ 买入</button>
                 <button @click="openAddTxnForStock('Sell')" class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-1 rounded-lg text-[10px] font-bold">+ 卖出</button>
@@ -603,7 +603,7 @@
 
           <div class="space-y-2 pt-2 border-t border-[#1f3329]">
             <div class="flex justify-between items-center">
-              <span class="text-xs font-bold text-slate-300">💰 股息记录 (最新在上面)</span>
+              <span class="text-xs font-bold text-slate-300">💰 股息记录 </span>
               <button @click="openAddDivForStock" class="btn-gold-border px-2.5 py-1 rounded-lg text-[10px] font-bold">+ 记录股息</button>
             </div>
             <div v-if="selectedStockDivs.length === 0" class="text-xs text-slate-500 py-4 text-center">暂无股息记录</div>
@@ -1103,7 +1103,7 @@
         };
 
         const promptUpdateGoldPrice = async (g) => {
-          const newPrice = prompt(`更新 [${g.Type === 'Paper' ? '虚拟黄金' : '实体金条'}] 当前每克市价 (RM/克):`, g.Market_Price_Per_Gram || g.Avg_Price || 300);
+          const newPrice = prompt(`更新 [${g.Type === 'Paper' ? '虚拟黄金' : '实体黄金'}] 当前每克市价 (RM/克):`, g.Market_Price_Per_Gram || g.Avg_Price || 300);
           if (newPrice === null) return;
           await postAction('updateGoldMarketPrice', { goldType: g.Type, marketPrice: newPrice });
         };
