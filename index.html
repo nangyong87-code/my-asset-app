@@ -62,7 +62,7 @@
 
         <!-- OVERVIEW -->
         <section v-if="activeTab === 'overview'" class="space-y-4">
-          <!-- 1. 最上面：净资产总额卡片（正常显示，不 float） -->
+          <!-- 1. 最上面：净资产总额卡片 -->
           <div class="forest-card rounded-3xl p-5 relative overflow-hidden space-y-3 bg-gradient-to-br from-[#132219] to-[#0d1711] shadow-2xl">
             <div class="text-xs text-slate-400 font-medium">净资产总额</div>
             <div class="text-2xl font-bold tracking-tight text-white flex items-baseline gap-1.5">
@@ -94,14 +94,12 @@
             <button @click="openSnapshotModal" class="w-full btn-gold-border font-bold py-2.5 rounded-2xl text-xs flex items-center justify-center gap-2"><i class="fa-solid fa-camera"></i> 手动记录快照 </button>
           </div>
 
-          <!-- 2. 往下接着是固定标题，以及只有列表部分才开始 float 吸顶 -->
+          <!-- 2. 历史结账与快照列表 -->
           <div class="space-y-2 pt-2">
-            <!-- 固定的标题行 -->
             <div class="sticky top-14 z-30 bg-[#090f0b]/95 backdrop-blur-md py-2 px-1 text-xs text-slate-400 font-bold border-b border-[#1a2e22]">
               📜 历史结账与快照列表 (点击查看分类详情)
             </div>
             
-            <!-- 具体的历史记录列表（向下滚动时在标题下方滚动） -->
             <div class="space-y-2 pt-1">
               <div v-for="h in groupedHistoryList" :key="h.date + h.remarkBase" @click="openHistoryDetail(h)" class="forest-card rounded-2xl p-3.5 flex justify-between items-center cursor-pointer active:scale-98 transition text-xs">
                 <div>
@@ -408,7 +406,7 @@
         </div>
       </div>
 
-      <!-- 历史结账详情弹窗 (大字市值 + 小字 TP 目标价：包括顶部总额和中间股票项) -->
+      <!-- 历史结账详情弹窗 -->
       <div v-if="showHistoryDetailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-sm rounded-3xl p-5 space-y-4">
           <div class="flex justify-between items-center border-b border-[#1f3329] pb-3">
@@ -419,7 +417,6 @@
             <button @click="showHistoryDetailModal = false" class="w-8 h-8 rounded-full bg-[#132219] text-slate-400 flex items-center justify-center text-sm">✕</button>
           </div>
           
-          <!-- 顶部净资产总额：大字市值，小字 TP -->
           <div class="text-center bg-[#132219] p-3 rounded-2xl border border-[#1f3329]">
             <div class="text-[10px] text-slate-400">净资产总额</div>
             <div class="font-serif-num text-2xl font-bold text-white mt-0.5">RM {{ formatNumber(selectedHistoryGroup?.marketVal) }}</div>
@@ -433,7 +430,6 @@
             <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-amber-400">● 虚拟黄金</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.marketItem, 'PaperGold')) }}</span></div>
             <div class="flex justify-between bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]"><span class="text-amber-300">● 实体黄金</span><span class="font-serif-num font-bold">RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.marketItem, 'PhysicalGold')) }}</span></div>
             
-            <!-- 中间股票项：大字市值，小字 TP -->
             <div class="flex justify-between items-center bg-[#132219]/60 p-2.5 rounded-xl border border-[#1f3329]">
               <span class="text-rose-400">● 股票市值</span>
               <div class="text-right">
@@ -631,9 +627,9 @@
           <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="stockTxnForm.date" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">股数 (Shares)</label><input type="number" v-model="stockTxnForm.shares" placeholder="如 1000" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">单价 (Price)</label><input type="number" step="0.001" v-model="stockTxnForm.price" placeholder="0.00" class="input-dark font-serif-num"></div>
-          <div><label class="block text-[11px] text-slate-400 mb-1">手续费 (Fees)</label><input type="number" step="0.01" v-model="stockTxnForm.fees" placeholder="0.00" class="input-dark font-serif-num"></div>
+          <div><label class="block text-[11px] text-slate-400 mb-1">手续费 (Fees - 不计入平均成本)</label><input type="number" step="0.01" v-model="stockTxnForm.fees" placeholder="0.00" class="input-dark font-serif-num"></div>
           <div>
-            <label class="block text-[11px] text-slate-400 mb-1">资金联动账户</label>
+            <label class="block text-[11px] text-slate-400 mb-1">资金联动账户 (自动扣款/入账)</label>
             <select v-model="stockTxnForm.linkedAccountId" class="input-dark">
               <option value="">不联动资金户口</option>
               <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name ? (a.Bank_Name + ' - ') : '' }}{{ a.Account_Nickname }} (RM {{ formatNumber(a.Current_Balance) }})</option>
@@ -651,7 +647,7 @@
           <div><label class="block text-[11px] text-slate-400 mb-1">每股派息额 (Per Share RM - 支持4位小数)</label><input type="number" step="0.0001" v-model="divForm.perShareAmount" placeholder="0.0000" class="input-dark font-serif-num"></div>
           <div class="bg-[#132219] p-2.5 rounded-xl border border-[#1f3329] text-xs"><span class="text-slate-400">自动计算总股息:</span> <span class="font-serif-num font-bold text-amber-300 ml-1">RM {{ formatNumber((parseFloat(divForm.units)||0) * (parseFloat(divForm.perShareAmount)||0)) }}</span></div>
           <div>
-            <label class="block text-[11px] text-slate-400 mb-1">存入现金户口 (派息日生效)</label>
+            <label class="block text-[11px] text-slate-400 mb-1">存入现金户口 (派息日自动增加余额)</label>
             <select v-model="divForm.linkedAccountId" class="input-dark">
               <option value="">不存入现有户口</option>
               <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name ? (a.Bank_Name + ' - ') : '' }}{{ a.Account_Nickname }}</option>
@@ -733,7 +729,7 @@
       <div v-if="showCashTxnModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
           <h3 class="font-bold text-base text-white">
-            {{ cashTxnForm.type === 'Deposit' ? '💳 ➕ 存入资金' : cashTxnForm.type === 'Withdrawal' ? '💳 ➖ 提取/支出' : '💳 🔄 账户间转账' }}
+            {{ cashTxnForm.type === 'Deposit' ? '💳 ➕ 存入资金' : cashTxnForm.type === 'Withdrawal' ? '💳 ➖ 提取/支出' : '💳 🔄 账户间转账 (双向绑定联动)' }}
           </h3>
           <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="cashTxnForm.date" class="input-dark font-serif-num"></div>
           
@@ -781,7 +777,7 @@
       <!-- 快照记录弹窗 -->
       <div v-if="showSnapshotModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-4">
-          <h3 class="font-bold text-base text-white">📷 手动记录快照 </h3>
+          <h3 class="font-bold text-base text-white">📷 手动记录快照 (单行双数据) </h3>
           <div class="text-xs text-slate-300 bg-[#132219] p-3 rounded-xl border border-[#1f3329] space-y-1">
             <div>当前按市值净值: <span class="font-bold text-amber-400 font-serif-num">RM {{ formatNumber(displayedNetWorthMarket) }}</span></div>
             <div>当前按TP目标价净值: <span class="font-bold text-amber-300 font-serif-num">RM {{ formatNumber(displayedNetWorthTP) }}</span></div>
@@ -800,7 +796,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbxnm6nRRRjoKlmxgaIBjpggvoLRzsIUDjiGuPRDd2Fu3_aWDgX7K0hyuEzWtEqX0t6n/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbyBz2vPumDYem5DQzgBd-9uNAl87SvLFh-TwlMK89FuZdrGjjfc1MNNtTqRAGr51YBb/exec";
 
     const { createApp, ref, computed } = Vue;
 
@@ -897,50 +893,30 @@
           });
         };
 
-        // 💡 智能合并历史结账记录：把同一天（或同一批次）的 [按市值] 和 [按TP] 组合成一行优雅展示
+        // 历史结账单行双数据重构
         const groupedHistoryList = computed(() => {
           const map = {};
           historyList.value.forEach(h => {
             const dateStr = cleanDate(h.Record_Date);
             const rawRem = String(h.Remarks || '').trim();
-            const isTP = rawRem.includes('[按TP]');
-            const isMarket = rawRem.includes('[按市值]');
-            
-            // 清理备注基础名
             let remarkBase = rawRem.replace(/\[按市值\]|\[按TP\]/g, '').trim();
             if (!remarkBase || /^\d+$/.test(remarkBase)) remarkBase = '月度结账';
 
-            // 以日期 + 基础备注作为组合 Key
             const groupKey = `${dateStr}_${remarkBase}`;
             if (!map[groupKey]) {
               map[groupKey] = {
                 date: dateStr,
                 remarkBase: remarkBase,
-                marketVal: 0,
-                tpVal: 0,
-                marketItem: null,
-                tpItem: null,
+                marketVal: parseFloat(h.Market_Val || h.Total_Net_Worth || 0) || 0,
+                tpVal: parseFloat(h.TP_Val || h.Total_Net_Worth || 0) || 0,
+                marketItem: h,
+                tpItem: h,
                 latestTimestamp: parseTimestamp(h.Record_Date)
               };
+            } else {
+              if (h.Market_Val !== undefined) map[groupKey].marketVal = parseFloat(h.Market_Val) || 0;
+              if (h.TP_Val !== undefined) map[groupKey].tpVal = parseFloat(h.TP_Val) || 0;
             }
-
-            const val = parseFloat(h.Total_Net_Worth) || 0;
-            if (isTP) {
-              map[groupKey].tpVal = val;
-              map[groupKey].tpItem = h;
-            } else if (isMarket || (!isTP && !isMarket)) {
-              // 默认旧数据或按市值归为市值
-              map[groupKey].marketVal = val;
-              map[groupKey].marketItem = h;
-            }
-          });
-
-          // 如果只有其中一个，互相补齐避免显示 0
-          Object.values(map).forEach(g => {
-            if (g.marketVal === 0 && g.tpVal > 0) g.marketVal = g.tpVal;
-            if (g.tpVal === 0 && g.marketVal > 0) g.tpVal = g.marketVal;
-            if (!g.marketItem && g.tpItem) g.marketItem = g.tpItem;
-            if (!g.tpItem && g.marketItem) g.tpItem = g.marketItem;
           });
 
           return Object.values(map).sort((a, b) => b.latestTimestamp - a.latestTimestamp);
@@ -1257,7 +1233,7 @@
           if (type === 'Bank') return parseFloat(h.Bank_Val || h.bank_val || h.Bank || 0) || 0;
           if (type === 'PaperGold') return parseFloat(h.Paper_Gold_Val || h.paper_gold_val || h.PaperGold || 0) || 0;
           if (type === 'PhysicalGold') return parseFloat(h.Physical_Gold_Val || h.physical_gold_val || h.PhysicalGold || 0) || 0;
-          if (type === 'Stock') return parseFloat(h.Stock_Val || h.stock_val || h.Stock || h.Stock_Val_MYR || 0) || 0;
+          if (type === 'Stock') return parseFloat(h.Stock_Val || h.stock_val || h.Stock || h.Stock_Val_MYR || h.Stock_Val_Market || 0) || 0;
           if (type === 'EPF') return parseFloat(h.EPF_Val || h.epf_val || h.EPF || 0) || 0;
           return 0;
         };
@@ -1322,8 +1298,10 @@
           const sorted = [...historyList.value].sort((a, b) => parseTimestamp(a.Record_Date) - parseTimestamp(b.Record_Date));
           const latest = sorted[sorted.length - 1];
           const prev = sorted[sorted.length - 2];
-          const diff = parseFloat(latest.Total_Net_Worth) - parseFloat(prev.Total_Net_Worth);
-          const pct = prev.Total_Net_Worth > 0 ? ((diff / parseFloat(prev.Total_Net_Worth)) * 100).toFixed(2) : '0.00';
+          const latestVal = parseFloat(latest.Market_Val || latest.Total_Net_Worth || 0);
+          const prevVal = parseFloat(prev.Market_Val || prev.Total_Net_Worth || 0);
+          const diff = latestVal - prevVal;
+          const pct = prevVal > 0 ? ((diff / prevVal) * 100).toFixed(2) : '0.00';
           return { amount: diff, pct: pct };
         });
 
@@ -1480,7 +1458,6 @@
             await postAction('manualSyncMalaysianStocks', {}, true);
             await fetchData();
           } catch (e) {
-            // 静默
           } finally { 
             updatingPrices.value = false; 
           }
@@ -1511,6 +1488,7 @@
           showAddStockTxnModal.value = true;
         };
 
+        // 股票买卖与现金账户联动
         const submitAddStockTxn = async () => {
           if (loading.value) return;
           if (!stockTxnForm.value.shares || !stockTxnForm.value.price) return alert('请填全股数与单价！');
@@ -1580,6 +1558,7 @@
           if (confirm(`确认删除存款账户 [${acc.Bank_Name ? acc.Bank_Name + ' - ' : ''}${acc.Account_Nickname}] 吗？`)) await postAction('deleteCashAccount', { accountId: acc.Account_ID });
         };
 
+        // 现金转账双向联动
         const submitCashTxn = async () => {
           if (loading.value) return;
           const amt = parseFloat(cashTxnForm.value.amount);
@@ -1602,7 +1581,7 @@
 
         const deleteCashTxn = async (t) => {
           if (loading.value) return;
-          if (confirm('确认删除此笔资金流水？')) await postAction('deleteCashTxn', { txnId: t.Txn_ID, accountId: t.Account_ID });
+          if (confirm('确认删除此笔资金流水？若为双向转账将同步联动删除对应另一端记录')) await postAction('deleteCashTxn', { txnId: t.Txn_ID, accountId: t.Account_ID, groupId: t.Group_ID || t.groupId });
         };
 
         const submitAddEPFAccount = async () => {
@@ -1643,6 +1622,7 @@
           showSnapshotModal.value = true;
         };
 
+        // 单行双数据快照提交
         const submitDualSnapshots = async () => {
           if (loading.value) return;
           if (!snapshotForm.value.remarks) return alert('请填写备注基础名！');
@@ -1653,53 +1633,40 @@
 
           loading.value = true;
           try {
-            await fetch(GAS_API_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({
-                action: 'logSnapshot',
-                totalNetWorth: displayedNetWorthMarket.value,
-                cashVal: totals.value.cash,
-                bankVal: totals.value.bank,
-                paperGoldVal: totals.value.paperGold,
-                physicalGoldVal: totals.value.physicalGold,
-                stockVal: totals.value.stockMarket,
-                epfVal: totals.value.epf,
-                recordDate: dateVal,
-                remarks: `${baseRemark} [按市值]`
-              })
-            });
+            const payload = {
+              action: 'logSnapshotSingleRow',
+              recordDate: dateVal,
+              remarks: baseRemark,
+              marketVal: displayedNetWorthMarket.value,
+              tpVal: displayedNetWorthTP.value,
+              cashVal: totals.value.cash,
+              bankVal: totals.value.bank,
+              paperGoldVal: totals.value.paperGold,
+              physicalGoldVal: totals.value.physicalGold,
+              stockMarketVal: totals.value.stockMarket,
+              stockTPVal: totals.value.stockTP,
+              epfVal: totals.value.epf
+            };
 
-            const res2 = await fetch(GAS_API_URL, {
+            const res = await fetch(GAS_API_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({
-                action: 'logSnapshot',
-                totalNetWorth: displayedNetWorthTP.value,
-                cashVal: totals.value.cash,
-                bankVal: totals.value.bank,
-                paperGoldVal: totals.value.paperGold,
-                physicalGoldVal: totals.value.physicalGold,
-                stockVal: totals.value.stockTP,
-                epfVal: totals.value.epf,
-                recordDate: dateVal,
-                remarks: `${baseRemark} [按TP]`
-              })
+              body: JSON.stringify(payload)
             });
-            const json2 = await res2.json();
-            if (json2.status === 'success' && json2.data) {
-              cashAccounts.value = json2.data.cashAccounts || [];
-              cashTxns.value = json2.data.cashTxns || [];
-              goldList.value = json2.data.goldList || [];
-              goldTxns.value = json2.data.goldTxns || [];
-              stockData.value = json2.data.stockData || [];
-              stockTxns.value = json2.data.stockTxns || [];
-              stockDividends.value = json2.data.stockDividends || [];
-              epfData.value = json2.data.epfData || [];
-              epfTxns.value = json2.data.epfTxns || [];
-              historyList.value = json2.data.history || [];
+            const json = await res.json();
+            if (json.status === 'success' && json.data) {
+              cashAccounts.value = json.data.cashAccounts || [];
+              cashTxns.value = json.data.cashTxns || [];
+              goldList.value = json.data.goldList || [];
+              goldTxns.value = json.data.goldTxns || [];
+              stockData.value = json.data.stockData || [];
+              stockTxns.value = json.data.stockTxns || [];
+              stockDividends.value = json.data.stockDividends || [];
+              epfData.value = json.data.epfData || [];
+              epfTxns.value = json.data.epfTxns || [];
+              historyList.value = json.data.history || [];
               recomputeLocalPortfolio();
-              alert('双重快照（按市值 & 按TP）已成功记录！');
+              alert('单行双数据快照已成功记录！');
             } else {
               await fetchData();
             }
