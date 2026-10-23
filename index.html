@@ -476,6 +476,7 @@
         </div>
       </div>
 
+      <!-- 修复：编辑股息弹窗加入存入现金户口选择 -->
       <div v-if="showEditDivModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
         <div class="bg-[#0d1711] border border-[#2e4e3b] w-full max-w-xs rounded-3xl p-5 space-y-3">
           <h3 class="font-bold text-base text-white">✏️ 编辑股息记录</h3>
@@ -483,6 +484,13 @@
           <div><label class="block text-[11px] text-slate-400 mb-1">派息日 (Pay Date - 决定到账)</label><input type="date" v-model="editDivForm.payDate" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">持股数 (Units)</label><input type="number" v-model="editDivForm.units" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">每股派息额 (支持4位小数)</label><input type="number" step="0.0001" v-model="editDivForm.perShareAmount" class="input-dark font-serif-num"></div>
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">存入现金户口 (派息日自动增加余额)</label>
+            <select v-model="editDivForm.linkedAccountId" class="input-dark">
+              <option value="">不存入现有户口</option>
+              <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name ? (a.Bank_Name + ' - ') : '' }}{{ a.Account_Nickname }}</option>
+            </select>
+          </div>
           <div class="flex gap-2 pt-2"><button @click="showEditDivModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitEditDiv" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存修改</button></div>
         </div>
       </div>
@@ -796,7 +804,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbyBz2vPumDYem5DQzgBd-9uNAl87SvLFh-TwlMK89FuZdrGjjfc1MNNtTqRAGr51YBb/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbwzkRzZnZ95HeciBkF1MAPzWVi2XqHvTmsAesYAMlA_SW0Cqq9nmKmLeL3xS60Ha9y1/exec";
 
     const { createApp, ref, computed } = Vue;
 
@@ -980,14 +988,15 @@
         };
 
         const showEditDivModal = ref(false);
-        const editDivForm = ref({ divId: '', announceDate: '', payDate: '', units: '', perShareAmount: '' });
+        const editDivForm = ref({ divId: '', announceDate: '', payDate: '', units: '', perShareAmount: '', linkedAccountId: '' });
         const openEditStockDividend = (d) => {
           editDivForm.value = {
             divId: d.Div_ID,
             announceDate: cleanDate(d.Announce_Date),
             payDate: cleanDate(d.Pay_Date),
             units: d.Units,
-            perShareAmount: d.Per_Share_Amount
+            perShareAmount: d.Per_Share_Amount,
+            linkedAccountId: d.Linked_Account_ID || d.linkedAccountId || ''
           };
           showEditDivModal.value = true;
         };
@@ -1488,7 +1497,6 @@
           showAddStockTxnModal.value = true;
         };
 
-        // 股票买卖与现金账户联动
         const submitAddStockTxn = async () => {
           if (loading.value) return;
           if (!stockTxnForm.value.shares || !stockTxnForm.value.price) return alert('请填全股数与单价！');
@@ -1558,7 +1566,6 @@
           if (confirm(`确认删除存款账户 [${acc.Bank_Name ? acc.Bank_Name + ' - ' : ''}${acc.Account_Nickname}] 吗？`)) await postAction('deleteCashAccount', { accountId: acc.Account_ID });
         };
 
-        // 现金转账双向联动
         const submitCashTxn = async () => {
           if (loading.value) return;
           const amt = parseFloat(cashTxnForm.value.amount);
@@ -1622,7 +1629,6 @@
           showSnapshotModal.value = true;
         };
 
-        // 单行双数据快照提交
         const submitDualSnapshots = async () => {
           if (loading.value) return;
           if (!snapshotForm.value.remarks) return alert('请填写备注基础名！');
