@@ -13,59 +13,57 @@
  <style>
     [v-cloak] { display: none !important; }
     
-    /* 💜 纯正深邃的暗夜紫黑底色 */
-    body { 
-      background-color: #06050b; 
-      color: #e2e8f0; 
+    /* 💜 1. 强制全局大背景为纯正的暗夜黑紫（彻底消灭绿色底！） */
+    html, body { 
+      background-color: #06050b !important; 
+      background: #06050b !important;
+      color: #e2e8f0 !important; 
       font-family: 'Plus Jakarta Sans', sans-serif; 
       -webkit-tap-highlight-color: transparent; 
     }
-    .font-serif-num { font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; font-weight: 700; }
     
-    /* 💜 高级暗夜紫毛玻璃主卡片 */
-    .forest-card { 
-      background: linear-gradient(145deg, #120f24 0%, #090812 100%); 
-      border: 1px solid rgba(139, 92, 246, 0.25); 
-      box-shadow: 0 12px 35px -10px rgba(10, 8, 22, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.06); 
-    }
-    
-    /* 💜 统一的按钮与微光边框 */
-    .btn-gold-border { 
-      background: linear-gradient(135deg, #1a1533 0%, #100d21 100%); 
-      border: 1px solid rgba(167, 139, 250, 0.4); 
-      color: #d8b4fe; 
-      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.25);
-    }
-    
-    /* 💜 选中状态（比如“按市值” / “按目标价TP”）的优雅高贵紫填充 */
-    .bg-emerald-900\/40, .bg-emerald-800, .bg-emerald-900 {
-      background: linear-gradient(135deg, #4c1d95 0%, #2e1065 100% !important;
-      border: 1px solid #a78bfa !important;
-      color: #f3e8ff !important;
-    }
-    
-    /* 💜 未选中按钮的暗紫质感 */
-    .border-emerald-800\/50, .border-emerald-700 {
-      border-color: #2e2453 !important;
-      background-color: #0d0a1a !important;
-      color: #94a3b8 !important;
+    /* 💜 2. 把页面可能存在的任何根容器、主包装盒背景全部压成暗夜紫 */
+    #app, .min-h-screen, div[class*="bg-"] {
+      background-color: #06050b;
     }
 
-    /* 💜 输入框紫调聚焦 */
+    .font-serif-num { font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; font-weight: 700; }
+    
+    /* 💜 3. 高级暗夜紫毛玻璃卡片（带高贵紫色渐变与微光边框） */
+    .forest-card, div[class*="bg-slate"], div[class*="bg-zinc"], div[class*="bg-gray"] { 
+      background: linear-gradient(145deg, #130f26 0%, #0a0815 100%) !important; 
+      border: 1px solid rgba(139, 92, 246, 0.3) !important; 
+      box-shadow: 0 12px 35px -10px rgba(6, 5, 12, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important; 
+    }
+    
+    /* 💜 4. 底部导航栏与顶部区域统一样式 */
+    nav, header, .fixed.bottom-0, .sticky {
+      background-color: #090714 !important;
+      border-color: rgba(139, 92, 246, 0.2) !important;
+    }
+
+    /* 💜 5. 按钮与紫色金边质感 */
+    .btn-gold-border { 
+      background: linear-gradient(135deg, #1d173b 0%, #0f0b24 100%) !important; 
+      border: 1px solid rgba(167, 139, 250, 0.5) !important; 
+      color: #d8b4fe !important; 
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3) !important;
+    }
+    
+    /* 💜 6. 输入框紫调聚焦 */
     .input-dark { 
-      background-color: #06050b; 
-      border: 1px solid #231b3f; 
-      color: white; 
-      border-radius: 0.75rem; 
-      padding: 0.5rem 0.75rem; 
-      font-size: 0.75rem; 
-      width: 100%; 
-      font-variant-numeric: tabular-nums; 
+      background-color: #06050b !important; 
+      border: 1px solid #281d4f !important; 
+      color: white !important; 
+      border-radius: 0.75rem !important; 
+      padding: 0.5rem 0.75rem !important; 
+      font-size: 0.75rem !important; 
+      width: 100% !important; 
     }
     .input-dark:focus {
-      border-color: #a78bfa;
-      outline: none;
-      box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.25);
+      border-color: #a78bfa !important;
+      outline: none !important;
+      box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.3) !important;
     }
   </style>
 </head>
