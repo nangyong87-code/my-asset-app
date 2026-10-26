@@ -804,7 +804,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycby6yV8jIBzEbovNwo77J2qdl5hJRim2r-qQoXP-JuzXIQslLufoEv6E0epGoLbREeHJ/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbyqTFiX1fa4sSD-_bOU64hkL6L9pRGGoCvgUX0xmZtfgKzUOa12zSkFskcokjD4hi0v/exec";
 
     const { createApp, ref, computed } = Vue;
 
@@ -1244,7 +1244,7 @@
           if (type === 'PhysicalGold') return parseFloat(h.Physical_Gold_Val || 0) || 0;
           if (type === 'EPF') return parseFloat(h.EPF_Val || 0) || 0;
           if (type === 'Stock') return parseFloat(h.Stock_Val || 0) || 0;
-          if (type === 'StockTP') return parseFloat(h.Stock_TP_Val || h.Stock_Val || 0) || 0;
+          if (type === 'StockTP') return parseFloat(h.Stock_TP_Val || h.TP_Val || h.Stock_Val || 0) || 0;
           return 0;
         };
 
