@@ -1633,7 +1633,7 @@
           showSnapshotModal.value = true;
         };
 
-        const submitDualSnapshots = async () => {
+const submitDualSnapshots = async () => {
           if (loading.value) return;
           if (!snapshotForm.value.remarks) return alert('请填写备注基础名！');
           showSnapshotModal.value = false;
@@ -1647,14 +1647,14 @@
               action: 'logSnapshotSingleRow',
               recordDate: dateVal,
               remarks: baseRemark,
-              marketVal: displayedNetWorthMarket.value,
-              tpVal: displayedNetWorthTP.value,
+              marketVal: displayedNetWorthMarket.value,     // 👈 市值净资产总额
+              tpVal: displayedNetWorthTP.value,             // 👈 TP目标价净资产总额 (独立分开！)
               cashVal: totals.value.cash,
               bankVal: totals.value.bank,
               paperGoldVal: totals.value.paperGold,
               physicalGoldVal: totals.value.physicalGold,
-              stockMarketVal: totals.value.stockMarket,
-              stockTPVal: totals.value.stockTP,
+              stockMarketVal: totals.value.stockMarket,     // 👈 股票当前市值
+              stockTPVal: totals.value.stockTP,             // 👈 股票TP目标价市值 (独立分开！)
               epfVal: totals.value.epf
             };
 
@@ -1676,7 +1676,7 @@
               epfTxns.value = json.data.epfTxns || [];
               historyList.value = json.data.history || [];
               recomputeLocalPortfolio();
-              alert('单行双数据快照已成功记录！');
+              alert('按市值与TP目标价的双轨快照已成功记录！');
             } else {
               await fetchData();
             }
