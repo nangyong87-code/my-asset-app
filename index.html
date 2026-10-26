@@ -12,32 +12,49 @@
 
  <style>
     [v-cloak] { display: none !important; }
+    
+    /* 💜 纯正深邃的暗夜紫黑底色 */
     body { 
-      background-color: #080711; 
+      background-color: #06050b; 
       color: #e2e8f0; 
       font-family: 'Plus Jakarta Sans', sans-serif; 
       -webkit-tap-highlight-color: transparent; 
     }
     .font-serif-num { font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; font-weight: 700; }
     
-    /* 💜 暗夜星空紫卡片与毛玻璃渐变 */
+    /* 💜 高级暗夜紫毛玻璃主卡片 */
     .forest-card { 
-      background: linear-gradient(145deg, #161327 0%, #0d0b16 100%); 
-      border: 1px solid rgba(139, 92, 246, 0.22); 
-      box-shadow: 0 10px 30px -10px rgba(15, 13, 30, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05); 
+      background: linear-gradient(145deg, #120f24 0%, #090812 100%); 
+      border: 1px solid rgba(139, 92, 246, 0.25); 
+      box-shadow: 0 12px 35px -10px rgba(10, 8, 22, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.06); 
     }
     
-    /* 💜 按钮与紫色金边质感 */
+    /* 💜 统一的按钮与微光边框 */
     .btn-gold-border { 
-      background: linear-gradient(135deg, #1c1833 0%, #131022 100%); 
-      border: 1px solid #8b5cf6; 
+      background: linear-gradient(135deg, #1a1533 0%, #100d21 100%); 
+      border: 1px solid rgba(167, 139, 250, 0.4); 
       color: #d8b4fe; 
-      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.25);
     }
     
+    /* 💜 选中状态（比如“按市值” / “按目标价TP”）的优雅高贵紫填充 */
+    .bg-emerald-900\/40, .bg-emerald-800, .bg-emerald-900 {
+      background: linear-gradient(135deg, #4c1d95 0%, #2e1065 100% !important;
+      border: 1px solid #a78bfa !important;
+      color: #f3e8ff !important;
+    }
+    
+    /* 💜 未选中按钮的暗紫质感 */
+    .border-emerald-800\/50, .border-emerald-700 {
+      border-color: #2e2453 !important;
+      background-color: #0d0a1a !important;
+      color: #94a3b8 !important;
+    }
+
+    /* 💜 输入框紫调聚焦 */
     .input-dark { 
-      background-color: #080711; 
-      border: 1px solid #282142; 
+      background-color: #06050b; 
+      border: 1px solid #231b3f; 
       color: white; 
       border-radius: 0.75rem; 
       padding: 0.5rem 0.75rem; 
@@ -48,7 +65,7 @@
     .input-dark:focus {
       border-color: #a78bfa;
       outline: none;
-      box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+      box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.25);
     }
   </style>
 </head>
