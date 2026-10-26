@@ -472,6 +472,13 @@
           <div><label class="block text-[11px] text-slate-400 mb-1">股数 (Shares)</label><input type="number" v-model="editStockTxnForm.shares" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">单价 (Price)</label><input type="number" step="0.001" v-model="editStockTxnForm.price" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">手续费 (Fees)</label><input type="number" step="0.01" v-model="editStockTxnForm.fees" class="input-dark font-serif-num"></div>
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">资金联动账户 (自动冲销旧账户并入账新账户)</label>
+            <select v-model="editStockTxnForm.linkedAccountId" class="input-dark">
+            <option value="">不联动资金户口</option>
+            <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name ? (a.Bank_Name + ' - ') : '' }}{{ a.Account_Nickname }} (RM {{ formatNumber(a.Current_Balance) }})</option>
+            </select>
+          </div>   
           <div class="flex gap-2 pt-2"><button @click="showEditStockTxnModal = false" class="flex-1 bg-[#132219] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitEditStockTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存修改</button></div>
         </div>
       </div>
@@ -804,7 +811,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbzEgP1kV2p1ooRh-A0sRQiEZpi1g15Abo2f2QEJtqtjjTAFrQQRn3tScpYbMrNXQiaU/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbzFUphiveZ-RAUsPA9QCMzm9P5cfxS5Fca8260UMxkbgmq0erGhCuVdOZKywLfET4KR/exec";
 
     const { createApp, ref, computed } = Vue;
 
@@ -975,9 +982,17 @@
         };
 
         const showEditStockTxnModal = ref(false);
-        const editStockTxnForm = ref({ txnId: '', broker: '', date: '', shares: '', price: '', fees: '' });
+        const editStockTxnForm = ref({ txnId: '', broker: '', date: '', shares: '', price: '', fees: '', linkedAccountId: '' });
         const openEditStockTxn = (t) => {
-          editStockTxnForm.value = { txnId: t.Txn_ID, broker: t.Broker || 'moomoo', date: cleanDate(t.Date), shares: t.Shares, price: t.Price, fees: t.Txn_Fees || 0 };
+          editStockTxnForm.value = { 
+            txnId: t.Txn_ID, 
+            broker: t.Broker || 'moomoo', 
+            date: cleanDate(t.Date), 
+            shares: t.Shares, 
+            price: t.Price, 
+            fees: t.Txn_Fees || 0,
+            linkedAccountId: t.Linked_Account_ID || t.linkedAccountId || '' // 👈 绑定旧账户ID
+          };
           showEditStockTxnModal.value = true;
         };
         const submitEditStockTxn = async () => {
