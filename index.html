@@ -434,7 +434,7 @@
               <span class="text-rose-400">● 股票市值</span>
               <div class="text-right">
                 <div class="font-serif-num font-bold text-white">RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.marketItem, 'Stock')) }}</div>
-                <div class="font-serif-num text-[10px] text-amber-300 mt-0.5">TP目标价: RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.tpItem, 'Stock')) }}</div>
+                <div class="font-serif-num text-[10px] text-amber-300 mt-0.5">TP目标价: RM {{ formatNumber(getHistoryVal(selectedHistoryGroup?.tpItem, 'StockTP')) }}</div>
               </div>
             </div>
 
@@ -1245,8 +1245,7 @@
           if (type === 'EPF') return parseFloat(h.EPF_Val || 0) || 0;
           if (type === 'Stock') return parseFloat(h.Stock_Val || 0) || 0;
           if (type === 'StockTP') return parseFloat(h.Stock_TP_Val || h.Stock_Val || 0) || 0;
-        return 0;
-        };
+          return 0;
         };
 
         const pressPin = (num) => {
@@ -1293,8 +1292,11 @@
 
           stockData.value.forEach(s => {
             const fx = s.Currency === 'USD' ? usdFxRate.value : 1;
-            stockMarket += (parseFloat(s.Market_Value_MYR) || 0) * fx;
-            stockTP += (parseFloat(s.TP_Value_MYR) || 0) * fx;
+            const curPrice = parseFloat(s.Current_Price) || 0;
+            const tpPrice = parseFloat(s.Target_Price_TP) > 0 ? parseFloat(s.Target_Price_TP) : curPrice;
+            const shares = parseFloat(s.Total_Shares) || 0;
+            stockMarket += shares * curPrice * fx;
+            stockTP += shares * tpPrice * fx;
           });
           epfData.value.forEach(e => { epf += parseFloat(e.Current_Balance) || 0; });
           return { cash, bank, paperGold, physicalGold, gold, stockMarket, stockTP, epf };
