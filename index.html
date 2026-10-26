@@ -804,7 +804,7 @@
   </div>
 
   <script>
-    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbzb83cqZeCaz3MPJka-NA4IIDJCJmuy5K-EBRfj3s1wY3w43BVMdyu24sEaC3lua7_U/exec";
+    var GAS_API_URL = "https://script.google.com/macros/s/AKfycbx76sa9q9Qo597laib1hvbsj1K7baDrmQs5bXETj_X1l55zQvPWBdo_h2Mk5AYNnoRX/exec";
 
     const { createApp, ref, computed } = Vue;
 
@@ -1238,14 +1238,15 @@
 
         const getHistoryVal = (h, type) => {
           if (!h) return 0;
-          // 精准映射字段
-          if (type === 'Cash') return parseFloat(h.Cash_Val || h.cash_val || 0) || 0;
-          if (type === 'Bank') return parseFloat(h.Bank_Val || h.bank_val || 0) || 0;
-          if (type === 'PaperGold') return parseFloat(h.Paper_Gold_Val || h.paper_gold_val || 0) || 0;
-          if (type === 'PhysicalGold') return parseFloat(h.Physical_Gold_Val || h.physical_gold_val || 0) || 0;
-          if (type === 'Stock') return parseFloat(h.Stock_Val || h.stock_val || 0) || 0;
-          if (type === 'EPF') return parseFloat(h.EPF_Val || h.epf_val || 0) || 0;
-          return 0;
+          if (type === 'Cash') return parseFloat(h.Cash_Val || 0) || 0;
+          if (type === 'Bank') return parseFloat(h.Bank_Val || 0) || 0;
+          if (type === 'PaperGold') return parseFloat(h.Paper_Gold_Val || 0) || 0;
+          if (type === 'PhysicalGold') return parseFloat(h.Physical_Gold_Val || 0) || 0;
+          if (type === 'EPF') return parseFloat(h.EPF_Val || 0) || 0;
+          if (type === 'Stock') return parseFloat(h.Stock_Val || 0) || 0;
+          if (type === 'StockTP') return parseFloat(h.Stock_TP_Val || h.Stock_Val || 0) || 0;
+        return 0;
+        };
         };
 
         const pressPin = (num) => {
