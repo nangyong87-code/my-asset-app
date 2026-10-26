@@ -10,13 +10,46 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <style>
+ <style>
     [v-cloak] { display: none !important; }
-    body { background-color: #0b120e; color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { 
+      background-color: #080711; 
+      color: #e2e8f0; 
+      font-family: 'Plus Jakarta Sans', sans-serif; 
+      -webkit-tap-highlight-color: transparent; 
+    }
     .font-serif-num { font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; font-weight: 700; }
-    .forest-card { background: linear-gradient(145deg, #132219 0%, #0d1711 100%); border: 1px solid rgba(46, 78, 59, 0.4); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5); }
-    .btn-gold-border { background: rgba(19, 34, 25, 0.8); border: 1px solid #9a7b38; color: #d4af37; }
-    .input-dark { background-color: #090f0b; border: 1px solid #1f3329; color: white; border-radius: 0.75rem; padding: 0.5rem 0.75rem; font-size: 0.75rem; width: 100%; font-variant-numeric: tabular-nums; }
+    
+    /* 💜 暗夜星空紫卡片与毛玻璃渐变 */
+    .forest-card { 
+      background: linear-gradient(145deg, #161327 0%, #0d0b16 100%); 
+      border: 1px solid rgba(139, 92, 246, 0.22); 
+      box-shadow: 0 10px 30px -10px rgba(15, 13, 30, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05); 
+    }
+    
+    /* 💜 按钮与紫色金边质感 */
+    .btn-gold-border { 
+      background: linear-gradient(135deg, #1c1833 0%, #131022 100%); 
+      border: 1px solid #8b5cf6; 
+      color: #d8b4fe; 
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+    }
+    
+    .input-dark { 
+      background-color: #080711; 
+      border: 1px solid #282142; 
+      color: white; 
+      border-radius: 0.75rem; 
+      padding: 0.5rem 0.75rem; 
+      font-size: 0.75rem; 
+      width: 100%; 
+      font-variant-numeric: tabular-nums; 
+    }
+    .input-dark:focus {
+      border-color: #a78bfa;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+    }
   </style>
 </head>
 <body class="min-h-screen pb-28 antialiased">
