@@ -13,57 +13,44 @@
  <style>
     [v-cloak] { display: none !important; }
     
-    /* 💜 1. 强制全局大背景为纯正的暗夜黑紫（彻底消灭绿色底！） */
-    html, body { 
-      background-color: #06050b !important; 
-      background: #06050b !important;
-      color: #e2e8f0 !important; 
+    /* 🖤 极夜黑全局底色，纯粹而深邃 */
+    body { 
+      background-color: #070709 !important; 
+      color: #f1f5f9 !important; 
       font-family: 'Plus Jakarta Sans', sans-serif; 
       -webkit-tap-highlight-color: transparent; 
     }
-    
-    /* 💜 2. 把页面可能存在的任何根容器、主包装盒背景全部压成暗夜紫 */
-    #app, .min-h-screen, div[class*="bg-"] {
-      background-color: #06050b;
-    }
-
     .font-serif-num { font-family: 'Inter', sans-serif; font-variant-numeric: tabular-nums; font-weight: 700; }
     
-    /* 💜 3. 高级暗夜紫毛玻璃卡片（带高贵紫色渐变与微光边框） */
-    .forest-card, div[class*="bg-slate"], div[class*="bg-zinc"], div[class*="bg-gray"] { 
-      background: linear-gradient(145deg, #130f26 0%, #0a0815 100%) !important; 
-      border: 1px solid rgba(139, 92, 246, 0.3) !important; 
-      box-shadow: 0 12px 35px -10px rgba(6, 5, 12, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important; 
+    /* ✨ 奢华极简暗黑卡片，搭配极细的高级香槟金微光边框 */
+    .forest-card { 
+      background: linear-gradient(145deg, #131318 0%, #0a0a0e 100%) !important; 
+      border: 1px solid rgba(212, 175, 55, 0.22) !important; 
+      box-shadow: 0 12px 35px -10px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important; 
     }
     
-    /* 💜 4. 底部导航栏与顶部区域统一样式 */
-    nav, header, .fixed.bottom-0, .sticky {
-      background-color: #090714 !important;
-      border-color: rgba(139, 92, 246, 0.2) !important;
+    /* ✨ 精致的香槟金边框按钮 */
+    .btn-gold-border { 
+      background: linear-gradient(135deg, #18181f 0%, #0d0d12 100%) !important; 
+      border: 1px solid #d4af37 !important; 
+      color: #fef08a !important; 
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15) !important;
     }
 
-    /* 💜 5. 按钮与紫色金边质感 */
-    .btn-gold-border { 
-      background: linear-gradient(135deg, #1d173b 0%, #0f0b24 100%) !important; 
-      border: 1px solid rgba(167, 139, 250, 0.5) !important; 
-      color: #d8b4fe !important; 
-      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3) !important;
-    }
-    
-    /* 💜 6. 输入框紫调聚焦 */
+    /* 🔍 输入框高定质感 */
     .input-dark { 
-      background-color: #06050b !important; 
-      border: 1px solid #281d4f !important; 
-      color: white !important; 
+      background-color: #070709 !important; 
+      border: 1px solid #27272a !important; 
+      color: #f1f5f9 !important; 
       border-radius: 0.75rem !important; 
       padding: 0.5rem 0.75rem !important; 
       font-size: 0.75rem !important; 
       width: 100% !important; 
     }
     .input-dark:focus {
-      border-color: #a78bfa !important;
+      border-color: #d4af37 !important;
       outline: none !important;
-      box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.3) !important;
+      box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2) !important;
     }
   </style>
 </head>
