@@ -1520,11 +1520,15 @@
         const fetchData = async () => {
           loading.value = true;
           try {
-            // 🌟 加上 { cache: 'no-store' } 强制手机浏览器不缓存请求结果
             const res = await fetch(`${GAS_API_URL}?action=getOverview&t=${Date.now()}`, {
               cache: 'no-store'
             });
-            const json = await res.json();
+            
+            // 🌟 打印出原始内容看看云端究竟返回了什么
+            const text = await res.text();
+            console.log("云端原始返回:", text);
+            
+            const json = JSON.parse(text);
             
             if (json.status === 'success' && json.data) {
               cashAccounts.value = json.data.cashAccounts || [];
@@ -1544,18 +1548,14 @@
                 if (json.data.settings.FX_USD) usdFxRate.value = parseFloat(json.data.settings.FX_USD) || 4.40;
               }
               recomputeLocalPortfolio();
-              
-              // 🌟 强行覆写手机本地 LocalStorage 缓存
               saveToLocalStorage();
-              
-              // 🌟 弹出一个提示，确认手机确实成功从云端拿到了最新数据
               showToast('云端数据已同步刷新！');
             } else {
               showToast('同步失败，云端返回格式异常');
             }
           } catch (e) { 
             console.error(e);
-            showToast('网络请求失败，请检查网络');
+            showToast('解析失败，请检查控制台日志');
           } finally { 
             loading.value = false; 
           }
