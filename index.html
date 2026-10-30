@@ -1523,39 +1523,45 @@
             const res = await fetch(`${GAS_API_URL}?action=getOverview&t=${Date.now()}`, {
               cache: 'no-store'
             });
-            
-            // 🌟 打印出原始内容看看云端究竟返回了什么
             const text = await res.text();
             console.log("云端原始返回:", text);
             
             const json = JSON.parse(text);
-
-          // 🌟 直接兼容云端返回的结构
-          const data = json.data || json; // 如果有 data 就用 data，如果没有就直接用 json
-
-          if (json.status === 'success' || data.cashAccounts) {
-            cashAccounts.value = data.cashAccounts || [];
-            cashTxns.value = data.cashTxns || [];
-            goldList.value = data.goldList || [];
-            goldTxns.value = data.goldTxns || [];
-            stockData.value = data.stockData || [];
-            stockTxns.value = data.stockTxns || [];
-            stockDividends.value = data.stockDividends || [];
-            epfData.value = data.epfData || [];
-            epfTxns.value = data.epfTxns || [];
-            historyList.value = data.history || [];
-  
-            if (data.settings) {
-              if (data.settings.PIN) correctPin.value = String(data.settings.PIN);
-              if (data.settings.Master_Password) correctMasterPassword.value = String(data.settings.Master_Password);
-              if (data.settings.FX_USD) usdFxRate.value = parseFloat(data.settings.FX_USD) || 4.40;
+            
+            // 🌟 兼容处理：支持标准的 {data: {...}}，也直接支持纯根对象 {...}
+            const data = json.data || json;
+            
+            // 🌟 只要能解析出核心资产数组之一，就视为完全成功！
+            if (data && (data.cashAccounts || data.stockData || data.goldList || data.epfData)) {
+              cashAccounts.value = data.cashAccounts || [];
+              cashTxns.value = data.cashTxns || [];
+              goldList.value = data.goldList || [];
+              goldTxns.value = data.goldTxns || [];
+              stockData.value = data.stockData || [];
+              stockTxns.value = data.stockTxns || [];
+              stockDividends.value = data.stockDividends || [];
+              epfData.value = data.epfData || [];
+              epfTxns.value = data.epfTxns || [];
+              historyList.value = data.history || [];
+              
+              if (data.settings) {
+                if (data.settings.PIN) correctPin.value = String(data.settings.PIN);
+                if (data.settings.Master_Password) correctMasterPassword.value = String(data.settings.Master_Password);
+                if (data.settings.FX_USD) usdFxRate.value = parseFloat(data.settings.FX_USD) || 4.40;
+              }
+              recomputeLocalPortfolio();
+              saveToLocalStorage();
+              showToast('云端数据已同步刷新！');
+            } else {
+              showToast('同步失败，云端返回格式异常');
+            }
+          } catch (e) { 
+            console.error(e);
+            showToast('解析失败，请检查控制台日志');
+          } finally { 
+            loading.value = false; 
           }
-            recomputeLocalPortfolio();
-            saveToLocalStorage();
-            showToast('云端数据已同步刷新！');
-        } else {
-            showToast('同步失败，云端返回格式异常');
-}
+        };
 
         const postAction = async (action, body, silent = false) => {
           // 🚀 乐观更新：立刻弹窗提示，不让 UI 卡在 loading 状态等待云端
