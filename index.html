@@ -120,8 +120,8 @@
             </div>
 
             <div class="grid grid-cols-2 gap-2 pt-1">
-              <button @click="useTP = false" :class="!useTP ? 'bg-[#18181f] text-amber-300 border-[#d4af37]' : 'bg-[#131318]/60 text-slate-400 border-[#27272a]'" class="py-1.5 rounded-xl text-xs font-bold border">按市值</button>
-              <button @click="useTP = true" :class="useTP ? 'bg-[#18181f] text-amber-300 border-[#d4af37]' : 'bg-[#131318]/60 text-slate-400 border-[#27272a]'" class="py-1.5 rounded-xl text-xs font-bold border">按目标价 TP</button>
+              <button @click="useTP = false" :class="!useTP ? 'bg-[#18181f] text-amber-300 border-[#d4af37]' : 'bg-[#131318]/60 text-slate-400 border-[#27272a]'" class="py-1.5 rounded-xl text-xs font-bold border">市值</button>
+              <button @click="useTP = true" :class="useTP ? 'bg-[#18181f] text-amber-300 border-[#d4af37]' : 'bg-[#131318]/60 text-slate-400 border-[#27272a]'" class="py-1.5 rounded-xl text-xs font-bold border">目标价 TP</button>
             </div>
 
             <div class="grid grid-cols-2 gap-y-2 gap-x-3 pt-2 border-t border-[#27272a] text-xs">
@@ -138,7 +138,7 @@
 
           <div class="space-y-2 pt-2">
             <div class="sticky top-14 z-30 bg-[#070709]/95 backdrop-blur-md py-2 px-1 text-xs text-slate-400 font-bold border-b border-[#27272a]">
-              📜 历史结账与快照列表 (点击查看分类详情)
+              📜 历史结账与快照列表
             </div>
             
             <div class="space-y-2 pt-1">
@@ -240,7 +240,7 @@
               </div>
 
               <div class="pt-2 border-t border-[#27272a] space-y-2">
-                <div class="text-[11px] font-bold text-slate-300">📜 {{ g.Type === 'Paper' ? '虚拟黄金' : '实体黄金' }} 交易历史 (近两年)</div>
+                <div class="text-[11px] font-bold text-slate-300">📜 {{ g.Type === 'Paper' ? '虚拟黄金' : '实体黄金' }} 交易历史 </div>
                 <div v-if="getGoldTxnsByType(g.Type).length === 0" class="text-[10px] text-slate-500 py-2">暂无交易记录</div>
                 <div v-for="t in getGoldTxnsByType(g.Type)" :key="t.Txn_ID" class="bg-[#070709] border border-[#27272a] rounded-xl p-2.5 flex justify-between items-center text-xs">
                   <div>
@@ -279,7 +279,7 @@
               <div @click="openEPFHistoryModal(fund)" class="cursor-pointer flex-1">
                 <span class="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full font-bold">{{ fund.Category }}</span>
                 <div class="font-bold text-slate-100 text-base mt-1.5">{{ fund.Fund_Name }}</div>
-                <div class="text-[10px] text-purple-300/80 mt-0.5">点击查看明细 (近两年) ➔</div>
+                <div class="text-[10px] text-purple-300/80 mt-0.5">点击查看明细 () ➔</div>
               </div>
               <div class="flex items-center gap-3">
                 <div class="font-serif-num font-bold text-slate-100 text-base">RM {{ formatNumber(fund.Current_Balance) }}</div>
@@ -377,7 +377,7 @@
           <div class="forest-card rounded-2xl p-4 space-y-3">
             <h3 class="font-bold text-sm text-white">⚙️ 汇率设置 (FX Rates)</h3>
             <div>
-              <label class="block text-xs text-slate-400 mb-1">1 美金 (USD) 折合马币 (MYR)</label>
+              <label class="block text-xs text-slate-400 mb-1">1 美金 (USD) 兑换马币 (MYR)</label>
               <div class="flex gap-2">
                 <input type="number" step="0.01" v-model="usdFxRate" class="input-dark font-serif-num">
                 <button @click="saveFxRate" class="btn-gold-border px-3 py-1 rounded-xl text-xs font-bold" :disabled="loading">保存</button>
@@ -387,17 +387,17 @@
 
           <!-- ✨ Master Password 与 PIN 码独立管理区 -->
           <div class="forest-card rounded-2xl p-4 space-y-3">
-            <h3 class="font-bold text-sm text-white">🔐 安全与密码中心</h3>
+            <h3 class="font-bold text-sm text-white">🔐 安全设定</h3>
             <div class="space-y-2">
               <div>
-                <label class="block text-[11px] text-slate-400 mb-1">Master Password (主密码 - 权限校验)</label>
-                <input type="password" v-model="masterPasswordInput" placeholder="请输入Master Password" class="input-dark mb-1">
+                <label class="block text-[11px] text-slate-400 mb-1">Master Password</label>
+                <input type="password" v-model="masterPasswordInput" placeholder="请输入主密码" class="input-dark mb-1">
               </div>
               <div>
                 <label class="block text-[11px] text-slate-400 mb-1">新解锁 PIN 码 (每次进 App 输入)</label>
                 <input type="password" v-model="newPinInput" placeholder="输入至少4位数字新PIN" class="input-dark mb-2 font-serif-num">
               </div>
-              <button @click="saveNewPinWithMaster" class="w-full btn-gold-border py-2.5 rounded-xl text-xs font-bold" :disabled="loading">使用主密码更新 PIN 码</button>
+              <button @click="saveNewPinWithMaster" class="w-full btn-gold-border py-2.5 rounded-xl text-xs font-bold" :disabled="loading">密码更新</button>
             </div>
           </div>
         </section>
@@ -732,7 +732,7 @@
             <button @click="showTxnHistoryModal = false" class="w-8 h-8 rounded-full bg-[#131318] text-slate-400 flex items-center justify-center text-sm">✕</button>
           </div>
           <div class="space-y-2 overflow-y-auto flex-1">
-            <div class="text-xs font-bold text-slate-300">📜 账户资金变动明细 (近两年)</div>
+            <div class="text-xs font-bold text-slate-300">📜 账户资金变动明细</div>
             <div v-if="accountTxns.length === 0" class="text-xs text-slate-500 py-6 text-center">暂无历史明细</div>
             <div v-for="t in accountTxns" :key="t.Txn_ID" class="bg-[#131318] border border-[#27272a] rounded-2xl p-3 flex justify-between items-center text-xs">
               <div>
@@ -761,7 +761,7 @@
             <button @click="showEPFTxnModal = false" class="w-8 h-8 rounded-full bg-[#131318] text-slate-400 flex items-center justify-center text-sm">✕</button>
           </div>
           <div class="space-y-2 overflow-y-auto flex-1">
-            <div class="text-xs font-bold text-slate-300">📜 供款与提取明细 (近两年)</div>
+            <div class="text-xs font-bold text-slate-300">📜 供款与提取明细</div>
             <div v-if="epfAccountTxns.length === 0" class="text-xs text-slate-500 py-6 text-center">暂无历史明细</div>
             <div v-for="t in epfAccountTxns" :key="t.Txn_ID" class="bg-[#131318] border border-[#27272a] rounded-2xl p-3 flex justify-between items-center text-xs">
               <div>
