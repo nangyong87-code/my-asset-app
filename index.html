@@ -1540,8 +1540,15 @@
                 if (json.data.settings.FX_USD) usdFxRate.value = parseFloat(json.data.settings.FX_USD) || 4.40;
               }
               recomputeLocalPortfolio();
+              
+              // 🌟 【关键点】：每次从云端成功拉取最新数据后，强制把最新数据写回手机 LocalStorage 覆盖旧缓存！
+              saveToLocalStorage(); 
             }
-          } catch (e) { console.error(e); } finally { loading.value = false; }
+          } catch (e) { 
+            console.error(e); 
+          } finally { 
+            loading.value = false; 
+          }
         };
 
         const postAction = async (action, body, silent = false) => {
