@@ -501,7 +501,7 @@
           <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="editCashTxnForm.date" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">金额 (RM)</label><input type="number" step="0.01" v-model="editCashTxnForm.amount" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">备注 (remark)</label><input type="text" v-model="editCashTxnForm.remark" class="input-dark"></div>
-          <div class="flex gap-2 pt-2"><button @click="showEditCashTxnModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitEditCashTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存修改</button></div>
+          <div class="flex gap-2 pt-2"><button @click="showEditCashTxnModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click.prevent="submitEditCashTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存修改</button></div>
         </div>
       </div>
 
@@ -511,7 +511,7 @@
           <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="editGoldTxnForm.date" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">重量 (克 Grams)</label><input type="number" step="0.01" v-model="editGoldTxnForm.grams" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">单价 (RM/克)</label><input type="number" step="0.01" v-model="editGoldTxnForm.price" class="input-dark font-serif-num"></div>
-          <div class="flex gap-2 pt-2"><button @click="showEditGoldTxnModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitEditGoldTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存修改</button></div>
+          <div class="flex gap-2 pt-2"><button @click="showEditGoldTxnModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click.prevent="submitEditGoldTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存修改</button></div>
         </div>
       </div>
 
@@ -530,7 +530,7 @@
             <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name ? (a.Bank_Name + ' - ') : '' }}{{ a.Account_Nickname }} (RM {{ formatNumber(a.Current_Balance) }})</option>
             </select>
           </div>   
-          <div class="flex gap-2 pt-2"><button @click="showEditStockTxnModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitEditStockTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存修改</button></div>
+          <div class="flex gap-2 pt-2"><button @click="showEditStockTxnModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click.prevent="submitEditStockTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存修改</button></div>
         </div>
       </div>
 
@@ -548,7 +548,7 @@
               <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name ? (a.Bank_Name + ' - ') : '' }}{{ a.Account_Nickname }}</option>
             </select>
           </div>
-          <div class="flex gap-2 pt-2"><button @click="showEditDivModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitEditDiv" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存修改</button></div>
+          <div class="flex gap-2 pt-2"><button @click="showEditDivModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click.prevent="submitEditDiv" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存修改</button></div>
         </div>
       </div>
 
@@ -558,7 +558,7 @@
           <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="editEPFTxnForm.date" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">金额 (RM)</label><input type="number" step="0.01" v-model="editEPFTxnForm.amount" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">备注 (remark)</label><input type="text" v-model="editEPFTxnForm.remark" class="input-dark"></div>
-          <div class="flex gap-2 pt-2"><button @click="showEditEPFTxnModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitEditEPFTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存修改</button></div>
+          <div class="flex gap-2 pt-2"><button @click="showEditEPFTxnModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click.prevent="submitEditEPFTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存修改</button></div>
         </div>
       </div>
 
@@ -569,7 +569,7 @@
           <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="goldForm.date" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">重量 (克 Grams)</label><input type="number" step="0.01" v-model="goldForm.grams" placeholder="0.00" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">单价 (RM / 克)</label><input type="number" step="0.01" v-model="goldForm.price" placeholder="0.00" class="input-dark font-serif-num"></div>
-          <div class="flex gap-2 pt-2"><button @click="showAddGoldModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitAddGold" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存</button></div>
+          <div class="flex gap-2 pt-2"><button @click.prevent="showAddGoldModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click.prevent="submitAddGold" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存</button></div>
         </div>
       </div>
 
@@ -587,7 +587,7 @@
           </div>
           <div class="flex gap-2 pt-2">
             <button @click="showNewStockModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button>
-            <button @click="submitNewStock" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">确认建卡</button>
+            <button @click.prevent="submitNewStock" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">确认建卡</button>
           </div>
         </div>
       </div>
@@ -700,7 +700,7 @@
               <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name ? (a.Bank_Name + ' - ') : '' }}{{ a.Account_Nickname }} (RM {{ formatNumber(a.Current_Balance) }})</option>
             </select>
           </div>
-          <div class="flex gap-2 pt-2"><button @click="showAddStockTxnModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitAddStockTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存明细</button></div>
+          <div class="flex gap-2 pt-2"><button @click="showAddStockTxnModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click.prevent="submitAddStockTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存明细</button></div>
         </div>
       </div>
 
@@ -718,7 +718,7 @@
               <option v-for="a in cashAccounts" :key="a.Account_ID" :value="a.Account_ID">{{ a.Bank_Name ? (a.Bank_Name + ' - ') : '' }}{{ a.Account_Nickname }}</option>
             </select>
           </div>
-          <div class="flex gap-2 pt-2"><button @click="showAddDivModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitAddDiv" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存股息</button></div>
+          <div class="flex gap-2 pt-2"><button @click="showAddDivModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click.prevent="submitAddDiv" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存股息</button></div>
         </div>
       </div>
 
@@ -787,7 +787,7 @@
           <div v-if="cashForm.type === 'Bank'"><label class="block text-[11px] text-slate-400 mb-1">机构名字</label><input type="text" v-model="cashForm.bankName" placeholder="如 Maybank" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">户口小名</label><input type="text" v-model="cashForm.nickname" placeholder="如 钱包现金 / Milo罐" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">初始余额 (RM)</label><input type="number" step="0.01" v-model="cashForm.balance" placeholder="0.00" class="input-dark font-serif-num"></div>
-          <div class="flex gap-2 pt-2"><button @click="showAddCashModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitAddCash" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存</button></div>
+          <div class="flex gap-2 pt-2"><button @click="showAddCashModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click.prevent="submitAddCash" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存</button></div>
         </div>
       </div>
 
@@ -814,7 +814,7 @@
           <div><label class="block text-[11px] text-slate-400 mb-1">变动金额 (RM) [正数]</label><input type="number" step="0.01" v-model="cashTxnForm.amount" placeholder="0.00" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">备注 (remark)</label><input type="text" v-model="cashTxnForm.remark" placeholder="备注说明" class="input-dark"></div>
           
-          <div class="flex gap-2 pt-2"><button @click="showCashTxnModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitCashTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">提交</button></div>
+          <div class="flex gap-2 pt-2"><button @click="showCashTxnModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click.prevent="submitCashTxn" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">提交</button></div>
         </div>
       </div>
 
@@ -824,7 +824,7 @@
           <div><label class="block text-[11px] text-slate-400 mb-1">分类</label><select v-model="epfAccForm.category" class="input-dark"><option value="EPF">EPF 公积金</option><option value="PRS">PRS 私人退休金</option></select></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">账户名称</label><input type="text" v-model="epfAccForm.fundName" placeholder="如 Account 2" class="input-dark"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">初始余额 (RM)</label><input type="number" step="0.01" v-model="epfAccForm.balance" placeholder="0.00" class="input-dark font-serif-num"></div>
-          <div class="flex gap-2 pt-2"><button @click="showAddEPFAccModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitAddEPFAccount" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存</button></div>
+          <div class="flex gap-2 pt-2"><button @click="showAddEPFAccModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click.prevent="submitAddEPFAccount" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">保存</button></div>
         </div>
       </div>
 
@@ -835,7 +835,7 @@
           <div><label class="block text-[11px] text-slate-400 mb-1">交易日期</label><input type="date" v-model="epfForm.date" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">金额 (RM) [正数]</label><input type="number" step="0.01" v-model="epfForm.amount" placeholder="0.00" class="input-dark font-serif-num"></div>
           <div><label class="block text-[11px] text-slate-400 mb-1">备注 (remark)</label><input type="text" v-model="epfForm.remark" placeholder="备注说明" class="input-dark"></div>
-          <div class="flex gap-2 pt-2"><button @click="showAddEPFModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click="submitAddEPFTransaction" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">提交</button></div>
+          <div class="flex gap-2 pt-2"><button @click="showAddEPFModal = false" class="flex-1 bg-[#131318] text-slate-300 py-2 rounded-xl text-xs">取消</button><button @click.prevent="submitAddEPFTransaction" class="flex-1 btn-gold-border font-bold py-2 rounded-xl text-xs" :disabled="loading">提交</button></div>
         </div>
       </div>
 
@@ -851,7 +851,7 @@
           <div><label class="block text-[11px] text-slate-400 mb-1">Remarks 备注基础名</label><input type="text" v-model="snapshotForm.remarks" placeholder="如 月度结账" class="input-dark"></div>
           <div class="flex gap-2 pt-2">
             <button @click="showSnapshotModal = false" class="flex-1 bg-[#131318] text-slate-200 py-2.5 rounded-xl text-xs">取消</button>
-            <button @click="submitDualSnapshots" class="flex-1 btn-gold-border font-bold py-2.5 rounded-xl text-xs" :disabled="loading">一键记录</button>
+            <button @click.prevent="submitDualSnapshots" class="flex-1 btn-gold-border font-bold py-2.5 rounded-xl text-xs" :disabled="loading">一键记录</button>
           </div>
         </div>
       </div>
@@ -1343,7 +1343,7 @@
             if (pinInput.value.length === 6) {
               if (pinInput.value === correctPin.value) {
                 isLocked.value = false;
-                syncUsdStockPricesSilence();
+                fetchData(); // 👈 解锁瞬间直接静默刷新云端数据，不再卡顿
               } else {
                 showToast('PIN 码错误！');
                 pinInput.value = '';
@@ -1367,20 +1367,40 @@
         };
 
         // ✨ 切换后台自动锁屏监听
-        const handleVisibilityChange = () => {
-          if (document.hidden) {
+       // ✨ 5分钟无操作自动锁屏逻辑（彻底移除 visibilitychange）
+        let idleTimer = null;
+        const IDLE_TIMEOUT = 5 * 60 * 1000; // 5分钟 = 300000毫秒
+
+        const resetIdleTimer = () => {
+          if (isLocked.value) return; // 如果已经锁屏了就不管
+          clearTimeout(idleTimer);
+          idleTimer = setTimeout(() => {
             lockApp();
-          }
+          }, IDLE_TIMEOUT);
         };
 
         onMounted(() => {
-          document.addEventListener('visibilitychange', handleVisibilityChange);
+          // 监听常见的用户交互动作来刷新 5 分钟倒计时
+          window.addEventListener('mousemove', resetIdleTimer);
+          window.addEventListener('mousedown', resetIdleTimer);
+          window.addEventListener('keypress', resetIdleTimer);
+          window.addEventListener('touchstart', resetIdleTimer);
+          window.addEventListener('scroll', resetIdleTimer);
+
+          // 启动初始计时
+          resetIdleTimer();
+          
           // 首次静默拉取最新数据校准
           fetchData();
         });
 
         onUnmounted(() => {
-          document.removeEventListener('visibilitychange', handleVisibilityChange);
+          clearTimeout(idleTimer);
+          window.removeEventListener('mousemove', resetIdleTimer);
+          window.removeEventListener('mousedown', resetIdleTimer);
+          window.removeEventListener('keypress', resetIdleTimer);
+          window.removeEventListener('touchstart', resetIdleTimer);
+          window.removeEventListener('scroll', resetIdleTimer);
         });
 
         const currentTabTitle = computed(() => tabs.find(x => x.id === activeTab.value)?.name || 'TrackEzy');
@@ -1525,39 +1545,53 @@
         };
 
         const postAction = async (action, body, silent = false) => {
-          if (loading.value) return;
-          loading.value = true;
+          // 🚀 乐观更新：立刻弹窗提示，不让 UI 卡在 loading 状态等待云端
+          if (!silent) {
+            showToast('操作已提交，后台同步中...');
+          }
+          
           try {
             const payload = JSON.stringify({ action, ...body });
-            const res = await fetch(GAS_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: payload });
-            const json = await res.json();
-            if (json.status === 'success' && json.data) {
-              cashAccounts.value = json.data.cashAccounts || [];
-              cashTxns.value = json.data.cashTxns || [];
-              goldList.value = json.data.goldList || [];
-              goldTxns.value = json.data.goldTxns || [];
-              stockData.value = json.data.stockData || [];
-              stockTxns.value = json.data.stockTxns || [];
-              stockDividends.value = json.data.stockDividends || [];
-              epfData.value = json.data.epfData || [];
-              epfTxns.value = json.data.epfTxns || [];
-              historyList.value = json.data.history || [];
-              
-              if (json.data.settings) {
-                if (json.data.settings.PIN) correctPin.value = String(json.data.settings.PIN);
-                if (json.data.settings.Master_Password) correctMasterPassword.value = String(json.data.settings.Master_Password);
-                if (json.data.settings.FX_USD) usdFxRate.value = parseFloat(json.data.settings.FX_USD) || 4.40;
+            // 异步在后台发起请求，不阻塞界面交互
+            fetch(GAS_API_URL, { 
+              method: 'POST', 
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+              body: payload 
+            })
+            .then(res => res.json())
+            .then(json => {
+              if (json.status === 'success' && json.data) {
+                cashAccounts.value = json.data.cashAccounts || [];
+                cashTxns.value = json.data.cashTxns || [];
+                goldList.value = json.data.goldList || [];
+                goldTxns.value = json.data.goldTxns || [];
+                stockData.value = json.data.stockData || [];
+                stockTxns.value = json.data.stockTxns || [];
+                stockDividends.value = json.data.stockDividends || [];
+                epfData.value = json.data.epfData || [];
+                epfTxns.value = json.data.epfTxns || [];
+                historyList.value = json.data.history || [];
+                
+                if (json.data.settings) {
+                  if (json.data.settings.PIN) correctPin.value = String(json.data.settings.PIN);
+                  if (json.data.settings.Master_Password) correctMasterPassword.value = String(json.data.settings.Master_Password);
+                  if (json.data.settings.FX_USD) usdFxRate.value = parseFloat(json.data.settings.FX_USD) || 4.40;
+                }
+                recomputeLocalPortfolio();
+                if (!silent) showToast('后台同步成功！');
+              } else {
+                if (json.message && !silent) alert(json.message);
+                fetchData(); // 如果后端校验失败，回滚拉取云端数据
               }
-              recomputeLocalPortfolio();
-              if (!silent) showToast('操作成功！');
-            } else {
-              if (json.message && !silent) alert(json.message);
-              await fetchData();
-            }
+            })
+            .catch(err => {
+              console.error(err);
+              if (!silent) showToast('网络开小差了，后台稍后重试');
+            });
+
           } catch (e) { 
-            if (!silent) showToast('网络开小差了，请重试');
-            else await fetchData();
-          } finally { loading.value = false; }
+            if (!silent) showToast('请求发送失败');
+          }
         };
 
         // ✨ 使用 Master Password 验证后更新 PIN 码
