@@ -1368,29 +1368,37 @@
 
         // ✨ 切换后台自动锁屏监听
        // ✨ 5分钟无操作自动锁屏逻辑（彻底移除 visibilitychange）
+// ✨ 5分钟无操作/手机切后台自动锁屏逻辑（完美兼容手机休眠）
+        // 5分钟无操作自动锁屏逻辑
         let idleTimer = null;
-        const IDLE_TIMEOUT = 5 * 60 * 1000; // 5分钟 = 300000毫秒
+        const IDLE_TIMEOUT = 5 * 60 * 1000;
 
         const resetIdleTimer = () => {
-          if (isLocked.value) return; // 如果已经锁屏了就不管
+          if (isLocked.value) return;
           clearTimeout(idleTimer);
           idleTimer = setTimeout(() => {
             lockApp();
           }, IDLE_TIMEOUT);
         };
 
+        // 🌟 1. 定义切回前台自动同步数据的函数
+        const handleVisibilityChange = () => {
+          if (document.visibilityState === 'visible') {
+            fetchData(); // 瞬间拉取云端最新数据，实现多端实时对齐！
+          }
+        };
+
         onMounted(() => {
-          // 监听常见的用户交互动作来刷新 5 分钟倒计时
           window.addEventListener('mousemove', resetIdleTimer);
           window.addEventListener('mousedown', resetIdleTimer);
           window.addEventListener('keypress', resetIdleTimer);
           window.addEventListener('touchstart', resetIdleTimer);
           window.addEventListener('scroll', resetIdleTimer);
 
-          // 启动初始计时
+          // 🌟 2. 在这里加上注册监听
+          document.addEventListener('visibilitychange', handleVisibilityChange);
+
           resetIdleTimer();
-          
-          // 首次静默拉取最新数据校准
           fetchData();
         });
 
@@ -1401,6 +1409,9 @@
           window.removeEventListener('keypress', resetIdleTimer);
           window.removeEventListener('touchstart', resetIdleTimer);
           window.removeEventListener('scroll', resetIdleTimer);
+          
+          // 🌟 3. 在这里加上移除监听
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
         });
 
         const currentTabTitle = computed(() => tabs.find(x => x.id === activeTab.value)?.name || 'TrackEzy');
@@ -1564,51 +1575,50 @@
         };
 
         const postAction = async (action, body, silent = false) => {
-          // 🚀 乐观更新：立刻弹窗提示，不让 UI 卡在 loading 状态等待云端
           if (!silent) {
             showToast('操作已提交，后台同步中...');
           }
           
           try {
             const payload = JSON.stringify({ action, ...body });
-            // 异步在后台发起请求，不阻塞界面交互
-            fetch(GAS_API_URL, { 
+            const res = await fetch(GAS_API_URL, { 
               method: 'POST', 
               headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
               body: payload 
-            })
-            .then(res => res.json())
-            .then(json => {
-              if (json.status === 'success' && json.data) {
-                cashAccounts.value = json.data.cashAccounts || [];
-                cashTxns.value = json.data.cashTxns || [];
-                goldList.value = json.data.goldList || [];
-                goldTxns.value = json.data.goldTxns || [];
-                stockData.value = json.data.stockData || [];
-                stockTxns.value = json.data.stockTxns || [];
-                stockDividends.value = json.data.stockDividends || [];
-                epfData.value = json.data.epfData || [];
-                epfTxns.value = json.data.epfTxns || [];
-                historyList.value = json.data.history || [];
-                
-                if (json.data.settings) {
-                  if (json.data.settings.PIN) correctPin.value = String(json.data.settings.PIN);
-                  if (json.data.settings.Master_Password) correctMasterPassword.value = String(json.data.settings.Master_Password);
-                  if (json.data.settings.FX_USD) usdFxRate.value = parseFloat(json.data.settings.FX_USD) || 4.40;
-                }
-                recomputeLocalPortfolio();
-                if (!silent) showToast('后台同步成功！');
-              } else {
-                if (json.message && !silent) alert(json.message);
-                fetchData(); // 如果后端校验失败，回滚拉取云端数据
-              }
-            })
-            .catch(err => {
-              console.error(err);
-              if (!silent) showToast('网络开小差了，后台稍后重试');
             });
-
-          } catch (e) { 
+            
+            const text = await res.text();
+            const json = JSON.parse(text);
+            
+            // 🌟 核心修复：对 postAction 也采用万能适配器，无条件兼容所有云端返回结构
+            const data = json.data || json.result || json;
+            
+            if (data && (data.cashAccounts || data.stockData || data.stockDividends || data.goldList || data.epfData)) {
+              cashAccounts.value = data.cashAccounts || cashAccounts.value || [];
+              cashTxns.value = data.cashTxns || cashTxns.value || [];
+              goldList.value = data.goldList || goldList.value || [];
+              goldTxns.value = data.goldTxns || goldTxns.value || [];
+              stockData.value = data.stockData || stockData.value || [];
+              stockTxns.value = data.stockTxns || stockTxns.value || [];
+              stockDividends.value = data.stockDividends || stockDividends.value || [];
+              epfData.value = data.epfData || epfData.value || [];
+              epfTxns.value = data.epfTxns || epfTxns.value || [];
+              historyList.value = data.history || historyList.value || [];
+              
+              const settings = data.settings || {};
+              if (settings.PIN) correctPin.value = String(settings.PIN);
+              if (settings.Master_Password) correctMasterPassword.value = String(settings.Master_Password);
+              if (settings.FX_USD) usdFxRate.value = parseFloat(settings.FX_USD) || 4.40;
+              
+              recomputeLocalPortfolio();
+              saveToLocalStorage(); // 🌟 每次提交成功，瞬间强行写入手机本地缓存！
+              if (!silent) showToast('同步成功！');
+            } else {
+              if (json.message && !silent) alert(json.message);
+              fetchData(); // 兜底回滚拉取
+            }
+          } catch (e) {
+            console.error("PostAction 出错:", e);
             if (!silent) showToast('请求发送失败');
           }
         };
