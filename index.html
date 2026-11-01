@@ -245,26 +245,7 @@
             </div>
           </div>
 
-              <div class="flex justify-between items-center pt-2 border-t border-[#27272a] text-xs">
-                <span class="text-slate-400 font-serif-num">当前市价: RM {{ formatNumber(g.Market_Price_Per_Gram || g.Avg_Price) }}/g</span>
-                <button @click="promptUpdateGoldPrice(g)" class="btn-gold-border px-2.5 py-1 rounded-xl text-[11px] font-bold">修改当前市价 ✏️</button>
-              </div>
-
-              <div class="pt-2 border-t border-[#27272a] space-y-2">
-                <div class="text-[11px] font-bold text-slate-300">📜 {{ g.Type === 'Paper' ? '虚拟黄金' : '实体黄金' }} 交易历史 </div>
-                <div v-if="getGoldTxnsByType(g.Type).length === 0" class="text-[10px] text-slate-500 py-2">暂无交易记录</div>
-                <div v-for="t in getGoldTxnsByType(g.Type)" :key="t.Txn_ID" class="bg-[#070709] border border-[#27272a] rounded-xl p-2.5 flex justify-between items-center text-xs">
-                  <div>
-                    <div class="font-bold text-slate-200">{{ t.Txn_Type === 'buy' ? '➕ 买入' : '➖ 卖出' }} · {{ cleanDate(t.Date) }}</div>
-                    <div class="text-[10px] text-slate-400 font-serif-num">{{ t.Grams }} 克 @ RM {{ formatNumber(t.Price) }}/g</div>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <div class="text-right font-serif-num font-bold text-amber-300">RM {{ formatNumber(t.Grams * t.Price) }}</div>
-                    <button @click="openEditGoldTxn(t)" class="text-amber-400 text-[10px] hover:underline">编辑</button>
-                    <button @click="deleteGoldTxn(t)" class="text-rose-400 text-[10px] hover:underline">删除</button>
-                  </div>
-                </div>
-              </div>
+             
             </div>
           </div>
         </section>
@@ -1966,7 +1947,7 @@
           showEditDivModal, editDivForm, openEditStockDividend, submitEditDiv,
           showEditEPFTxnModal, editEPFTxnForm, openEditEPFTxn, submitEditEPFTxn,
           displayedNetWorthMarket, displayedNetWorthTP,
-          lockApp, toast，
+          lockApp, toast,
           showGoldTxnHistoryModal, selectedGoldItem, goldAccountTxns, openGoldHistoryModal,
         };
       }
