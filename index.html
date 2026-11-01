@@ -219,12 +219,16 @@
             </div>
           </div>
 
-          <div class="space-y-3">
+         <div class="space-y-3">
             <div v-for="g in goldList" :key="g.Type" class="forest-card rounded-2xl p-4 space-y-3">
+              <!-- 🌟 点击左侧区域即可弹出近半年交易明细弹窗 -->
               <div class="flex justify-between items-center">
-                <div>
-                  <div class="font-bold text-sm text-slate-100">{{ g.Type === 'Paper' ? '🪙 虚拟黄金 (Paper Gold)' : '🥇 实体黄金 (Gold Bar)' }}</div>
+                <div @click="openGoldHistoryModal(g)" class="cursor-pointer flex-1">
+                  <div class="font-bold text-sm text-slate-100">
+                    {{ g.Type === 'Paper' ? '🪙 虚拟黄金 (Paper Gold)' : '🥇 实体黄金 (Gold Bar)' }}
+                  </div>
                   <div class="text-[10px] text-slate-400 mt-0.5 font-serif-num">{{ g.Grams || 0 }} 克 · 买入均价 RM {{ formatNumber(g.Avg_Price) }}/g</div>
+                  <div class="text-[10px] text-amber-400/80 mt-1">点击查看交易明细 (近半年) ➔</div>
                 </div>
                 <div class="text-right">
                   <div class="font-serif-num font-bold text-amber-300 text-base">RM {{ formatNumber(getGoldMarketVal(g)) }}</div>
@@ -233,6 +237,13 @@
                   </div>
                 </div>
               </div>
+
+              <div class="flex justify-between items-center pt-2 border-t border-[#27272a] text-xs">
+                <span class="text-slate-400 font-serif-num">当前市价: RM {{ formatNumber(g.Market_Price_Per_Gram || g.Avg_Price) }}/g</span>
+                <button @click="promptUpdateGoldPrice(g)" class="btn-gold-border px-2.5 py-1 rounded-xl text-[11px] font-bold">修改当前市价 ✏️</button>
+              </div>
+            </div>
+          </div>
 
               <div class="flex justify-between items-center pt-2 border-t border-[#27272a] text-xs">
                 <span class="text-slate-400 font-serif-num">当前市价: RM {{ formatNumber(g.Market_Price_Per_Gram || g.Avg_Price) }}/g</span>
@@ -722,6 +733,38 @@
         </div>
       </div>
 
+      <!-- 黄金交易历史明细弹窗 (仅显现近半年) -->
+      <div v-if="showGoldTxnHistoryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="forest-card w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[85vh] flex flex-col">
+          <div class="flex justify-between items-center border-b border-[#27272a] pb-3">
+            <div>
+              <h3 class="font-extrabold text-base text-white">
+                {{ selectedGoldItem?.Type === 'Paper' ? '🪙 虚拟黄金' : '🥇 实体黄金' }} 交易历史
+              </h3>
+              <p class="text-xs text-amber-400 font-serif-num">当前持仓: {{ selectedGoldItem?.Grams || 0 }} 克 (仅显示近半年)</p>
+            </div>
+            <button @click="showGoldTxnHistoryModal = false" class="w-8 h-8 rounded-full bg-[#131318] text-slate-400 flex items-center justify-center text-sm">✕</button>
+          </div>
+          <div class="space-y-2 overflow-y-auto flex-1">
+            <div class="text-xs font-bold text-slate-300">📜 近半年交易明细</div>
+            <div v-if="goldAccountTxns.length === 0" class="text-xs text-slate-500 py-6 text-center">暂无近半年交易记录</div>
+            <div v-for="t in goldAccountTxns" :key="t.Txn_ID" class="bg-[#131318] border border-[#27272a] rounded-2xl p-3 flex justify-between items-center text-xs">
+              <div>
+                <div class="font-bold text-slate-200 font-serif-num">{{ t.Txn_Type === 'buy' ? '➕ 买入' : '➖ 卖出' }} · {{ cleanDate(t.Date) }}</div>
+                <div class="text-[10px] text-slate-400 mt-0.5 font-serif-num">{{ t.Grams }} 克 @ RM {{ formatNumber(t.Price) }}/g</div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="text-right font-serif-num font-bold text-amber-300">RM {{ formatNumber(t.Grams * t.Price) }}</div>
+                <div class="flex gap-1.5">
+                  <button @click="openEditGoldTxn(t)" class="text-amber-400 text-[10px] hover:underline">编辑</button>
+                  <button @click="deleteGoldTxn(t)" class="text-rose-400 text-[10px] hover:underline">删除</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div v-if="showTxnHistoryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="forest-card w-full max-w-md rounded-3xl p-5 space-y-4 max-h-[85vh] flex flex-col">
           <div class="flex justify-between items-center border-b border-[#27272a] pb-3">
@@ -1206,6 +1249,33 @@
         const getGoldTxnsByType = (type) => {
           const list = goldTxns.value.filter(t => String(t.Gold_Type).trim() === String(type).trim());
           return sortByDateDesc(filterRecentTwoYears(list, 'Date'), 'Date');
+        };
+
+        // 🌟 专门针对黄金的“近半年”时间过滤函数（182天内）
+        const filterRecentHalfYear = (list, dateField = 'Date') => {
+          const sixMonthsAgo = Date.now() - (182 * 24 * 60 * 60 * 1000);
+          return list.filter(item => {
+            const ts = parseTimestamp(item[dateField] || item.Record_Date || item.Pay_Date);
+            if (!ts) return true;
+            return ts >= sixMonthsAgo;
+          });
+        };
+
+        // 🌟 黄金交易明细弹窗控制状态
+        const showGoldTxnHistoryModal = ref(false);
+        const selectedGoldItem = ref(null);
+        
+        // 🌟 计算属性：过滤出当前选中黄金类型的近半年交易记录
+        const goldAccountTxns = computed(() => {
+          if (!selectedGoldItem.value) return [];
+          const list = goldTxns.value.filter(t => String(t.Gold_Type).trim() === String(selectedGoldItem.value.Type).trim());
+          return sortByDateDesc(filterRecentHalfYear(list, 'Date'), 'Date');
+        });
+
+        // 🌟 打开黄金历史弹窗
+        const openGoldHistoryModal = (g) => {
+          selectedGoldItem.value = g;
+          showGoldTxnHistoryModal.value = true;
         };
 
         const showAddEPFAccModal = ref(false);
@@ -1896,7 +1966,8 @@
           showEditDivModal, editDivForm, openEditStockDividend, submitEditDiv,
           showEditEPFTxnModal, editEPFTxnForm, openEditEPFTxn, submitEditEPFTxn,
           displayedNetWorthMarket, displayedNetWorthTP,
-          lockApp, toast
+          lockApp, toast，
+          showGoldTxnHistoryModal, selectedGoldItem, goldAccountTxns, openGoldHistoryModal,
         };
       }
     }).mount('#app');
